@@ -23,10 +23,10 @@ interface LearnWorldsLesson {
   locked: boolean;
 }
 
-// No ambiente real, essas credenciais devem vir de variáveis de ambiente seguras
-const API_KEY = "api_key_simulada";
-const SCHOOL_ID = "eduzayn";
-const API_BASE_URL = `https://api.learnworlds.com/v2/school/${SCHOOL_ID}`;
+// Credenciais da API LearnWorlds
+const API_KEY = "5lT9XbVrXwv9ulYNufC3OdU4ewon4wUocMENvWEa3pBc8hIOix";
+const SCHOOL_ID = "66abb5fdf8655b4b800c7278";
+const API_BASE_URL = "https://grupozayneducacional.com.br/admin/api";
 
 // Headers padrão para requisições
 const getHeaders = () => ({
@@ -35,7 +35,7 @@ const getHeaders = () => ({
 });
 
 /**
- * Busca todos os cursos disponíveis para o aluno usando Supabase
+ * Busca todos os cursos disponíveis para o aluno usando Supabase e LearnWorlds
  * @param userId ID do usuário/aluno
  */
 export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[]> => {
@@ -50,7 +50,8 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
           id,
           titulo,
           descricao,
-          imagem_url
+          imagem_url,
+          learning_worlds_id
         )
       `)
       .eq('aluno_id', userId);
@@ -66,14 +67,26 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
       return getMockCourses();
     }
     
-    // Mapeia os dados da resposta para o formato esperado pela interface
-    return matriculas.map(matricula => ({
-      id: matricula.curso_id,
-      title: matricula.cursos?.titulo || "Sem título",
-      description: matricula.cursos?.descricao || "Sem descrição",
-      thumbnail: matricula.cursos?.imagem_url || "https://via.placeholder.com/300x180?text=Curso",
-      progress: matricula.progresso || 0
-    }));
+    // Para cada matrícula, tenta buscar informações adicionais da API LearnWorlds
+    // No contexto atual, estamos apenas usando os dados do Supabase e acrescentando fallbacks
+    const courses = matriculas.map(matricula => {
+      const curso = matricula.cursos;
+      
+      // Dados do curso, com fallbacks seguros
+      return {
+        id: matricula.curso_id,
+        title: curso?.titulo || "Sem título",
+        description: curso?.descricao || "Sem descrição",
+        thumbnail: curso?.imagem_url || "https://via.placeholder.com/300x180?text=Curso",
+        progress: matricula.progresso || 0,
+        learnWorldsId: curso?.learning_worlds_id || null
+      };
+    });
+    
+    // TODO: Se necessário, enriquecer os dados com informações da API LearnWorlds
+    // usando os learning_worlds_id disponíveis nos cursos
+    
+    return courses;
   } catch (error) {
     console.error("Erro ao buscar cursos do usuário:", error);
     
@@ -162,11 +175,15 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
       
       // Mapeia as aulas para o formato esperado
       if (aulas && aulas.length > 0) {
-        const aulasFormatadas = aulas.map(aula => {
+        const aulasFormatadas = aulas.map((aula, index) => {
           // Verifica se a aula está concluída
           const concluida = aula.progresso_aulas && aula.progresso_aulas.length > 0
             ? aula.progresso_aulas[0].concluido || false
             : false;
+          
+          // A lógica de bloqueio pode ser personalizada
+          // Por exemplo, aulas posteriores podem ser bloqueadas se as anteriores não estiverem concluídas
+          const bloqueada = index > 0 && !todasAulas[index - 1]?.completed;
           
           return {
             id: aula.id,
@@ -175,7 +192,7 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
             duration: aula.duracao || 0,
             videoUrl: aula.url || "https://www.youtube.com/embed/dQw4w9WgXcQ",
             completed: concluida,
-            locked: false // Por padrão, nenhuma aula está bloqueada
+            locked: bloqueada
           };
         });
         
@@ -238,7 +255,7 @@ const getMockLessons = (): LearnWorldsLesson[] => {
       duration: 60 * 60, // 60 minutos em segundos
       videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       completed: false,
-      locked: false
+      locked: true
     }
   ];
 };
@@ -299,6 +316,9 @@ export const markLessonAsCompleted = async (courseId: string, lessonId: string, 
     }
     
     console.log(`Aula ${lessonId} do curso ${courseId} marcada como concluída para o usuário ${userId}`);
+    
+    // TODO: Se necessário, também atualizar o progresso na API LearnWorlds
+    
     return true;
   } catch (error) {
     console.error("Erro ao marcar aula como concluída:", error);
@@ -362,6 +382,9 @@ export const trackVideoProgress = async (courseId: string, lessonId: string, use
     }
     
     console.log(`Progresso de ${progressSeconds}s registrado na aula ${lessonId} do curso ${courseId} para o usuário ${userId}`);
+    
+    // TODO: Se necessário, também atualizar o progresso na API LearnWorlds
+    
     return true;
   } catch (error) {
     console.error("Erro ao registrar progresso do vídeo:", error);

@@ -14,6 +14,7 @@ import {
   getUserCourses, 
   getCourseLessons,
   getCurrentUserId,
+  markLessonAsCompleted,
   type LearnWorldsCourse, 
   type LearnWorldsLesson 
 } from "@/services/learnworlds-api";
@@ -90,47 +91,62 @@ const DetalheCurso: React.FC = () => {
       setCurrentLessonId(lessonId);
     } else if (lesson && lesson.locked) {
       toast({
-        variant: "warning",
+        // Corrigindo o tipo do toast para um valor válido
+        variant: "destructive",
         title: "Aula bloqueada",
         description: "Esta aula ainda não está disponível para visualização.",
       });
     }
   };
   
-  const handleLessonComplete = () => {
-    // Atualiza a lista de aulas para marcar a aula atual como concluída
-    setLessons(prevLessons => 
-      prevLessons.map(lesson => 
-        lesson.id === currentLessonId 
-          ? { ...lesson, completed: true } 
-          : lesson
-      )
-    );
+  const handleLessonComplete = async () => {
+    if (!currentLessonId || !courseId || !userId) return;
     
-    // Atualiza o progresso do curso
-    if (course) {
-      const completedLessons = lessons.filter(l => 
-        l.completed || l.id === currentLessonId
-      ).length;
+    try {
+      // Chama a API para marcar a aula como concluída
+      await markLessonAsCompleted(courseId, currentLessonId, userId);
       
-      const newProgress = Math.floor((completedLessons / lessons.length) * 100);
-      setCourse({
-        ...course,
-        progress: newProgress
+      // Atualiza a lista de aulas localmente
+      setLessons(prevLessons => 
+        prevLessons.map(lesson => 
+          lesson.id === currentLessonId 
+            ? { ...lesson, completed: true } 
+            : lesson
+        )
+      );
+      
+      // Atualiza o progresso do curso
+      if (course) {
+        const completedLessons = lessons.filter(l => 
+          l.completed || l.id === currentLessonId
+        ).length;
+        
+        const newProgress = Math.floor((completedLessons / lessons.length) * 100);
+        setCourse({
+          ...course,
+          progress: newProgress
+        });
+      }
+      
+      toast({
+        title: "Aula concluída!",
+        description: "Seu progresso foi salvo com sucesso.",
       });
-    }
-    
-    toast({
-      title: "Aula concluída!",
-      description: "Seu progresso foi salvo com sucesso.",
-    });
-    
-    // Opcionalmente, avança para a próxima aula não concluída
-    const currentIndex = lessons.findIndex(l => l.id === currentLessonId);
-    const nextIncompleteLesson = lessons.slice(currentIndex + 1).find(l => !l.completed && !l.locked);
-    
-    if (nextIncompleteLesson) {
-      setCurrentLessonId(nextIncompleteLesson.id);
+      
+      // Opcionalmente, avança para a próxima aula não concluída
+      const currentIndex = lessons.findIndex(l => l.id === currentLessonId);
+      const nextIncompleteLesson = lessons.slice(currentIndex + 1).find(l => !l.completed && !l.locked);
+      
+      if (nextIncompleteLesson) {
+        setCurrentLessonId(nextIncompleteLesson.id);
+      }
+    } catch (error) {
+      console.error("Erro ao marcar aula como concluída:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar progresso",
+        description: "Não foi possível salvar seu progresso. Tente novamente mais tarde.",
+      });
     }
   };
   
