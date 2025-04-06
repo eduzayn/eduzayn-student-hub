@@ -25,7 +25,7 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, visualizacao = 'grid' }) =
     if (progress > 30) return "bg-blue-500";
     return "bg-primary";
   };
-
+  
   // Renderização no modo lista
   if (visualizacao === 'list') {
     return (
@@ -56,7 +56,7 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, visualizacao = 'grid' }) =
             <CardFooter className="py-2 px-3 mt-auto flex justify-between items-center">
               <div className="flex items-center text-xs text-muted-foreground">
                 <Clock className="w-3 h-3 mr-1" /> 
-                <span>{curso.duration || "Auto-estudo"}</span>
+                <span>Auto-estudo</span>
               </div>
               <Button asChild size="sm" variant="outline" className="ml-auto">
                 <Link to={`/dashboard/cursos/${curso.id}`}>
@@ -96,12 +96,10 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, visualizacao = 'grid' }) =
             indicatorClassName={getProgressColor(curso.progress)} 
           />
         </div>
-        {curso.duration && (
-          <div className="flex items-center mt-3 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3 mr-1" /> 
-            <span>{curso.duration}</span>
-          </div>
-        )}
+        <div className="flex items-center mt-3 text-xs text-muted-foreground">
+          <Clock className="w-3 h-3 mr-1" /> 
+          <span>Auto-estudo</span>
+        </div>
       </CardContent>
       <CardFooter className="pt-0">
         <Button asChild className="w-full">
