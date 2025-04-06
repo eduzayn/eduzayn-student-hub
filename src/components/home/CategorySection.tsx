@@ -16,7 +16,7 @@ const categories = [
     id: 1,
     name: "Graduação",
     icon: GraduationCap,
-    courses: 48,
+    courses: 60,
     color: "bg-blue-500",
     slug: "graduacao",
     description: "Bacharelados, Licenciaturas e Tecnológicos"
