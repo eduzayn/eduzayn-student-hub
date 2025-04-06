@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MainLayout from "@/components/layout/MainLayout";
 
 const NotFound = () => {
   const location = useLocation();
