@@ -12,6 +12,7 @@ import {
   BookmarkCheck
 } from "lucide-react";
 import { getCachedFreepikImage } from "@/utils/freepikAPI";
+import { supabase } from "@/integrations/supabase/client";
 
 // Categorias atualizadas incluindo número de cursos de pós-graduação
 const categories = [
@@ -109,29 +110,73 @@ const CategorySection = () => {
     
     setCategoryImages(initialImages);
     
-    // Fetch images for each category
-    const loadImages = async () => {
+    // Tentar carregar imagens do Supabase primeiro
+    const checkSupabaseImages = async () => {
       try {
         setLoading(true);
         
-        const imagePromises = categories.map(async (category) => {
-          try {
-            const imageUrl = await getCachedFreepikImage(category.imageQuery);
-            return { id: category.id, imageUrl };
-          } catch (error) {
-            console.warn(`Failed to load image for ${category.name}:`, error);
-            return { id: category.id, imageUrl: '' };
+        // Verificar primeiro se temos imagens no bucket category_images
+        const { data: categoryFiles, error } = await supabase
+          .storage
+          .from('category_images')
+          .list();
+          
+        if (!error && categoryFiles && categoryFiles.length > 0) {
+          // Se temos imagens no bucket, mapear cada categoria para uma imagem
+          const imagesMap = {} as Record<number, string>;
+          
+          for (const category of categories) {
+            // Normalizar nome da categoria para usar como caminho
+            const categoryPath = category.slug || 
+              category.name.toLowerCase().replace(/\s+/g, '-');
+              
+            // Procurar um arquivo que corresponda a esta categoria
+            const matchingFile = categoryFiles.find(file => 
+              file.name.startsWith(categoryPath) || 
+              file.name.includes(categoryPath)
+            );
+            
+            if (matchingFile) {
+              const { data } = supabase
+                .storage
+                .from('category_images')
+                .getPublicUrl(matchingFile.name);
+                
+              imagesMap[category.id] = data.publicUrl;
+            } else {
+              // Se não encontrar, usar o Freepik como fallback
+              try {
+                const imageUrl = await getCachedFreepikImage(category.imageQuery);
+                imagesMap[category.id] = imageUrl;
+              } catch (error) {
+                console.warn(`Failed to load image for ${category.name}:`, error);
+                imagesMap[category.id] = '';
+              }
+            }
           }
-        });
-        
-        const results = await Promise.all(imagePromises);
-        
-        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
-          acc[id] = imageUrl;
-          return acc;
-        }, {} as Record<number, string>);
-        
-        setCategoryImages(imagesMap);
+          
+          setCategoryImages(imagesMap);
+        } else {
+          // Se não tivermos imagens no bucket, usar o Freepik
+          const imagePromises = categories.map(async (category) => {
+            try {
+              const imageUrl = await getCachedFreepikImage(category.imageQuery);
+              return { id: category.id, imageUrl };
+            } catch (error) {
+              console.warn(`Failed to load image for ${category.name}:`, error);
+              return { id: category.id, imageUrl: '' };
+            }
+          });
+          
+          const results = await Promise.all(imagePromises);
+          
+          const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+            acc[id] = imageUrl;
+            return acc;
+          }, {} as Record<number, string>);
+          
+          setCategoryImages(imagesMap);
+        }
       } catch (err) {
         console.error("Failed to load category images:", err);
       } finally {
@@ -139,7 +184,7 @@ const CategorySection = () => {
       }
     };
     
-    loadImages();
+    checkSupabaseImages();
   }, []);
 
   return (
