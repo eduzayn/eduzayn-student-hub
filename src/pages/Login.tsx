@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +55,7 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isLoading, setIsLoading] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -100,6 +102,7 @@ const Login = () => {
     if (!emailNotConfirmed) return;
     
     setIsLoading(true);
+    setAuthError(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -122,6 +125,7 @@ const Login = () => {
       }
     } catch (err: any) {
       console.error(err);
+      setAuthError(err?.message || "Entre em contato com o administrador.");
       toast({
         title: "Falha ao tentar acessar",
         description: err?.message || "Entre em contato com o administrador.",
@@ -135,6 +139,7 @@ const Login = () => {
   async function onLogin(values: LoginFormValues) {
     setIsLoading(true);
     setEmailNotConfirmed(null);
+    setAuthError(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -146,6 +151,8 @@ const Login = () => {
         if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
           setEmailNotConfirmed(values.email);
           throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique no botão abaixo para acessar mesmo assim.");
+        } else if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
+          throw new Error("O login com email está desativado. Entre em contato com o administrador para ativar essa funcionalidade.");
         }
         throw error;
       }
@@ -158,6 +165,7 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error: any) {
       console.error(error);
+      setAuthError(error?.message || "Verifique suas credenciais e tente novamente.");
       toast({
         title: "Erro ao fazer login",
         description: error?.message || "Verifique suas credenciais e tente novamente.",
@@ -170,6 +178,7 @@ const Login = () => {
 
   async function onSignup(values: SignupFormValues) {
     setIsLoading(true);
+    setAuthError(null);
     
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -185,6 +194,9 @@ const Login = () => {
       });
       
       if (error) {
+        if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
+          throw new Error("O cadastro com email está desativado. Entre em contato com o administrador para ativar essa funcionalidade.");
+        }
         throw error;
       }
       
@@ -198,6 +210,7 @@ const Login = () => {
       setActiveTab("login");
     } catch (error: any) {
       console.error(error);
+      setAuthError(error?.message || "Ocorreu um erro ao criar sua conta. Tente novamente.");
       toast({
         title: "Erro ao criar conta",
         description: error?.message || "Ocorreu um erro ao criar sua conta. Tente novamente.",
@@ -222,6 +235,16 @@ const Login = () => {
                 : "Cadastre-se para começar sua jornada de aprendizado"}
             </p>
           </div>
+
+          {authError && (
+            <Alert className="mb-6 border-red-500">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <AlertTitle>Erro de autenticação</AlertTitle>
+              <AlertDescription>
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {emailNotConfirmed && (
             <Alert className="mb-6 border-amber-500">
