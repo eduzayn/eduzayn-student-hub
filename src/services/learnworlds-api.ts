@@ -1,4 +1,3 @@
-
 /**
  * Serviço de integração com a API da LearnWorlds
  * Documentação: https://developers.learnworlds.com/
@@ -19,6 +18,7 @@ interface LearnWorldsLesson {
   duration: number;
   videoUrl: string;
   completed: boolean;
+  locked: boolean;  // Adicionando a propriedade locked
 }
 
 // No ambiente real, essas credenciais devem vir de variáveis de ambiente seguras
@@ -89,7 +89,8 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
         description: "Visão geral e objetivos do curso",
         duration: 15 * 60, // 15 minutos em segundos
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: true
+        completed: true,
+        locked: false
       },
       {
         id: "aula-2",
@@ -97,7 +98,8 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
         description: "Instalação e configuração das ferramentas necessárias",
         duration: 25 * 60, // 25 minutos em segundos
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: true
+        completed: true,
+        locked: false
       },
       {
         id: "aula-3",
@@ -105,7 +107,8 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
         description: "Conceitos fundamentais que você precisa conhecer",
         duration: 45 * 60, // 45 minutos em segundos
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: false
+        completed: false,
+        locked: false
       },
       {
         id: "aula-4",
@@ -113,7 +116,8 @@ export const getCourseLessons = async (courseId: string, userId: string): Promis
         description: "Início da aplicação prática dos conceitos",
         duration: 60 * 60, // 60 minutos em segundos
         videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: false
+        completed: false,
+        locked: false
       }
     ];
   } catch (error) {
