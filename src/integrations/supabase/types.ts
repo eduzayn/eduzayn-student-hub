@@ -9,7 +9,188 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          discount_price: number | null
+          duration: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          learning_worlds_id: string | null
+          price: number
+          short_description: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_price?: number | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          learning_worlds_id?: string | null
+          price: number
+          short_description?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_price?: number | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          learning_worlds_id?: string | null
+          price?: number
+          short_description?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          asaas_subscription_id: string | null
+          course_id: string
+          created_at: string
+          enrollment_date: string
+          expiration_date: string | null
+          id: string
+          last_access_date: string | null
+          learning_worlds_enrollment_id: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          asaas_subscription_id?: string | null
+          course_id: string
+          created_at?: string
+          enrollment_date?: string
+          expiration_date?: string | null
+          id?: string
+          last_access_date?: string | null
+          learning_worlds_enrollment_id?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          asaas_subscription_id?: string | null
+          course_id?: string
+          created_at?: string
+          enrollment_date?: string
+          expiration_date?: string | null
+          id?: string
+          last_access_date?: string | null
+          learning_worlds_enrollment_id?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
