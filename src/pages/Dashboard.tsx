@@ -14,9 +14,19 @@ const Dashboard = () => {
       const isAdminBypass = localStorage.getItem('adminBypassAuthenticated') === 'true';
       
       if (isAdminBypass) {
-        // Redirecionar para o novo portal do aluno na raiz /dashboard
-        console.log("Admin bypass ativado, redirecionando para o novo portal do aluno");
-        return; // O componente AlunoLayout será renderizado automaticamente
+        // Verificar se o usuário é um administrador
+        const isAdmin = localStorage.getItem('adminBypassRole') === 'admin';
+        
+        if (isAdmin) {
+          // Redirecionar para o portal administrativo
+          console.log("Admin detectado, redirecionando para o portal administrativo");
+          navigate("/admin");
+          return;
+        } else {
+          // Redirecionar para o portal do aluno (comportamento padrão)
+          console.log("Usuário comum detectado, permanecendo no portal do aluno");
+          return; // O componente AlunoLayout será renderizado automaticamente
+        }
       }
       
       // Verificar autenticação normal para usuários comuns

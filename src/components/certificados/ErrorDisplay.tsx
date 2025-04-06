@@ -6,7 +6,7 @@ import { AlertTriangle } from "lucide-react";
 
 interface ErrorDisplayProps {
   message?: string;
-  error?: string | null;  // Adicionando a propriedade error
+  error?: string | null;  // Essa propriedade já existe
 }
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message, error }) => {

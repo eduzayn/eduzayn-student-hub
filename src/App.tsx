@@ -8,6 +8,8 @@ import { AuthProvider } from "./hooks/use-auth";
 
 import MainLayout from "./components/layout/MainLayout";
 import AlunoLayout from "./components/layout/AlunoLayout";
+import AdminLayout from "./components/layout/AdminLayout";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Cursos from "./pages/Cursos";
@@ -26,6 +28,19 @@ import Certificados from "./pages/aluno/Certificados";
 import Comunicacao from "./pages/aluno/Comunicacao";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
+
+// Páginas do Portal Administrativo
+import PortalAdministrativo from "./pages/admin/PortalAdministrativo";
+import ModuloChat from "./pages/admin/ModuloChat";
+import ModuloContabilidade from "./pages/admin/ModuloContabilidade";
+import ModuloFinanceiro from "./pages/admin/ModuloFinanceiro";
+import ModuloMaterial from "./pages/admin/ModuloMaterial";
+import ModuloMatriculas from "./pages/admin/ModuloMatriculas";
+import ModuloProfessor from "./pages/admin/ModuloProfessor";
+import ModuloParceiro from "./pages/admin/ModuloParceiro";
+import ModuloPolo from "./pages/admin/ModuloPolo";
+import ModuloRH from "./pages/admin/ModuloRH";
+import ModuloAplicacoes from "./pages/admin/ModuloAplicacoes";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +87,21 @@ const App = () => (
               <Route path="perfil" element={<div className="text-2xl font-bold">Perfil do Aluno</div>} />
               <Route path="configuracoes" element={<div className="text-2xl font-bold">Configurações</div>} />
               <Route path="notificacoes" element={<div className="text-2xl font-bold">Notificações</div>} />
+            </Route>
+            
+            {/* Portal Administrativo */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<PortalAdministrativo />} />
+              <Route path="chat" element={<ModuloChat />} />
+              <Route path="contabilidade" element={<ModuloContabilidade />} />
+              <Route path="financeiro" element={<ModuloFinanceiro />} />
+              <Route path="material" element={<ModuloMaterial />} />
+              <Route path="matriculas" element={<ModuloMatriculas />} />
+              <Route path="professor" element={<ModuloProfessor />} />
+              <Route path="parceiro" element={<ModuloParceiro />} />
+              <Route path="polo" element={<ModuloPolo />} />
+              <Route path="rh" element={<ModuloRH />} />
+              <Route path="aplicacoes" element={<ModuloAplicacoes />} />
             </Route>
             
             {/* Rota de Fallback */}
