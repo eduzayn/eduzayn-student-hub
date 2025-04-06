@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Certificado, Disciplina, Pagamento } from "@/types/certificados";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Certificado, CertificadoResponse, Disciplina, Pagamento } from "@/types/certificados";
 import CertificadosGrid from "@/components/certificados/CertificadosGrid";
 import LoadingSkeleton from "@/components/certificados/LoadingSkeleton";
 import ErrorDisplay from "@/components/certificados/ErrorDisplay";
@@ -11,99 +9,6 @@ import DetalhesCertificadoDialog from "@/components/certificados/DetalhesCertifi
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// Dados simulados para desenvolvimento
-const MOCK_CERTIFICADOS: Certificado[] = [
-  {
-    id: "cert-001",
-    cursoId: "curso-001",
-    cursoNome: "Graduação em Pedagogia",
-    dataInicio: "2023-09-15",
-    cargaHoraria: 3200,
-    status: "disponivel",
-    requisitos: [
-      { id: "req1", descricao: "Aprovado em todas as disciplinas", cumprido: true },
-      { id: "req2", descricao: "Pagamentos em dia", cumprido: true },
-      { id: "req3", descricao: "Completou o tempo mínimo de curso (18 meses)", cumprido: true }
-    ]
-  },
-  {
-    id: "cert-002",
-    cursoId: "curso-002",
-    cursoNome: "Pós-graduação em Gestão Escolar",
-    dataInicio: "2023-05-10",
-    cargaHoraria: 420,
-    status: "indisponivel",
-    requisitos: [
-      { id: "req1", descricao: "Aprovado em todas as disciplinas", cumprido: false, detalhe: "Faltam 2 disciplinas para concluir" },
-      { id: "req2", descricao: "Pagamentos em dia", cumprido: true },
-      { id: "req3", descricao: "Completou o tempo mínimo de curso (18 meses)", cumprido: false, detalhe: "10 meses decorridos de 18 necessários" }
-    ]
-  },
-  {
-    id: "cert-003",
-    cursoId: "curso-003",
-    cursoNome: "Segunda Licenciatura em História",
-    dataInicio: "2022-02-20",
-    dataFim: "2023-10-15",
-    cargaHoraria: 1400,
-    status: "gerado",
-    dataEmissao: "2023-10-20",
-    pdfUrl: "/certificados/certificado-historia.pdf",
-    requisitos: [
-      { id: "req1", descricao: "Aprovado em todas as disciplinas", cumprido: true },
-      { id: "req2", descricao: "Pagamentos em dia", cumprido: true },
-      { id: "req3", descricao: "Completou o tempo mínimo de curso (18 meses)", cumprido: true }
-    ]
-  }
-];
-
-const MOCK_DISCIPLINAS: Record<string, Disciplina[]> = {
-  "curso-001": [
-    { id: "disc-001", nome: "Fundamentos da Educação", nota: 85, concluida: true },
-    { id: "disc-002", nome: "Psicologia da Educação", nota: 92, concluida: true },
-    { id: "disc-003", nome: "Metodologia de Ensino", nota: 78, concluida: true },
-    { id: "disc-004", nome: "Práticas Pedagógicas", nota: 81, concluida: true },
-  ],
-  "curso-002": [
-    { id: "disc-005", nome: "Gestão Educacional", nota: 88, concluida: true },
-    { id: "disc-006", nome: "Políticas Públicas", nota: 75, concluida: true },
-    { id: "disc-007", nome: "Liderança e Inovação", nota: 0, concluida: false },
-    { id: "disc-008", nome: "Projeto Final", nota: 0, concluida: false },
-  ],
-  "curso-003": [
-    { id: "disc-009", nome: "História Antiga", nota: 82, concluida: true },
-    { id: "disc-010", nome: "História Medieval", nota: 79, concluida: true },
-    { id: "disc-011", nome: "História Contemporânea", nota: 85, concluida: true },
-    { id: "disc-012", nome: "Metodologia da Pesquisa", nota: 90, concluida: true },
-  ]
-};
-
-const MOCK_PAGAMENTOS: Record<string, Pagamento[]> = {
-  "curso-001": [
-    { id: "pag-001", status: 'pago', dataVencimento: "2023-09-15", valor: 499.90, numero: 1 },
-    { id: "pag-002", status: 'pago', dataVencimento: "2023-10-15", valor: 499.90, numero: 2 },
-    { id: "pag-003", status: 'pago', dataVencimento: "2023-11-15", valor: 499.90, numero: 3 },
-    { id: "pag-004", status: 'pago', dataVencimento: "2023-12-15", valor: 499.90, numero: 4 },
-    { id: "pag-005", status: 'pago', dataVencimento: "2024-01-15", valor: 499.90, numero: 5 },
-    { id: "pag-006", status: 'pago', dataVencimento: "2024-02-15", valor: 499.90, numero: 6 },
-  ],
-  "curso-002": [
-    { id: "pag-007", status: 'pago', dataVencimento: "2023-05-10", valor: 399.90, numero: 1 },
-    { id: "pag-008", status: 'pago', dataVencimento: "2023-06-10", valor: 399.90, numero: 2 },
-    { id: "pag-009", status: 'pago', dataVencimento: "2023-07-10", valor: 399.90, numero: 3 },
-    { id: "pag-010", status: 'pendente', dataVencimento: "2023-08-10", valor: 399.90, numero: 4 },
-    { id: "pag-011", status: 'pendente', dataVencimento: "2023-09-10", valor: 399.90, numero: 5 },
-  ],
-  "curso-003": [
-    { id: "pag-012", status: 'pago', dataVencimento: "2022-02-20", valor: 549.90, numero: 1 },
-    { id: "pag-013", status: 'pago', dataVencimento: "2022-03-20", valor: 549.90, numero: 2 },
-    { id: "pag-014", status: 'pago', dataVencimento: "2022-04-20", valor: 549.90, numero: 3 },
-    { id: "pag-015", status: 'pago', dataVencimento: "2022-05-20", valor: 549.90, numero: 4 },
-    { id: "pag-016", status: 'pago', dataVencimento: "2022-06-20", valor: 549.90, numero: 5 },
-    { id: "pag-017", status: 'pago', dataVencimento: "2022-07-20", valor: 549.90, numero: 6 },
-  ]
-};
 
 // Calcular tempo decorrido do curso em meses
 const calcularTempoDecorrido = (dataInicio: string): { meses: number; porcentagem: number } => {
@@ -127,39 +32,208 @@ const Certificados: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<string>("todos");
   const { isLoggedIn, userEmail } = useAuth();
-  const { toast } = useToast();
   
   // Estado para o diálogo de detalhes
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [selectedCertificado, setSelectedCertificado] = useState<Certificado | null>(null);
+  
+  // Estados para disciplinas e pagamentos
+  const [disciplinas, setDisciplinas] = useState<Record<string, Disciplina[]>>({});
+  const [pagamentos, setPagamentos] = useState<Record<string, Pagamento[]>>({});
   
   // Função para buscar certificados
   const buscarCertificados = async () => {
     setLoading(true);
     
     try {
-      // Em um ambiente real, aqui você buscaria os dados do Supabase
-      // Exemplo:
-      // const { data, error } = await supabase
-      //   .from('certificados')
-      //   .select('*')
-      //   .eq('aluno_id', userId);
+      // Buscar certificados do usuário logado
+      const { data: user } = await supabase.auth.getUser();
       
-      // Simulando chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user || !user.user) {
+        throw new Error('Usuário não autenticado');
+      }
       
-      // Usando dados de exemplo para desenvolvimento
-      setCertificados(MOCK_CERTIFICADOS);
-      setFilteredCertificados(MOCK_CERTIFICADOS);
+      // Buscar matrículas do aluno
+      const { data: matriculasData, error: matriculasError } = await supabase
+        .from('matriculas')
+        .select(`
+          id,
+          data_inicio,
+          data_conclusao,
+          curso_id,
+          cursos:curso_id (
+            id,
+            titulo,
+            carga_horaria
+          )
+        `)
+        .eq('aluno_id', user.user.id);
+      
+      if (matriculasError) {
+        throw new Error(matriculasError.message);
+      }
+      
+      // Buscar disciplinas (aulas) para cada curso
+      const todosCursos: Record<string, Disciplina[]> = {};
+      const todosPagamentos: Record<string, Pagamento[]> = {};
+      
+      for (const matricula of matriculasData || []) {
+        // Buscar disciplinas/aulas
+        const { data: aulasData, error: aulasError } = await supabase
+          .from('aulas')
+          .select(`
+            id,
+            titulo,
+            modulo_id,
+            modulo:modulo_id (curso_id)
+          `)
+          .eq('modulo:modulo_id.curso_id', matricula.curso_id);
+          
+        if (aulasError) {
+          console.error('Erro ao buscar aulas:', aulasError);
+        } else if (aulasData) {
+          // Buscar progresso das aulas
+          const { data: progressoData, error: progressoError } = await supabase
+            .from('progresso_aulas')
+            .select('aula_id, concluido')
+            .eq('aluno_id', user.user.id)
+            .in('aula_id', aulasData.map(aula => aula.id));
+            
+          if (progressoError) {
+            console.error('Erro ao buscar progresso:', progressoError);
+          }
+          
+          // Mapear aulas para disciplinas
+          const disciplinas: Disciplina[] = aulasData.map(aula => {
+            const progresso = progressoData?.find(p => p.aula_id === aula.id);
+            const nota = progresso?.concluido ? 85 : 0; // Valor simulado para nota
+            
+            return {
+              id: aula.id,
+              nome: aula.titulo,
+              nota: nota,
+              concluida: !!progresso?.concluido
+            };
+          });
+          
+          todosCursos[matricula.curso_id] = disciplinas;
+        }
+        
+        // Buscar pagamentos
+        const { data: parcelasData, error: parcelasError } = await supabase
+          .from('parcelas')
+          .select('*')
+          .eq('aluno_id', user.user.id)
+          .eq('curso_id', matricula.curso_id)
+          .order('numero_parcela');
+          
+        if (parcelasError) {
+          console.error('Erro ao buscar parcelas:', parcelasError);
+        } else if (parcelasData) {
+          // Mapear parcelas para pagamentos
+          const pagamentos: Pagamento[] = parcelasData.map(parcela => {
+            let status: 'pago' | 'pendente' | 'atrasado' = 'pendente';
+            
+            if (parcela.status === 'pago') {
+              status = 'pago';
+            } else {
+              // Verificar se está atrasado
+              const dataVencimento = new Date(parcela.data_vencimento);
+              const hoje = new Date();
+              status = dataVencimento < hoje ? 'atrasado' : 'pendente';
+            }
+            
+            return {
+              id: parcela.id,
+              status: status,
+              dataVencimento: parcela.data_vencimento,
+              valor: parcela.valor,
+              numero: parcela.numero_parcela
+            };
+          });
+          
+          todosPagamentos[matricula.curso_id] = pagamentos;
+        }
+      }
+      
+      setDisciplinas(todosCursos);
+      setPagamentos(todosPagamentos);
+      
+      // Transformar matrículas em certificados
+      const certificadosMapeados: Certificado[] = matriculasData?.map(matricula => {
+        const cursoId = matricula.curso_id;
+        const disciplinasCurso = todosCursos[cursoId] || [];
+        const pagamentosCurso = todosPagamentos[cursoId] || [];
+        
+        // Verificar requisitos
+        const tempoDecorrido = calcularTempoDecorrido(matricula.data_inicio);
+        const disciplinasConcluidas = disciplinasCurso.every(d => d.concluida && d.nota >= 70);
+        const pagamentosQuitados = pagamentosCurso.every(p => p.status === 'pago');
+        const tempoMinimoCumprido = tempoDecorrido.meses >= 18;
+        
+        // Determinar status do certificado
+        let status: 'disponivel' | 'indisponivel' | 'em_processamento' | 'gerado' = 'indisponivel';
+        
+        if (disciplinasConcluidas && pagamentosQuitados && tempoMinimoCumprido) {
+          status = 'disponivel';
+          
+          // Verificar se foi gerado ou está em processamento
+          if (matricula.data_conclusao) {
+            status = 'gerado';
+          }
+        }
+        
+        // Criar lista de requisitos
+        const requisitos = [
+          {
+            id: `req1-${cursoId}`,
+            descricao: 'Aprovado em todas as disciplinas',
+            cumprido: disciplinasConcluidas,
+            detalhe: !disciplinasConcluidas 
+              ? `Faltam ${disciplinasCurso.filter(d => !d.concluida || d.nota < 70).length} disciplinas para concluir` 
+              : undefined
+          },
+          {
+            id: `req2-${cursoId}`,
+            descricao: 'Pagamentos em dia',
+            cumprido: pagamentosQuitados,
+            detalhe: !pagamentosQuitados 
+              ? `${pagamentosCurso.filter(p => p.status !== 'pago').length} pagamentos pendentes` 
+              : undefined
+          },
+          {
+            id: `req3-${cursoId}`,
+            descricao: 'Completou o tempo mínimo de curso (18 meses)',
+            cumprido: tempoMinimoCumprido,
+            detalhe: !tempoMinimoCumprido 
+              ? `${tempoDecorrido.meses} meses decorridos de 18 necessários` 
+              : undefined
+          }
+        ];
+        
+        return {
+          id: matricula.id,
+          cursoId: matricula.curso_id,
+          cursoNome: matricula.cursos?.titulo || 'Curso sem nome',
+          dataInicio: matricula.data_inicio,
+          dataFim: matricula.data_conclusao || undefined,
+          cargaHoraria: matricula.cursos?.carga_horaria || 0,
+          dataEmissao: matricula.data_conclusao || undefined,
+          status: status,
+          pdfUrl: status === 'gerado' ? `/certificados/${matricula.id}.pdf` : undefined,
+          requisitos: requisitos
+        };
+      }) || [];
+      
+      setCertificados(certificadosMapeados);
+      setFilteredCertificados(certificadosMapeados);
       
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao buscar certificados:", err);
       setError("Não foi possível carregar seus certificados. Por favor, tente novamente mais tarde.");
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar certificados",
-        description: "Não foi possível carregar seus certificados. Tente novamente mais tarde.",
+      toast.error("Erro ao carregar certificados", { 
+        description: "Não foi possível carregar seus certificados. Tente novamente mais tarde." 
       });
     } finally {
       setLoading(false);
@@ -192,10 +266,22 @@ const Certificados: React.FC = () => {
   // Solicitar um certificado
   const handleSolicitar = async (cursoId: string) => {
     try {
-      // Simula a chamada para a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const certificado = certificados.find(c => c.cursoId === cursoId);
+      if (!certificado) {
+        throw new Error('Certificado não encontrado');
+      }
       
-      // Atualiza o estado local
+      // Atualizar status no banco de dados
+      const { error: updateError } = await supabase
+        .from('matriculas')
+        .update({ status: 'concluido' })
+        .eq('id', certificado.id);
+        
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+      
+      // Atualizar o estado local
       const novosCertificados = certificados.map(cert => {
         if (cert.cursoId === cursoId) {
           return { ...cert, status: "em_processamento" };
@@ -208,7 +294,7 @@ const Certificados: React.FC = () => {
       toast.success("Certificado solicitado com sucesso", { 
         description: "O seu certificado está em processamento e ficará disponível em breve." 
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao solicitar certificado:", err);
       toast.error("Erro ao solicitar certificado", { 
         description: "Não foi possível processar sua solicitação. Tente novamente mais tarde." 
@@ -226,18 +312,40 @@ const Certificados: React.FC = () => {
   };
   
   // Download de certificado
-  const handleDownload = (certificadoId: string) => {
+  const handleDownload = async (certificadoId: string) => {
     const certificado = certificados.find(cert => cert.id === certificadoId);
     
-    // Em um ambiente real, você redirecionaria para a URL do PDF
-    // ou faria download via API
-    if (certificado?.pdfUrl) {
+    if (!certificado?.pdfUrl) {
+      toast.error("Certificado indisponível", { 
+        description: "Não foi possível baixar o certificado. Tente novamente mais tarde." 
+      });
+      return;
+    }
+    
+    try {
+      // Simulação de download - em produção seria implementado com o Storage do Supabase
       toast.success("Download iniciado", { 
         description: "O download do seu certificado foi iniciado." 
       });
-      // Simulação: window.open(certificado.pdfUrl, '_blank');
-    } else {
-      toast.error("Certificado indisponível", { 
+      
+      // Em um ambiente real, baixaria o PDF do Storage
+      // const { data, error } = await supabase.storage
+      //   .from('certificados')
+      //   .download(`${certificadoId}.pdf`);
+      
+      // if (error) {
+      //   throw error;
+      // }
+      
+      // const url = URL.createObjectURL(data);
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = `certificado-${certificado.cursoNome}.pdf`;
+      // a.click();
+      // URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error("Erro ao baixar certificado:", err);
+      toast.error("Erro ao baixar certificado", { 
         description: "Não foi possível baixar o certificado. Tente novamente mais tarde." 
       });
     }
@@ -260,12 +368,12 @@ const Certificados: React.FC = () => {
   
   // Disciplinas do curso selecionado
   const disciplinasSelecionadas = selectedCertificado 
-    ? MOCK_DISCIPLINAS[selectedCertificado.cursoId] || []
+    ? disciplinas[selectedCertificado.cursoId] || []
     : [];
   
   // Pagamentos do curso selecionado
   const pagamentosSelecionados = selectedCertificado 
-    ? MOCK_PAGAMENTOS[selectedCertificado.cursoId] || []
+    ? pagamentos[selectedCertificado.cursoId] || []
     : [];
   
   return (

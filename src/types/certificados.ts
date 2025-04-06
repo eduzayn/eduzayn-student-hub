@@ -39,3 +39,16 @@ export interface Certificado {
   pdfUrl?: string;
   requisitos: RequisitoCertificado[];
 }
+
+export interface CertificadoResponse {
+  id: string;
+  cursoId: string;
+  cursoNome: string;
+  dataInicio: string;
+  dataFim?: string;
+  cargaHoraria: number;
+  dataEmissao?: string;
+  status: string;
+  pdfUrl?: string;
+  requisitos: RequisitoCertificado[];
+}
