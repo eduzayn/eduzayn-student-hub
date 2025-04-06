@@ -2,22 +2,35 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, BookOpen, Grid3X3, ListFilter } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
 import { getUserCourses, getCurrentUserId, type LearnWorldsCourse } from "@/services/learnworlds-api";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import { toast } from "sonner";
 
 const CursosAluno: React.FC = () => {
   const [cursos, setCursos] = useState<LearnWorldsCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  const { getAllCourses } = useLearnWorldsApi();
   
   // Busca o ID do usuário atual
   useEffect(() => {
     const fetchUserId = async () => {
-      const id = await getCurrentUserId();
-      setUserId(id || "user123"); // Fallback para "user123" se não estiver autenticado
+      try {
+        const id = await getCurrentUserId();
+        setUserId(id || "user123"); // Fallback para "user123" se não estiver autenticado
+      } catch (err) {
+        console.error("Erro ao buscar ID do usuário:", err);
+        toast.error("Erro ao identificar usuário", { 
+          description: "Usando perfil padrão para demonstração" 
+        });
+        setUserId("user123"); // Fallback em caso de erro
+      }
     };
     
     fetchUserId();
@@ -30,19 +43,42 @@ const CursosAluno: React.FC = () => {
       
       try {
         setLoading(true);
-        const data = await getUserCourses(userId);
-        setCursos(data);
+        
+        // Tentativa de usar a API LearnWorlds através do hook
+        const cursosApi = await getAllCourses(1, 20);
+        
+        // Se conseguir dados da API, use-os
+        if (cursosApi && Array.isArray(cursosApi)) {
+          setCursos(cursosApi);
+        } else {
+          // Caso contrário, use a função anterior como fallback
+          const data = await getUserCourses(userId);
+          setCursos(data);
+        }
+        
         setError(null);
       } catch (err) {
         console.error("Erro ao buscar cursos:", err);
         setError("Não foi possível carregar seus cursos. Por favor, tente novamente mais tarde.");
+        
+        // Tenta usar o método fallback se o principal falhar
+        try {
+          const fallbackData = await getUserCourses(userId);
+          if (fallbackData && fallbackData.length > 0) {
+            setCursos(fallbackData);
+            setError(null);
+            toast.info("Usando dados locais", { description: "Não foi possível conectar ao servidor" });
+          }
+        } catch (fallbackErr) {
+          console.error("Erro também no método fallback:", fallbackErr);
+        }
       } finally {
         setLoading(false);
       }
     };
     
     fetchCursos();
-  }, [userId]);
+  }, [userId, getAllCourses]);
   
   // Filtra cursos por progresso
   const cursosEmAndamento = cursos.filter(curso => curso.progress > 0 && curso.progress < 100);
@@ -53,7 +89,9 @@ const CursosAluno: React.FC = () => {
   if (loading) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-6">Meus Cursos</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Meus Cursos</h1>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array(3).fill(0).map((_, index) => (
             <div key={index} className="space-y-3">
@@ -69,7 +107,7 @@ const CursosAluno: React.FC = () => {
   }
   
   // Exibição de erro
-  if (error) {
+  if (error && cursos.length === 0) {
     return (
       <div>
         <h1 className="text-3xl font-bold mb-6">Meus Cursos</h1>
@@ -84,7 +122,34 @@ const CursosAluno: React.FC = () => {
   
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Meus Cursos</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Meus Cursos</h1>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setViewMode('grid')} 
+            className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-primary text-white' : 'bg-muted'}`}
+            aria-label="Visualização em Grade"
+          >
+            <Grid3X3 size={18} />
+          </button>
+          <button 
+            onClick={() => setViewMode('list')} 
+            className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-primary text-white' : 'bg-muted'}`}
+            aria-label="Visualização em Lista"
+          >
+            <ListFilter size={18} />
+          </button>
+        </div>
+      </div>
+      
+      {error && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Tabs defaultValue="em-andamento" className="space-y-4">
         <TabsList>
@@ -116,43 +181,67 @@ const CursosAluno: React.FC = () => {
         
         <TabsContent value="em-andamento">
           {cursosEmAndamento.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+              : "space-y-4"
+            }>
               {cursosEmAndamento.map(curso => (
-                <CursoCard key={curso.id} curso={curso} />
+                <CursoCard key={curso.id} curso={curso} visualizacao={viewMode} />
               ))}
             </div>
           ) : (
-            <p className="text-center py-10 text-muted-foreground">
-              Você não tem cursos em andamento no momento.
-            </p>
+            <div className="text-center py-10 bg-muted/20 rounded-lg border border-dashed">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
+                Você não tem cursos em andamento no momento.
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Escolha um curso da aba "Não Iniciados" para começar seus estudos.
+              </p>
+            </div>
           )}
         </TabsContent>
         
         <TabsContent value="nao-iniciados">
           {cursosNaoIniciados.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+              : "space-y-4"
+            }>
               {cursosNaoIniciados.map(curso => (
-                <CursoCard key={curso.id} curso={curso} />
+                <CursoCard key={curso.id} curso={curso} visualizacao={viewMode} />
               ))}
             </div>
           ) : (
-            <p className="text-center py-10 text-muted-foreground">
-              Você não tem cursos não iniciados.
-            </p>
+            <div className="text-center py-10 bg-muted/20 rounded-lg border border-dashed">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
+                Você não tem cursos não iniciados.
+              </p>
+            </div>
           )}
         </TabsContent>
         
         <TabsContent value="concluidos">
           {cursosConcluidos.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+              : "space-y-4"
+            }>
               {cursosConcluidos.map(curso => (
-                <CursoCard key={curso.id} curso={curso} />
+                <CursoCard key={curso.id} curso={curso} visualizacao={viewMode} />
               ))}
             </div>
           ) : (
-            <p className="text-center py-10 text-muted-foreground">
-              Você ainda não concluiu nenhum curso.
-            </p>
+            <div className="text-center py-10 bg-muted/20 rounded-lg border border-dashed">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
+                Você ainda não concluiu nenhum curso.
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Continue estudando para receber seu certificado!
+              </p>
+            </div>
           )}
         </TabsContent>
       </Tabs>
