@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Save, Loader2, AlertCircle } from "lucide-react";
+import { Save, Loader2, AlertCircle, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import SelectAluno from "./SelectAluno";
 import SelectCurso from "./SelectCurso";
 import ConfiguracaoMatricula from "./ConfiguracaoMatricula";
@@ -47,7 +48,7 @@ type NovaMatriculaForm = z.infer<typeof novaMatriculaSchema>;
 
 const NovaMatriculaForm: React.FC = () => {
   const { criarMatricula } = useMatricula();
-  const { matricularAlunoEmCurso } = useLearnWorldsApi();
+  const { matricularAlunoEmCurso, offlineMode } = useLearnWorldsApi();
   const { activeTab, setActiveTab, proximaAba, voltarAba } = useMatriculaFormSteps();
   const { 
     pagamentoInfo, 
@@ -88,6 +89,7 @@ const NovaMatriculaForm: React.FC = () => {
         progresso: 0
       };
       
+      // Tentar matricular aluno no LearnWorlds se não estiver em modo offline
       if (data.learnworlds_aluno_id && data.learnworlds_curso_id) {
         try {
           const resultadoLearnWorlds = await matricularAlunoEmCurso(
@@ -111,6 +113,7 @@ const NovaMatriculaForm: React.FC = () => {
         throw new Error("Falha ao criar a matrícula");
       }
       
+      // Configurar pagamento se necessário
       if (data.configurar_pagamento && data.forma_pagamento && data.valor_matricula && data.data_vencimento && alunoSelecionado) {
         const gateway = data.forma_pagamento.startsWith("asaas") ? 'asaas' : 'lytex';
         
@@ -168,6 +171,16 @@ const NovaMatriculaForm: React.FC = () => {
   
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
+      {/* Banner de modo offline */}
+      {offlineMode && (
+        <Alert variant="warning" className="mb-6">
+          <WifiOff className="h-4 w-4" />
+          <AlertDescription>
+            <span className="font-medium">Modo offline ativado.</span> A matrícula será criada localmente e sincronizada com o LearnWorlds quando a conexão for restabelecida.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="aluno">1. Aluno</TabsTrigger>

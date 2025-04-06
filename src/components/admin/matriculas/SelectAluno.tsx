@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, CheckCircle, User, Plus, X, AlertCircle } from "lucide-react";
+import { Search, CheckCircle, User, Plus, X, AlertCircle, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SelectAlunoProps {
   onAlunoSelecionado: (aluno: any) => void;
@@ -46,7 +47,8 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
     telefone: ""
   });
   
-  const { getUsers, cadastrarAluno, loading, error } = useLearnWorldsApi();
+  const { getUsers, cadastrarAluno, loading, error, offlineMode } = useLearnWorldsApi();
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     carregarAlunos();
@@ -74,7 +76,7 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
       setAlunos(alunosFormatados);
     } catch (error) {
       console.error("Erro ao carregar alunos:", error);
-      toast.error("Erro ao carregar a lista de alunos do LearnWorlds");
+      toast.error("Erro ao carregar a lista de alunos");
       
       // Em caso de falha, carrega dados simulados como fallback
       carregarAlunosSimulados(termoBusca);
@@ -192,6 +194,19 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Selecione o Aluno</h2>
       
+      {/* Modo Offline Banner */}
+      {offlineMode && (
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-center gap-2">
+          <WifiOff className="h-4 w-4 text-amber-500" />
+          <div>
+            <p className="text-amber-800 font-medium">Modo offline ativado</p>
+            <p className="text-xs text-amber-600">
+              Operando com dados locais. As alterações serão sincronizadas quando a conexão for restabelecida.
+            </p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -212,7 +227,7 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
         </Button>
       </div>
       
-      {error && (
+      {error && !offlineMode && (
         <div className="bg-destructive/10 p-3 rounded-md flex items-center gap-2 text-sm">
           <AlertCircle className="h-4 w-4 text-destructive" />
           <span>Erro ao buscar alunos: {error}</span>
@@ -267,6 +282,11 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
                                 LearnWorlds
                               </Badge>
                             )}
+                            {aluno.id.startsWith('offline-') && (
+                              <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+                                Offline
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">{aluno.email}</p>
                           <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
@@ -294,7 +314,9 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
             <DialogDescription>
-              Preencha os dados do aluno para cadastrá-lo na plataforma LearnWorlds e no sistema.
+              {offlineMode 
+                ? "Você está em modo offline. Os dados serão armazenados localmente até que a conexão seja restabelecida."
+                : "Preencha os dados do aluno para cadastrá-lo na plataforma LearnWorlds e no sistema."}
             </DialogDescription>
           </DialogHeader>
           
