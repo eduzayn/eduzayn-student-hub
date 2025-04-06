@@ -16,7 +16,7 @@ const categories = [
     id: 1,
     name: "Graduação",
     icon: GraduationCap,
-    courses: 60,
+    courses: 74, // Atualizando para 74 cursos (adicionando os 14 bacharelados)
     color: "bg-blue-500",
     slug: "graduacao",
     description: "Bacharelados, Licenciaturas e Tecnológicos"
@@ -88,3 +88,4 @@ const CategorySection = () => {
 };
 
 export default CategorySection;
+

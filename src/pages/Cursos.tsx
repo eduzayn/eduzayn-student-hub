@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Clock, Award } from "lucide-react";
+import { Clock, Award, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // Dados simulados para os cursos
 const mockCourses = [
@@ -424,16 +425,169 @@ const mockCourses = [
     originalPrice: "R$ 697,00",
     image: "/placeholder.svg",
   },
+  
+  // Novos cursos de Bacharelado (3.5+ anos)
+  {
+    id: 42,
+    title: "Administração",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 547,00",
+    originalPrice: "R$ 747,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 43,
+    title: "Biblioteconomia",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 547,00",
+    originalPrice: "R$ 747,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 44,
+    title: "Ciências Contábeis",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 547,00",
+    originalPrice: "R$ 747,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 45,
+    title: "Educação Física",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 547,00",
+    originalPrice: "R$ 747,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 46,
+    title: "Engenharia de Aplicação",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 47,
+    title: "Engenharia de Dados",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 48,
+    title: "Engenharia de Design Digital",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 49,
+    title: "Engenharia de Manutenção e Diagnóstico Industrial",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 50,
+    title: "Engenharia de Sistemas",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 51,
+    title: "Engenharia de Software",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 647,00",
+    originalPrice: "R$ 847,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 52,
+    title: "Psicopedagogia",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 597,00",
+    originalPrice: "R$ 797,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 53,
+    title: "Publicidade e Propaganda",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 597,00",
+    originalPrice: "R$ 797,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 54,
+    title: "Relações Internacionais",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 597,00",
+    originalPrice: "R$ 797,00",
+    image: "/placeholder.svg",
+  },
+  {
+    id: 55,
+    title: "Serviço Social",
+    category: "Bacharelado",
+    categorySlug: "graduacao",
+    duration: "4 anos",
+    price: "R$ 547,00",
+    originalPrice: "R$ 747,00",
+    image: "/placeholder.svg",
+  },
 ];
 
 const Cursos = () => {
   const { categoria } = useParams();
   const [currentCategory, setCurrentCategory] = useState(categoria || "todos");
+  const [searchTerm, setSearchTerm] = useState("");
   
-  // Filtrar cursos com base na categoria selecionada
-  const filteredCourses = currentCategory === "todos" 
-    ? mockCourses 
-    : mockCourses.filter(course => course.categorySlug === currentCategory);
+  useEffect(() => {
+    if (categoria) {
+      setCurrentCategory(categoria);
+    }
+  }, [categoria]);
+  
+  // Filtrar cursos com base na categoria selecionada e termo de busca
+  const filteredCourses = mockCourses
+    .filter(course => currentCategory === "todos" || course.categorySlug === currentCategory)
+    .filter(course => 
+      searchTerm === "" || 
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   // Categorias disponíveis
   const categories = [
@@ -455,6 +609,20 @@ const Cursos = () => {
               : categories.find(cat => cat.id === currentCategory)?.name || "Cursos"}
           </h1>
           
+          {/* Campo de Busca */}
+          <div className="relative mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input 
+                type="text"
+                placeholder="Buscar por nome de curso ou categoria..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+              />
+            </div>
+          </div>
+          
           {/* Filtros de Categoria */}
           <div className="mb-8 overflow-x-auto pb-2">
             <div className="flex space-x-2">
@@ -471,57 +639,71 @@ const Cursos = () => {
             </div>
           </div>
           
+          {/* Resultados da busca */}
+          {searchTerm && (
+            <p className="mb-4 text-gray-600">
+              Exibindo {filteredCourses.length} resultado(s) para "{searchTerm}"
+            </p>
+          )}
+          
           {/* Grid de Cursos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={course.image} 
-                    alt={course.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-primary">{course.category}</Badge>
-                  </div>
-                </div>
-                
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl">
-                    <Link to={`/curso/${course.id}`} className="hover:text-primary transition-colors">
-                      {course.title}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="pb-2 space-y-3">
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span>{course.duration}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Award className="h-4 w-4 mr-1" />
-                      <span>Certificado</span>
+          {filteredCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-medium text-gray-700 mb-2">Nenhum curso encontrado</h3>
+              <p className="text-gray-500">Tente modificar sua busca ou filtros.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map((course) => (
+                <Card key={course.id} className="overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={course.image} 
+                      alt={course.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-primary">{course.category}</Badge>
                     </div>
                   </div>
                   
-                  <div className="flex items-end gap-2">
-                    <span className="text-xl font-bold text-primary">{course.price}</span>
-                    <span className="text-sm text-gray-500 line-through">{course.originalPrice}</span>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button asChild className="w-full">
-                    <Link to={`/curso/${course.id}`}>
-                      Saiba Mais
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl">
+                      <Link to={`/curso/${course.id}`} className="hover:text-primary transition-colors">
+                        {course.title}
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="pb-2 space-y-3">
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{course.duration}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Award className="h-4 w-4 mr-1" />
+                        <span>Certificado</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-end gap-2">
+                      <span className="text-xl font-bold text-primary">{course.price}</span>
+                      <span className="text-sm text-gray-500 line-through">{course.originalPrice}</span>
+                    </div>
+                  </CardContent>
+                  
+                  <CardFooter>
+                    <Button asChild className="w-full">
+                      <Link to={`/curso/${course.id}`}>
+                        Saiba Mais
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>
