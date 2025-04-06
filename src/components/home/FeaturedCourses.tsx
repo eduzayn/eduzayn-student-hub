@@ -8,6 +8,7 @@ import { Users, Clock, BookOpen, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getCachedFreepikImage } from "@/utils/freepikAPI";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // Mock featured courses data
 const featuredCourses = [
@@ -132,17 +133,17 @@ const FeaturedCourses = () => {
   }, []);
 
   return (
-    <section className="eduzayn-section bg-white">
-      <div className="eduzayn-container">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
+    <section className="eduzayn-section bg-gray-50 py-16">
+      <div className="eduzayn-container max-w-7xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
           <div>
-            <h2 className="eduzayn-heading">Cursos em Destaque</h2>
+            <h2 className="eduzayn-heading text-3xl font-bold text-gray-800 mb-3">Cursos em Destaque</h2>
             <p className="text-gray-600 max-w-2xl">
               Conheça os cursos mais populares da EduZayn, escolhidos para impulsionar sua carreira 
               e garantir seu diferencial no mercado de trabalho.
             </p>
           </div>
-          <Button asChild variant="ghost" className="mt-4 md:mt-0">
+          <Button asChild variant="outline" className="mt-4 md:mt-0 hover:bg-primary hover:text-white transition-colors">
             <Link to="/cursos">Ver todos os cursos</Link>
           </Button>
         </div>
@@ -154,32 +155,35 @@ const FeaturedCourses = () => {
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {!loading && featuredCourses.map((course) => (
-            <Card key={course.id} className="eduzayn-card animate-fade-in group">
+            <Card key={course.id} className="eduzayn-card animate-fade-in group hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200">
               <div className="relative overflow-hidden">
-                <img 
-                  src={courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
-                  alt={course.title}
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    // Fallback to placeholder if image fails
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
-                  }}
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
+                <AspectRatio ratio={16/9}>
+                  <img 
+                    src={courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
+                    alt={course.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      // Fallback to placeholder if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
+                    }}
+                  />
+                </AspectRatio>
+                <div className="absolute top-3 left-3 flex gap-2 z-10">
                   {course.isFeatured && (
-                    <Badge variant="secondary" className="bg-primary text-white">
+                    <Badge variant="secondary" className="bg-primary text-white font-medium shadow-sm">
                       Destaque
                     </Badge>
                   )}
                   {course.popular && (
-                    <Badge variant="secondary" className="bg-accent text-white">
+                    <Badge variant="secondary" className="bg-orange-500 text-white font-medium shadow-sm">
                       Popular
                     </Badge>
                   )}
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               
               <CardHeader className="pb-2">
@@ -189,10 +193,10 @@ const FeaturedCourses = () => {
                   </Badge>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm ml-1">{course.rating}</span>
+                    <span className="text-sm ml-1 font-medium">{course.rating}</span>
                   </div>
                 </div>
-                <CardTitle className="text-lg mt-2 line-clamp-2">
+                <CardTitle className="text-lg mt-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
                   <Link 
                     to={`/curso/${course.id}`} 
                     className="hover:text-primary transition-colors"
@@ -218,17 +222,17 @@ const FeaturedCourses = () => {
                   </div>
                 </div>
                 
-                <div className="mt-4">
+                <div className="mt-4 bg-gray-50 -mx-6 px-6 py-3">
                   <div className="text-xl font-bold text-gray-900">{course.price}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 flex items-center justify-between">
                     <span className="line-through">{course.originalPrice || ''}</span>
-                    <span className="ml-2">em até 12x no cartão</span>
+                    <span className="text-green-600 font-medium">em até 12x no cartão</span>
                   </div>
                 </div>
               </CardContent>
               
               <CardFooter className="border-t pt-4">
-                <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90">
+                <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90 shadow-md">
                   <Link to={`/curso/${course.id}`}>
                     Matricule-se
                   </Link>
