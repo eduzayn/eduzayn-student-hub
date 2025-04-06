@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -895,8 +894,7 @@ const CourseList = () => {
               // Tenta encontrar uma imagem relacionada ao título do curso
               const searchTerm = course.title.split(" ")[0]; // Usa a primeira palavra do título
               const imageUrl = await getCachedFreepikImage(
-                `${searchTerm} education course`,
-                500
+                `${searchTerm} education course`
               );
               
               return { ...course, image: imageUrl || "/placeholder.svg" };
