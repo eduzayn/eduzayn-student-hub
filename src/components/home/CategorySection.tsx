@@ -52,6 +52,15 @@ const categories = [
   },
   {
     id: 5,
+    name: "MBA",
+    icon: Briefcase,
+    courses: 20,
+    color: "bg-yellow-500",
+    slug: "mba",
+    description: "Cursos de especialização em gestão empresarial"
+  },
+  {
+    id: 6,
     name: "Formação Livre",
     icon: Library,
     courses: 15,
@@ -59,7 +68,7 @@ const categories = [
     slug: "formacao-livre"
   },
   {
-    id: 6,
+    id: 7,
     name: "Capacitação Profissional",
     icon: Briefcase,
     courses: 22,
@@ -67,7 +76,7 @@ const categories = [
     slug: "capacitacao-profissional"
   },
   {
-    id: 7,
+    id: 8,
     name: "Formação Pedagógica",
     icon: School,
     courses: 13,
