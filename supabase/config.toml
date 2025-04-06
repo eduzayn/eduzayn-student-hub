@@ -29,5 +29,8 @@ site_url = "http://localhost:5173"
 enabled = true
 
 [functions]
-[functions.learnworlds-api]
+[functions.asaas-payments]
+verify_jwt = true
+
+[functions.lytex-integration]
 verify_jwt = true

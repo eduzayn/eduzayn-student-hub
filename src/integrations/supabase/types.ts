@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      aditivos_contrato: {
+        Row: {
+          assinado: boolean | null
+          codigo: string | null
+          conteudo: string
+          contrato_id: string
+          created_at: string
+          data_aceite: string | null
+          data_geracao: string
+          hash_validacao: string | null
+          id: string
+          ip_aceite: string | null
+          motivo: string
+          titulo: string
+          updated_at: string
+          url_aditivo_assinado: string | null
+          versao: string
+        }
+        Insert: {
+          assinado?: boolean | null
+          codigo?: string | null
+          conteudo: string
+          contrato_id: string
+          created_at?: string
+          data_aceite?: string | null
+          data_geracao?: string
+          hash_validacao?: string | null
+          id?: string
+          ip_aceite?: string | null
+          motivo: string
+          titulo: string
+          updated_at?: string
+          url_aditivo_assinado?: string | null
+          versao: string
+        }
+        Update: {
+          assinado?: boolean | null
+          codigo?: string | null
+          conteudo?: string
+          contrato_id?: string
+          created_at?: string
+          data_aceite?: string | null
+          data_geracao?: string
+          hash_validacao?: string | null
+          id?: string
+          ip_aceite?: string | null
+          motivo?: string
+          titulo?: string
+          updated_at?: string
+          url_aditivo_assinado?: string | null
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aditivos_contrato_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aulas: {
         Row: {
           data_atualizacao: string | null
@@ -129,6 +191,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      contratos: {
+        Row: {
+          aluno_id: string
+          assinado: boolean | null
+          codigo: string | null
+          conteudo: string
+          created_at: string
+          data_aceite: string | null
+          data_geracao: string
+          hash_validacao: string | null
+          id: string
+          ip_aceite: string | null
+          matricula_id: string | null
+          titulo: string
+          updated_at: string
+          url_contrato_assinado: string | null
+          versao: string
+        }
+        Insert: {
+          aluno_id: string
+          assinado?: boolean | null
+          codigo?: string | null
+          conteudo: string
+          created_at?: string
+          data_aceite?: string | null
+          data_geracao?: string
+          hash_validacao?: string | null
+          id?: string
+          ip_aceite?: string | null
+          matricula_id?: string | null
+          titulo: string
+          updated_at?: string
+          url_contrato_assinado?: string | null
+          versao: string
+        }
+        Update: {
+          aluno_id?: string
+          assinado?: boolean | null
+          codigo?: string | null
+          conteudo?: string
+          created_at?: string
+          data_aceite?: string | null
+          data_geracao?: string
+          hash_validacao?: string | null
+          id?: string
+          ip_aceite?: string | null
+          matricula_id?: string | null
+          titulo?: string
+          updated_at?: string
+          url_contrato_assinado?: string | null
+          versao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courses: {
         Row: {
@@ -351,6 +475,50 @@ export type Database = {
           },
         ]
       }
+      historico_matricula: {
+        Row: {
+          alterado_por: string | null
+          created_at: string
+          data_alteracao: string
+          id: string
+          matricula_id: string
+          motivo: string | null
+          observacoes: string | null
+          status_anterior: string
+          status_novo: string
+        }
+        Insert: {
+          alterado_por?: string | null
+          created_at?: string
+          data_alteracao?: string
+          id?: string
+          matricula_id: string
+          motivo?: string | null
+          observacoes?: string | null
+          status_anterior: string
+          status_novo: string
+        }
+        Update: {
+          alterado_por?: string | null
+          created_at?: string
+          data_alteracao?: string
+          id?: string
+          matricula_id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          status_anterior?: string
+          status_novo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_matricula_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matriculas: {
         Row: {
           aluno_id: string
@@ -359,10 +527,14 @@ export type Database = {
           data_conclusao: string | null
           data_criacao: string | null
           data_inicio: string | null
+          forma_ingresso: string | null
           id: string
           learning_worlds_enrollment_id: string | null
+          observacoes: string | null
+          origem_matricula: string | null
           progresso: number | null
           status: Database["public"]["Enums"]["status_matricula"] | null
+          turno: string | null
         }
         Insert: {
           aluno_id: string
@@ -371,10 +543,14 @@ export type Database = {
           data_conclusao?: string | null
           data_criacao?: string | null
           data_inicio?: string | null
+          forma_ingresso?: string | null
           id?: string
           learning_worlds_enrollment_id?: string | null
+          observacoes?: string | null
+          origem_matricula?: string | null
           progresso?: number | null
           status?: Database["public"]["Enums"]["status_matricula"] | null
+          turno?: string | null
         }
         Update: {
           aluno_id?: string
@@ -383,10 +559,14 @@ export type Database = {
           data_conclusao?: string | null
           data_criacao?: string | null
           data_inicio?: string | null
+          forma_ingresso?: string | null
           id?: string
           learning_worlds_enrollment_id?: string | null
+          observacoes?: string | null
+          origem_matricula?: string | null
           progresso?: number | null
           status?: Database["public"]["Enums"]["status_matricula"] | null
+          turno?: string | null
         }
         Relationships: [
           {
@@ -439,6 +619,68 @@ export type Database = {
             columns: ["curso_id"]
             isOneToOne: false
             referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos_matricula: {
+        Row: {
+          comprovante_url: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          desconto: number | null
+          forma_pagamento: string
+          gateway: string
+          gateway_payment_id: string | null
+          id: string
+          link_pagamento: string | null
+          matricula_id: string
+          status: Database["public"]["Enums"]["status_pagamento_matricula"]
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          desconto?: number | null
+          forma_pagamento: string
+          gateway: string
+          gateway_payment_id?: string | null
+          id?: string
+          link_pagamento?: string | null
+          matricula_id: string
+          status?: Database["public"]["Enums"]["status_pagamento_matricula"]
+          tipo: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          desconto?: number | null
+          forma_pagamento?: string
+          gateway?: string
+          gateway_payment_id?: string | null
+          id?: string
+          link_pagamento?: string | null
+          matricula_id?: string
+          status?: Database["public"]["Enums"]["status_pagamento_matricula"]
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_matricula_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
             referencedColumns: ["id"]
           },
         ]
@@ -655,6 +897,13 @@ export type Database = {
       status_financeiro: "em_dia" | "pendente" | "atrasado" | "bloqueado"
       status_matricula: "ativo" | "inativo" | "trancado" | "formado"
       status_pagamento: "pendente" | "pago" | "atrasado" | "em_negociacao"
+      status_pagamento_matricula:
+        | "pendente"
+        | "processando"
+        | "pago"
+        | "cancelado"
+        | "atrasado"
+        | "estornado"
     }
     CompositeTypes: {
       [_ in never]: never
