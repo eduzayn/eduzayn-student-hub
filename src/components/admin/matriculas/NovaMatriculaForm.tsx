@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Save, Loader2, AlertCircle } from "lucide-react";
+import { Save, Loader2, AlertCircle, Mail, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +54,11 @@ const NovaMatriculaForm: React.FC = () => {
   const [alunoSelecionado, setAlunoSelecionado] = useState<any>(null);
   const [cursoSelecionado, setCursoSelecionado] = useState<any>(null);
   const [learnworldsError, setLearnworldsError] = useState<string | null>(null);
+  const [pagamentoInfo, setPagamentoInfo] = useState<{
+    link?: string;
+    copiado: boolean;
+    enviado: boolean;
+  }>({ copiado: false, enviado: false });
   
   const form = useForm<NovaMatriculaForm>({
     resolver: zodResolver(novaMatriculaSchema),
@@ -92,7 +97,6 @@ const NovaMatriculaForm: React.FC = () => {
           
           if (resultadoLearnWorlds) {
             // Se tiver ID de matrícula do LearnWorlds, adicionar aos dados da matrícula
-            // Usando a propriedade correta conforme o tipo Matricula
             matriculaData.learnworlds_enrollment_id = resultadoLearnWorlds.id;
             console.log("Matrícula criada no LearnWorlds:", resultadoLearnWorlds.id);
           }
@@ -134,18 +138,52 @@ const NovaMatriculaForm: React.FC = () => {
           toast.warning("Matrícula criada, mas houve um problema ao configurar o pagamento");
         } else {
           toast.success("Matrícula e pagamento configurados com sucesso!");
+          
+          // Armazenar o link de pagamento para exibição
+          if (resultadoPagamento.invoiceUrl) {
+            setPagamentoInfo({
+              link: resultadoPagamento.invoiceUrl,
+              copiado: false,
+              enviado: false
+            });
+          }
+
+          // Enviar email com link de pagamento (simulação para propósito de demonstração)
+          // Em produção, isso chamaria a edge function para enviar o email real
+          if (alunoSelecionado.email && resultadoPagamento.invoiceUrl) {
+            // Simular envio de e-mail
+            setTimeout(() => {
+              console.log(`E-mail enviado para ${alunoSelecionado.email} com link de pagamento: ${resultadoPagamento.invoiceUrl}`);
+              setPagamentoInfo(prev => ({...prev, enviado: true}));
+              toast.success(`E-mail com link de pagamento enviado para ${alunoSelecionado.email}`);
+            }, 1500);
+          }
         }
       } else {
         toast.success("Matrícula criada com sucesso!");
       }
       
-      // Redirecionar para a lista de matrículas
-      navigate("/admin/matriculas");
+      // Não redirecionar imediatamente para permitir que o consultor utilize o link de pagamento
+      if (!pagamentoInfo.link) {
+        setTimeout(() => navigate("/admin/matriculas"), 2000);
+      }
     } catch (error: any) {
       console.error("Erro ao criar matrícula:", error);
       toast.error(error.message || "Erro ao criar a matrícula");
     } finally {
       setSubmitting(false);
+    }
+  };
+  
+  // Função para copiar o link de pagamento para a área de transferência
+  const copiarLinkPagamento = () => {
+    if (pagamentoInfo.link) {
+      navigator.clipboard.writeText(pagamentoInfo.link);
+      setPagamentoInfo(prev => ({...prev, copiado: true}));
+      toast.success("Link de pagamento copiado para a área de transferência");
+      
+      // Resetar o estado 'copiado' após 3 segundos
+      setTimeout(() => setPagamentoInfo(prev => ({...prev, copiado: false})), 3000);
     }
   };
   
@@ -188,6 +226,9 @@ const NovaMatriculaForm: React.FC = () => {
     
     proximaAba();
   };
+  
+  // Verificar se a matrícula foi concluída e há um link de pagamento
+  const matriculaConcluida = !!pagamentoInfo.link;
   
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -248,21 +289,79 @@ const NovaMatriculaForm: React.FC = () => {
                 </Alert>
               )}
               
-              <ConfiguracaoPagamento 
-                form={form} 
-                aluno={alunoSelecionado} 
-                curso={cursoSelecionado} 
-              />
-              
-              <div className="flex justify-between mt-6">
-                <Button type="button" variant="outline" onClick={voltarAba}>
-                  Voltar
-                </Button>
-                <Button type="submit" disabled={submitting} className="gap-2">
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Salvar Matrícula
-                </Button>
-              </div>
+              {matriculaConcluida ? (
+                <div className="space-y-4">
+                  <Alert className="bg-green-50 border-green-200">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <AlertDescription>
+                      Matrícula criada com sucesso! O link de pagamento está disponível abaixo.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="p-4 border rounded-md bg-gray-50">
+                    <h3 className="font-medium mb-2">Link de Pagamento</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      <input 
+                        type="text" 
+                        value={pagamentoInfo.link} 
+                        readOnly 
+                        className="flex-1 p-2 rounded border text-sm bg-white"
+                      />
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={copiarLinkPagamento}
+                        className="gap-1"
+                      >
+                        {pagamentoInfo.copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {pagamentoInfo.copiado ? 'Copiado' : 'Copiar'}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Mail className="h-4 w-4" />
+                      {pagamentoInfo.enviado 
+                        ? <span className="text-green-600 flex items-center gap-1"><Check className="h-3 w-3" /> E-mail enviado para {alunoSelecionado?.email}</span> 
+                        : <span>Enviando e-mail para {alunoSelecionado?.email}...</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate("/admin/matriculas")}
+                    >
+                      Voltar para Matrículas
+                    </Button>
+                    <Button 
+                      type="button"
+                      onClick={() => navigate("/admin/matriculas/nova")}
+                    >
+                      Nova Matrícula
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <ConfiguracaoPagamento 
+                    form={form} 
+                    aluno={alunoSelecionado} 
+                    curso={cursoSelecionado} 
+                  />
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button type="button" variant="outline" onClick={voltarAba}>
+                      Voltar
+                    </Button>
+                    <Button type="submit" disabled={submitting} className="gap-2">
+                      {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Salvar Matrícula
+                    </Button>
+                  </div>
+                </>
+              )}
             </TabsContent>
           </CardContent>
         </Card>

@@ -1,4 +1,3 @@
-
 export interface Aluno {
   id: string;
   nome: string;
@@ -30,6 +29,7 @@ export interface Matricula {
   turno?: string;
   observacoes?: string;
   progresso?: number;
+  learnworlds_enrollment_id?: string;
 }
 
 export interface Contrato {
