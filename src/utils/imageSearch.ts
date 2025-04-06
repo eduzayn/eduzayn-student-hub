@@ -33,7 +33,7 @@ export function getContextImage(context: string): string {
     "sports", "esportes", "fitness", "academia", "gym"
   ];
   
-  // Novos termos para verificar se o contexto está relacionado à administração
+  // Termos para verificar se o contexto está relacionado à administração
   const administrationTerms = [
     "administração", "administracao", "gestão", "gestao", "negócios", "negocios",
     "business", "management", "administrador", "finanças", "financas", 
@@ -41,8 +41,33 @@ export function getContextImage(context: string): string {
     "mba", "empreendedor", "empreendedorismo"
   ];
   
+  // Novos termos para verificar se o contexto está relacionado a cursos de direito
+  const lawTerms = [
+    "direito", "direito administrativo", "direito civil", "direito constitucional",
+    "direito penal", "direito tributário", "direito empresarial", "direito do trabalho",
+    "direito previdenciário", "direito digital", "direito ambiental", "direito internacional",
+    "direito imobiliário", "direito eleitoral", "direito educacional", "direito contratual",
+    "direito público", "direito processual", "arbitragem", "compliance", "perícia",
+    "law", "legal", "jurídico", "legislação"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica se o contexto contém termos relacionados a cursos de direito
+  for (const term of lawTerms) {
+    if (normalizedContext.includes(term)) {
+      // Usa o mapeamento específico se existe, ou faz alternância com base no termo
+      if (CONTEXT_IMAGES[term]) {
+        return CONTEXT_IMAGES[term];
+      } else {
+        // Alternância baseada no comprimento do termo para criar variedade
+        return normalizedContext.length % 2 === 0 
+          ? "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png" 
+          : "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png";
+      }
+    }
+  }
   
   // Verifica se o contexto contém termos relacionados à administração
   for (const term of administrationTerms) {
