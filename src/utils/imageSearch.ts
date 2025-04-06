@@ -1,3 +1,4 @@
+
 import { CONTEXT_IMAGES, PLACEHOLDER_IMAGES, imageCache } from './imageMapping';
 
 /**
@@ -18,6 +19,13 @@ export function getContextImage(context: string): string {
     "teacher training", "formação de professores", "formacao de professores"
   ];
   
+  // Verifica se o contexto está relacionado à segunda licenciatura
+  const secondDegreeTerms = [
+    "segunda licenciatura", "segunda-licenciatura", "sociologia", "filosofia",
+    "geografia", "história", "letras", "matemática", "ciências da religião",
+    "educação física", "second degree", "licenciatura"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
   
@@ -32,6 +40,13 @@ export function getContextImage(context: string): string {
   for (const term of pedagogicalTrainingTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png";
+    }
+  }
+  
+  // Verifica se o contexto contém termos relacionados à segunda licenciatura
+  for (const term of secondDegreeTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png";
     }
   }
   

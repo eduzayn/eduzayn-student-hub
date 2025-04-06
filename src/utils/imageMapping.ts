@@ -3,7 +3,7 @@
 export const CONTEXT_IMAGES = {
   // Education categories
   "graduacao": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "segunda-licenciatura": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "segunda-licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "segunda-graduacao-bacharelado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "pos-graduacao": null,
   "mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
@@ -13,7 +13,7 @@ export const CONTEXT_IMAGES = {
   
   // Course topics
   "education graduation university": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "teaching license education": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "teaching license education": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "bachelor degree education": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "postgraduate education specialization": null,
   "business management mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
@@ -41,7 +41,7 @@ export const CONTEXT_IMAGES = {
   
   // Adicionando chaves específicas para elementos da interface
   "hero-banner": "/lovable-uploads/638ad6c9-a3be-4cca-85e0-145d4f8f4974.png",
-  "about-us": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "about-us": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "testimonials": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "call-to-action": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   
@@ -65,16 +65,16 @@ export const CONTEXT_IMAGES = {
   "adhd": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
   
   // Adicionando cursos específicos de segunda licenciatura
-  "sociologia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "ciências da religião": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "educação física": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "filosofia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "geografia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "história": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "letras": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "matemática": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "second degree": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "licenciatura": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "sociologia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "ciências da religião": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "educação física": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "filosofia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "geografia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "história": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "letras": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "matemática": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "second degree": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   
   // Atualização - Termos para formação pedagógica
   "formacao pedagogica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
@@ -91,7 +91,7 @@ export const CONTEXT_IMAGES = {
 // Imagens de fallback quando o contexto não é encontrado
 export const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   null,
   "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
@@ -100,4 +100,3 @@ export const PLACEHOLDER_IMAGES = [
 
 // Cache para armazenar imagens já buscadas por categoria
 export const imageCache: Record<string, string> = {};
-
