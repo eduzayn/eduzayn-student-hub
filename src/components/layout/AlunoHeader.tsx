@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from "@/components/ui/popover";
+} from "@/components/ui/dropdown-menu";
 import { 
   SidebarTrigger
 } from "@/components/ui/sidebar";
