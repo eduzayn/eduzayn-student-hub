@@ -26,7 +26,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public Routes - Encapsuladas pelo MainLayout */}
+          {/* Rotas Públicas - Todas usam MainLayout */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/cursos" element={<Cursos />} />
@@ -42,7 +42,7 @@ const App = () => (
           {/* Dashboard Route - Implementará seu próprio layout */}
           <Route path="/dashboard/*" element={<Dashboard />} />
           
-          {/* Fallback Route */}
+          {/* Rota de Fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
