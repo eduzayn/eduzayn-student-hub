@@ -93,9 +93,10 @@ export const useMatricula = () => {
     setError(null);
     
     try {
+      // Aqui está a correção: não usar array na inserção
       const { data, error } = await supabase
         .from('matriculas')
-        .insert([matriculaData])
+        .insert(matriculaData)
         .select('id')
         .single();
         
@@ -127,10 +128,10 @@ export const useMatricula = () => {
     setError(null);
     
     try {
-      // Atualizar a matrícula
+      // Atualizar a matrícula - usando casting para resolver problema de tipos
       const { error: updateError } = await supabase
         .from('matriculas')
-        .update({ status: novoStatus })
+        .update({ status: novoStatus as any })
         .eq('id', id);
         
       if (updateError) throw updateError;
@@ -146,13 +147,13 @@ export const useMatricula = () => {
       
       const { error: historicoError } = await supabase
         .from('historico_matricula')
-        .insert([historicoData]);
+        .insert(historicoData);
         
       if (historicoError) {
         // Reverter atualização da matrícula em caso de erro ao registrar histórico
         await supabase
           .from('matriculas')
-          .update({ status: statusAnterior })
+          .update({ status: statusAnterior as any })
           .eq('id', id);
           
         throw historicoError;
@@ -192,10 +193,10 @@ export const useMatricula = () => {
         
       if (fetchError) throw fetchError;
       
-      // Atualizar a matrícula
+      // Atualizar a matrícula - usando casting para resolver problema de tipos
       const { data: matriculaAtualizada, error: updateError } = await supabase
         .from('matriculas')
-        .update(dadosAtualizacao)
+        .update(dadosAtualizacao as any)
         .eq('id', id)
         .select()
         .single();
@@ -214,7 +215,7 @@ export const useMatricula = () => {
         
         const { error: historicoError } = await supabase
           .from('historico_matricula')
-          .insert([historicoData]);
+          .insert(historicoData);
           
         if (historicoError) {
           toast.error(`Matrícula atualizada, mas houve erro ao registrar histórico: ${historicoError.message}`);
