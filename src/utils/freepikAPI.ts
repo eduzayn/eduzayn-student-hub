@@ -56,41 +56,61 @@ const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 ];
 
-/**
- * Returns an image URL based on the context
- * @param context The category or search term to find an image for
- * @returns A placeholder image URL that matches the context
- */
+// Função mais poderosa e flexível para encontrar imagens correspondentes para contextos educacionais
 function getContextImage(context: string): string {
-  // Normalize the context to improve matching
+  // Normaliza o contexto para melhorar a correspondência
   const normalizedContext = context.toLowerCase().trim();
   
-  // Try to find a direct match
+  // Tenta encontrar uma correspondência direta
   if (CONTEXT_IMAGES[normalizedContext]) {
     return CONTEXT_IMAGES[normalizedContext];
   }
   
-  // Try to find partial matches
+  // Tenta encontrar correspondências parciais com pontuação
+  let bestMatch = "";
+  let bestScore = 0;
+  
   for (const key in CONTEXT_IMAGES) {
-    if (normalizedContext.includes(key.toLowerCase()) || key.toLowerCase().includes(normalizedContext)) {
-      return CONTEXT_IMAGES[key];
+    // Calcula uma pontuação simples baseada em quantas palavras são compartilhadas
+    const keyWords = key.toLowerCase().split(/\s+/);
+    const contextWords = normalizedContext.split(/\s+/);
+    
+    let matchCount = 0;
+    for (const word of contextWords) {
+      if (word.length > 2 && keyWords.some(kw => kw.includes(word) || word.includes(kw))) {
+        matchCount++;
+      }
+    }
+    
+    // Se o contexto está completamente contido na chave ou vice-versa
+    if (key.toLowerCase().includes(normalizedContext) || normalizedContext.includes(key.toLowerCase())) {
+      matchCount += 2;
+    }
+    
+    if (matchCount > bestScore) {
+      bestScore = matchCount;
+      bestMatch = key;
     }
   }
   
-  // Return a random image if no match
+  // Se encontrou uma correspondência parcial boa
+  if (bestScore > 0) {
+    return CONTEXT_IMAGES[bestMatch];
+  }
+  
+  // Retorna uma imagem aleatória se não encontrar nada
   const index = Math.floor(Math.random() * PLACEHOLDER_IMAGES.length);
   return PLACEHOLDER_IMAGES[index];
 }
 
 /**
- * Searches for images based on a query
- * @param query The search term
- * @param limit Maximum number of images to return (default: 1)
- * @returns An array of image URLs or placeholders if failed
+ * Returns an image URL based on the context
+ * @param context The category or search term to find an image for
+ * @returns A placeholder image URL that matches the context
  */
-export async function searchFreepikImages(query: string, limit: number = 1): Promise<string[]> {
+export function searchFreepikImages(query: string, limit: number = 1): Promise<string[]> {
   // Return context-specific images
-  return Array(limit).fill('').map(() => getContextImage(query));
+  return Promise.resolve(Array(limit).fill('').map(() => getContextImage(query)));
 }
 
 /**
@@ -98,8 +118,8 @@ export async function searchFreepikImages(query: string, limit: number = 1): Pro
  * @param query The search term
  * @returns A single image URL that matches the context
  */
-export async function getFreepikImage(query: string): Promise<string> {
-  return getContextImage(query);
+export function getFreepikImage(query: string): Promise<string> {
+  return Promise.resolve(getContextImage(query));
 }
 
 // Cache mechanism to store already fetched images by category
@@ -125,11 +145,11 @@ export async function getCachedFreepikImage(query: string): Promise<string> {
 }
 
 /**
- * Uploads an image to Supabase storage
- * @param file The file to upload
- * @param path The path in the bucket (e.g., 'category-name/image.png')
- * @param bucket The bucket to upload to
- * @returns The public URL of the uploaded image
+ * Faz upload de uma imagem para o armazenamento do Supabase
+ * @param file O arquivo para fazer upload
+ * @param path O caminho no bucket (ex: 'categoria/imagem.png')
+ * @param bucket O bucket para fazer upload
+ * @returns A URL pública da imagem carregada
  */
 export async function uploadImage(
   file: File,
@@ -137,7 +157,7 @@ export async function uploadImage(
   bucket: 'course_images' | 'category_images' | 'avatars'
 ): Promise<string | undefined> {
   try {
-    // Upload the file
+    // Upload do arquivo
     const { error: uploadError } = await supabase
       .storage
       .from(bucket)
@@ -147,12 +167,12 @@ export async function uploadImage(
       });
       
     if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+      console.error('Erro ao fazer upload da imagem:', uploadError);
       toast.error('Erro ao fazer upload da imagem');
       return undefined;
     }
     
-    // Get the public URL
+    // Obter a URL pública
     const { data } = supabase
       .storage
       .from(bucket)
@@ -160,8 +180,18 @@ export async function uploadImage(
       
     return data.publicUrl;
   } catch (error) {
-    console.error('Error in uploadImage:', error);
+    console.error('Erro em uploadImage:', error);
     toast.error('Erro ao processar imagem');
     return undefined;
   }
+}
+
+// Adicionando uma função para atualizar manualmente uma imagem de um curso no cache
+export function setManualCourseImage(courseId: number, imageUrl: string): void {
+  imageCache[`course-${courseId}`] = imageUrl;
+}
+
+// Adicionando uma função para atualizar uma correspondência de contexto específica
+export function setContextImage(context: string, imageUrl: string): void {
+  CONTEXT_IMAGES[context.toLowerCase().trim()] = imageUrl;
 }
