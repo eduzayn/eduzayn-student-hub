@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import CertificadoCard from "@/components/certificados/CertificadoCard";
@@ -23,21 +22,17 @@ const Certificados = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [statusFiltro, setStatusFiltro] = useState<'todos' | StatusCertificado>('todos');
 
-  // Buscar matriculas do aluno
   const { data: matriculas, isLoading: isLoadingMatriculas, error: matriculasError } = useQuery({
     queryKey: ['matriculas-aluno'],
     queryFn: async () => {
-      // Em um cenário real, buscaríamos o ID do aluno autenticado
-      const alunoId = "aluno-id"; // Placeholder para o ID do aluno autenticado
-      
-      // Mock dos dados - Em produção, seria uma chamada ao Supabase
+      const alunoId = "aluno-id";
       return [
         {
           id: "1",
           aluno_id: alunoId,
           curso_id: "curso-1",
           data_inicio: new Date('2023-01-15').toISOString(),
-          status: "ativo", // Aqui usamos um status válido
+          status: "ativo",
           curso: {
             titulo: "MBA em Gestão de Projetos",
             carga_horaria: 420
@@ -49,7 +44,7 @@ const Certificados = () => {
           curso_id: "curso-2",
           data_inicio: new Date('2022-08-10').toISOString(),
           data_conclusao: new Date('2024-02-15').toISOString(),
-          status: "formado", // Aqui usamos um status válido
+          status: "formado",
           curso: {
             titulo: "Especialização em Marketing Digital",
             carga_horaria: 380
@@ -59,11 +54,9 @@ const Certificados = () => {
     }
   });
 
-  // Consultar certificados
   const { data: certificados, isLoading: isLoadingCertificados, error: certificadosError, refetch: refetchCertificados } = useQuery({
     queryKey: ['certificados'],
     queryFn: async () => {
-      // Mock - Em produção, seria uma chamada ao Supabase
       const certificadosMock: CertificadoResponse[] = [
         {
           id: "cert-1",
@@ -83,7 +76,6 @@ const Certificados = () => {
         }
       ];
       
-      // Converter para o tipo correto
       return certificadosMock.map(cert => ({
         ...cert,
         status: cert.status as StatusCertificado
@@ -92,11 +84,9 @@ const Certificados = () => {
     enabled: !isLoadingMatriculas && !!matriculas
   });
 
-  // Verificar requisitos para certificado
   const { data: requisitos, isLoading: isLoadingRequisitos } = useQuery({
     queryKey: ['requisitos-certificado'],
     queryFn: async () => {
-      // No cenário real, verificaríamos os requisitos no backend
       const requisitosMock = {
         "curso-1": [
           { 
@@ -141,10 +131,8 @@ const Certificados = () => {
     enabled: !isLoadingMatriculas && !!matriculas
   });
 
-  // Solicitação de emissão de certificado
   const solicitarCertificado = useMutation({
     mutationFn: async (cursoId: string) => {
-      // Simular requisição para emissão de certificado
       return new Promise(resolve => setTimeout(() => resolve({ success: true }), 1500));
     },
     onSuccess: () => {
@@ -163,13 +151,10 @@ const Certificados = () => {
     }
   });
 
-  // Processar informações de certificados a partir das matrículas
   useEffect(() => {
     if (matriculas && requisitos && !certificados) {
       const processarCertificados = async () => {
         try {
-          // Aqui processamos cada matrícula para criar objetos de certificado
-          // Em um ambiente real, esta lógica estaria no backend
           const certProcessados = matriculas.map(matricula => {
             const reqs = requisitos[matricula.curso_id] || [];
             const todosRequisitosCumpridos = reqs.every(req => req.cumprido);
@@ -200,19 +185,33 @@ const Certificados = () => {
     }
   }, [matriculas, requisitos, certificados]);
 
-  const handleAbrirDetalhes = (certificado: Certificado) => {
-    setCertificadoSelecionado(certificado);
-    setIsDialogOpen(true);
+  const handleVerificarRequisitos = (cursoId: string | Certificado) => {
+    if (typeof cursoId !== 'string') {
+      setCertificadoSelecionado(cursoId);
+      setIsDialogOpen(true);
+      return;
+    }
+    
+    const certificado = certificados?.find(c => c.cursoId === cursoId);
+    if (certificado) {
+      setCertificadoSelecionado(certificado);
+      setIsDialogOpen(true);
+    }
   };
 
-  const handleSolicitarCertificado = (cursoId: string) => {
-    solicitarCertificado.mutate(cursoId);
+  const handleAbrirDetalhes = (certificado: Certificado) => {
+    handleVerificarRequisitos(certificado);
+  };
+
+  const handleSolicitarCertificado = (cursoId: string | Certificado) => {
+    const id = typeof cursoId === 'string' ? cursoId : cursoId.cursoId;
+    
+    solicitarCertificado.mutate(id);
   };
 
   const handleDownloadCertificado = (certificadoId: string) => {
     const certificado = certificados?.find(c => c.id === certificadoId);
     if (certificado?.pdfUrl) {
-      // Em produção, implementar download real
       toast({
         title: "Download iniciado",
         description: "Seu certificado está sendo baixado.",
@@ -226,7 +225,6 @@ const Certificados = () => {
     }
   };
 
-  // Filtrar certificados
   const certificadosFiltrados = certificados?.filter(cert => 
     statusFiltro === 'todos' || cert.status === statusFiltro
   );
@@ -235,7 +233,7 @@ const Certificados = () => {
   const error = matriculasError || certificadosError;
 
   if (error) {
-    return <ErrorDisplay error="Ocorreu um erro ao carregar seus certificados." />;
+    return <ErrorDisplay message="Ocorreu um erro ao carregar seus certificados." />;
   }
 
   return (
@@ -256,15 +254,16 @@ const Certificados = () => {
           ) : certificados && certificados.length > 0 ? (
             <CertificadosGrid
               certificados={certificadosFiltrados || []}
-              onVerificarRequisitos={handleAbrirDetalhes}
+              onVerificarRequisitos={handleVerificarRequisitos}
               onSolicitarCertificado={handleSolicitarCertificado}
               onDownloadCertificado={handleDownloadCertificado}
+              onDetalhes={handleAbrirDetalhes}
             >
               {certificadosFiltrados?.map(certificado => (
                 <CertificadoCard
                   key={certificado.id}
                   certificado={certificado}
-                  onVerificarRequisitos={handleAbrirDetalhes}
+                  onVerificarRequisitos={handleVerificarRequisitos}
                   onSolicitarCertificado={handleSolicitarCertificado}
                   onDownloadCertificado={handleDownloadCertificado}
                   onDetalhes={handleAbrirDetalhes}

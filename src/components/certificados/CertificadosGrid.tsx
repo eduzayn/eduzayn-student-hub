@@ -9,7 +9,8 @@ interface CertificadosGridProps {
   onVerificarRequisitos: (cursoId: string) => void;
   onSolicitarCertificado: (cursoId: string) => void;
   onDownloadCertificado: (certificadoId: string) => void;
-  children?: React.ReactNode; // Adicionando suporte para children
+  onDetalhes?: (certificado: Certificado) => void; // Nova prop adicionada
+  children?: React.ReactNode;
 }
 
 const CertificadosGrid: React.FC<CertificadosGridProps> = ({
@@ -17,6 +18,7 @@ const CertificadosGrid: React.FC<CertificadosGridProps> = ({
   onVerificarRequisitos,
   onSolicitarCertificado,
   onDownloadCertificado,
+  onDetalhes,
   children
 }) => {
   if (certificados.length === 0) {
@@ -42,6 +44,7 @@ const CertificadosGrid: React.FC<CertificadosGridProps> = ({
           onVerificarRequisitos={onVerificarRequisitos}
           onSolicitarCertificado={onSolicitarCertificado}
           onDownloadCertificado={onDownloadCertificado}
+          onDetalhes={onDetalhes}
         />
       ))}
     </div>
