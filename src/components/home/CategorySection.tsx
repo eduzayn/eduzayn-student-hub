@@ -63,9 +63,10 @@ const categories = [
     id: 6,
     name: "Formação Livre",
     icon: Library,
-    courses: 15,
+    courses: 16,
     color: "bg-orange-500",
-    slug: "formacao-livre"
+    slug: "formacao-livre",
+    description: "Cursos livres para capacitação profissional"
   },
   {
     id: 7,

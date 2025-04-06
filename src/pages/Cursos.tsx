@@ -1006,6 +1006,40 @@ const mockCourses = [
     originalPrice: "R$ 155,00",
     image: "/placeholder.svg",
   },
+  
+  // Novo curso de Formação Livre em Psicanálise
+  {
+    id: 500,
+    title: "Formação Livre em Psicanálise",
+    category: "Formação Livre",
+    categorySlug: "formacao-livre",
+    duration: "800 horas",
+    price: "R$ 197,00",
+    originalPrice: "R$ 297,00",
+    image: "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+    description: "Curso completo de formação livre em psicanálise com 800 horas de carga horária total, abordando desde conceitos introdutórios até tópicos avançados em clínica e sexualidade.",
+    curriculum: [
+      { module: "Introdução à EAD", hours: 30 },
+      { module: "Diversidade Étnico Racial, Gênero e Direitos Humanos", hours: 40 },
+      { module: "Formação e Ética do Psicanalista", hours: 40 },
+      { module: "Complexo de Édipo e Castração", hours: 40 },
+      { module: "Introdução à Psicanálise", hours: 40 },
+      { module: "Libido, Pulsões e Sexualidade", hours: 40 },
+      { module: "Metodologia da Pesquisa Científica", hours: 40 },
+      { module: "Narcisismo e a Cultura da Indiferença", hours: 40 },
+      { module: "O Aparelho psíquico, aspectos clínicos e Teóricos", hours: 40 },
+      { module: "O Método Psicanalítico", hours: 40 },
+      { module: "Práticas e Procedimentos em Clínica", hours: 40 },
+      { module: "Processos de Transferência e Resistência", hours: 40 },
+      { module: "Psicanálise da Criança e do Adolescente", hours: 40 },
+      { module: "Psicanálise II", hours: 40 },
+      { module: "Psicopatologias I", hours: 40 },
+      { module: "Psicopatologias II", hours: 40 },
+      { module: "Sonhos, Simbologia e Representação", hours: 40 },
+      { module: "Tópicos Avançados em Clínica", hours: 40 },
+      { module: "Tópicos Avançados em Sexualidade", hours: 40 }
+    ]
+  }
 ];
 
 const Cursos = () => {
