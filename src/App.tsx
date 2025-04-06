@@ -28,6 +28,7 @@ import Certificados from "./pages/aluno/Certificados";
 import Comunicacao from "./pages/aluno/Comunicacao";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
+import Matricula from "./pages/Matricula";
 
 // Páginas do Portal Administrativo
 import PortalAdministrativo from "./pages/admin/PortalAdministrativo";
@@ -67,6 +68,8 @@ const App = () => (
               <Route path="/quem-somos" element={<QuemSomos />} />
               <Route path="/contato" element={<Contato />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/matricula" element={<Matricula />} />
+              <Route path="/checkout" element={<Checkout />} />
             </Route>
             
             {/* Rota de Dashboard antiga (será redirecionada) */}
