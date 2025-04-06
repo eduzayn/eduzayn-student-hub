@@ -41,7 +41,7 @@ export function getContextImage(context: string): string {
     "mba", "empreendedor", "empreendedorismo"
   ];
   
-  // Novos termos para verificar se o contexto está relacionado a cursos de direito
+  // Termos para verificar se o contexto está relacionado a cursos de direito
   const lawTerms = [
     "direito", "direito administrativo", "direito civil", "direito constitucional",
     "direito penal", "direito tributário", "direito empresarial", "direito do trabalho",
@@ -51,8 +51,23 @@ export function getContextImage(context: string): string {
     "law", "legal", "jurídico", "legislação"
   ];
   
+  // Termos para verificar se o contexto está relacionado a artes visuais
+  const visualArtsTerms = [
+    "artes visuais", "arte", "visual arts", "arte digital", "design gráfico",
+    "desenho", "pintura", "escultura", "fotografia", "história da arte",
+    "estética", "criatividade", "ilustração", "artes", "artista", 
+    "expressão artística", "comunicação visual", "educação artística"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica se o contexto contém termos relacionados a artes visuais
+  for (const term of visualArtsTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png";
+    }
+  }
   
   // Verifica se o contexto contém termos relacionados a cursos de direito
   for (const term of lawTerms) {
