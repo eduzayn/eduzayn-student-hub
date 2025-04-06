@@ -22,6 +22,7 @@ import FinanceiroAluno from "./pages/aluno/FinanceiroAluno";
 import DocumentosAluno from "./pages/aluno/DocumentosAluno";
 import CarteiraAluno from "./pages/aluno/CarteiraAluno";
 import RotaAprendizagem from "./pages/aluno/RotaAprendizagem";
+import Certificados from "./pages/aluno/Certificados";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
 
@@ -60,9 +61,9 @@ const App = () => (
               <Route path="documentos" element={<DocumentosAluno />} />
               <Route path="carteira" element={<CarteiraAluno />} />
               <Route path="aprendizagem" element={<RotaAprendizagem />} />
+              <Route path="certificados" element={<Certificados />} />
               <Route path="calendario" element={<div className="text-2xl font-bold">Calendário</div>} />
               <Route path="materiais" element={<div className="text-2xl font-bold">Materiais</div>} />
-              <Route path="certificados" element={<div className="text-2xl font-bold">Certificados</div>} />
               <Route path="comunicacao" element={<div className="text-2xl font-bold">Comunicação</div>} />
               <Route path="estatisticas" element={<div className="text-2xl font-bold">Estatísticas</div>} />
               <Route path="suporte" element={<div className="text-2xl font-bold">Suporte</div>} />
