@@ -63,7 +63,7 @@ const CourseEnrollCard: React.FC<CourseEnrollCardProps> = ({
         asChild 
         className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-lg py-6"
       >
-        <Link to={`/matricula/checkout/${id}`}>
+        <Link to={`/checkout/${id}`}>
           Matricule-se Agora
         </Link>
       </Button>
