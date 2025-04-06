@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Matricula } from "@/types/matricula";
+import type { Database } from "@/integrations/supabase/types";
 
 export const useMatricula = () => {
   const [loading, setLoading] = useState(false);
@@ -93,10 +94,15 @@ export const useMatricula = () => {
     setError(null);
     
     try {
-      // Aqui está a correção: não usar array na inserção
+      // Explicitamente tipando para o tipo esperado pelo banco de dados
+      type MatriculaInsert = Database["public"]["Tables"]["matriculas"]["Insert"];
+      
+      // Converter os dados para o tipo esperado pelo Supabase
+      const dadosParaInserir = matriculaData as unknown as MatriculaInsert;
+      
       const { data, error } = await supabase
         .from('matriculas')
-        .insert(matriculaData)
+        .insert(dadosParaInserir)
         .select('id')
         .single();
         
@@ -128,10 +134,12 @@ export const useMatricula = () => {
     setError(null);
     
     try {
-      // Atualizar a matrícula - usando casting para resolver problema de tipos
+      // Atualizar a matrícula - usando tipagem correta
+      type MatriculaUpdate = Database["public"]["Tables"]["matriculas"]["Update"];
+      
       const { error: updateError } = await supabase
         .from('matriculas')
-        .update({ status: novoStatus as any })
+        .update({ status: novoStatus as MatriculaUpdate["status"] })
         .eq('id', id);
         
       if (updateError) throw updateError;
@@ -153,7 +161,7 @@ export const useMatricula = () => {
         // Reverter atualização da matrícula em caso de erro ao registrar histórico
         await supabase
           .from('matriculas')
-          .update({ status: statusAnterior as any })
+          .update({ status: statusAnterior as MatriculaUpdate["status"] })
           .eq('id', id);
           
         throw historicoError;
@@ -193,10 +201,13 @@ export const useMatricula = () => {
         
       if (fetchError) throw fetchError;
       
-      // Atualizar a matrícula - usando casting para resolver problema de tipos
+      // Utilizar o tipo correto para atualização
+      type MatriculaUpdate = Database["public"]["Tables"]["matriculas"]["Update"];
+      
+      // Atualizar a matrícula com o tipo correto
       const { data: matriculaAtualizada, error: updateError } = await supabase
         .from('matriculas')
-        .update(dadosAtualizacao as any)
+        .update(dadosAtualizacao as MatriculaUpdate)
         .eq('id', id)
         .select()
         .single();
