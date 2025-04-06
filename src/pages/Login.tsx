@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +19,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 
-// Esquemas de validação
 const loginSchema = z.object({
   email: z.string()
     .email("Digite um email válido")
@@ -50,7 +48,6 @@ const registroSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegistroFormValues = z.infer<typeof registroSchema>;
 
-// Credencial de administrador para bypass
 const ADMIN_BYPASS = {
   email: "ana.diretoria@eduzayn.com.br",
   password: "Zayn@2025"
@@ -61,7 +58,6 @@ const Login = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Form para login
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -70,7 +66,6 @@ const Login = () => {
     },
   });
 
-  // Form para registro
   const registroForm = useForm<RegistroFormValues>({
     resolver: zodResolver(registroSchema),
     defaultValues: {
@@ -81,27 +76,22 @@ const Login = () => {
     },
   });
 
-  // Função para entrar
   const onLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     setAuthError(null);
     
-    // Verificar se é o usuário admin com bypass
     if (values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password) {
-      // Salvar no localStorage para manter o estado de bypass
       localStorage.setItem('adminBypassAuthenticated', 'true');
       localStorage.setItem('adminBypassEmail', ADMIN_BYPASS.email);
       
-      // Redirecionar para dashboard
       setTimeout(() => {
         setIsLoading(false);
-        navigate("/dashboard");
+        navigate("/admin");
       }, 500);
       
       return;
     }
     
-    // Login normal pelo supabase para outros usuários
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
@@ -121,7 +111,6 @@ const Login = () => {
     }
   };
 
-  // Função para registrar
   const onRegister = async (values: RegistroFormValues) => {
     setIsLoading(true);
     setAuthError(null);
@@ -140,7 +129,6 @@ const Login = () => {
       if (error) {
         setAuthError(error.message);
       } else {
-        // Redirecionar ou mostrar mensagem de confirmação
         setAuthError("Verifique seu email para confirmar seu cadastro!");
         registroForm.reset();
       }
@@ -160,13 +148,12 @@ const Login = () => {
           <TabsTrigger value="registro">Cadastro</TabsTrigger>
         </TabsList>
         
-        {/* Tab conteúdo do Login */}
         <TabsContent value="login">
           <Card>
             <CardHeader>
-              <CardTitle>Login</CardTitle>
+              <CardTitle>Portal Administrativo</CardTitle>
               <CardDescription>
-                Entre com seu e-mail e senha para acessar sua conta.
+                Entre com seu e-mail e senha para acessar o portal.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -219,7 +206,6 @@ const Login = () => {
           </Card>
         </TabsContent>
         
-        {/* Tab conteúdo do Cadastro */}
         <TabsContent value="registro">
           <Card>
             <CardHeader>

@@ -51,7 +51,7 @@ const NavBar = () => {
           {/* Desktop Call to Action */}
           <div className="hidden md:flex items-center space-x-3">
             <Button asChild variant="outline">
-              <Link to="/login">Entrar</Link>
+              <Link to="/login">Portal Administrativo</Link>
             </Button>
             <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
               <Link to="/dashboard">Portal do Aluno</Link>
@@ -111,7 +111,7 @@ const NavBar = () => {
               </Link>
               <div className="pt-2 flex flex-col space-y-2">
                 <Button asChild variant="outline" className="w-full">
-                  <Link to="/login" onClick={toggleMenu}>Entrar</Link>
+                  <Link to="/login" onClick={toggleMenu}>Portal Administrativo</Link>
                 </Button>
                 <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
                   <Link to="/dashboard" onClick={toggleMenu}>Portal do Aluno</Link>
