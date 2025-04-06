@@ -1,4 +1,3 @@
-
 import { CONTEXT_IMAGES, PLACEHOLDER_IMAGES, imageCache } from './imageMapping';
 
 /**
@@ -83,6 +82,14 @@ export function getContextImage(context: string): string {
     }
   }
   
+  // Verifica PRIMEIRO se o contexto contém termos relacionados à educação especial
+  // Movido para o topo das verificações para garantir prioridade
+  for (const term of specialEducationTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
+    }
+  }
+  
   // Verifica se o contexto contém termos relacionados a cursos de direito
   for (const term of lawTerms) {
     if (normalizedContext.includes(term)) {
@@ -109,13 +116,6 @@ export function getContextImage(context: string): string {
   for (const term of physicalEducationTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png";
-    }
-  }
-  
-  // Verifica se o contexto contém termos relacionados à educação especial
-  for (const term of specialEducationTerms) {
-    if (normalizedContext.includes(term)) {
-      return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
     }
   }
   

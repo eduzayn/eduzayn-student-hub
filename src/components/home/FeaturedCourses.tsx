@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, BookOpen, Star, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { getCachedFreepikImage } from "@/utils/imageUtils";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // Mock featured courses data
@@ -102,6 +102,12 @@ const FeaturedCourses = () => {
             return { id: course.id, imageUrl: course.image };
           }
           
+          // Verifica se o título contém "Educação Especial" para usar imagem específica
+          if (course.title.toLowerCase().includes("educação especial") ||
+              course.title.toLowerCase().includes("educacao especial")) {
+            return { id: course.id, imageUrl: '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png' };
+          }
+          
           try {
             // Use title first for best matching, then fallback to category
             const contextKey = course.title || course.imageQuery || course.categorySlug;
@@ -156,90 +162,102 @@ const FeaturedCourses = () => {
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {!loading && featuredCourses.map((course) => (
-            <Card key={course.id} className="eduzayn-card animate-fade-in group hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200">
-              <div className="relative overflow-hidden">
-                <AspectRatio ratio={16/9}>
-                  <img 
-                    src={courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
-                    alt={course.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    onError={(e) => {
-                      // Fallback to placeholder if image fails
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
-                    }}
-                  />
-                </AspectRatio>
-                <div className="absolute top-3 left-3 flex gap-2 z-10">
-                  {course.isFeatured && (
-                    <Badge variant="secondary" className="bg-primary text-white font-medium shadow-sm">
-                      Destaque
-                    </Badge>
-                  )}
-                  {course.popular && (
-                    <Badge variant="secondary" className="bg-orange-500 text-white font-medium shadow-sm">
-                      Popular
-                    </Badge>
-                  )}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-              
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <Badge variant="outline" className="bg-gray-50">
-                    {course.category}
-                  </Badge>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm ml-1 font-medium">{course.rating}</span>
+          {!loading && featuredCourses.map((course) => {
+            // Verificar se é curso de educação especial
+            const isSpecialEducation = 
+              course.title.toLowerCase().includes("educação especial") || 
+              course.title.toLowerCase().includes("educacao especial");
+            
+            // Definir imagem apropriada
+            const courseImage = isSpecialEducation 
+              ? '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png' 
+              : (courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png');
+            
+            return (
+              <Card key={course.id} className="eduzayn-card animate-fade-in group hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200">
+                <div className="relative overflow-hidden">
+                  <AspectRatio ratio={16/9}>
+                    <img 
+                      src={courseImage} 
+                      alt={course.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
+                      }}
+                    />
+                  </AspectRatio>
+                  <div className="absolute top-3 left-3 flex gap-2 z-10">
+                    {course.isFeatured && (
+                      <Badge variant="secondary" className="bg-primary text-white font-medium shadow-sm">
+                        Destaque
+                      </Badge>
+                    )}
+                    {course.popular && (
+                      <Badge variant="secondary" className="bg-orange-500 text-white font-medium shadow-sm">
+                        Popular
+                      </Badge>
+                    )}
                   </div>
-                </div>
-                <CardTitle className="text-lg mt-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
-                  <Link 
-                    to={`/curso/${course.id}`} 
-                    className="hover:text-primary transition-colors"
-                  >
-                    {course.title}
-                  </Link>
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="pb-2">
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>{course.duration}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span>{course.students} alunos</span>
-                  </div>
-                  <div className="flex items-center">
-                    <BookOpen className="h-4 w-4 mr-1" />
-                    <span>Certificado</span>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 
-                <div className="mt-4 bg-gray-50 -mx-6 px-6 py-3">
-                  <div className="text-xl font-bold text-gray-900">{course.price}</div>
-                  <div className="text-xs text-gray-500 flex items-center justify-between">
-                    <span className="line-through">{course.originalPrice || ''}</span>
-                    <span className="text-green-600 font-medium">em até 12x no cartão</span>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline" className="bg-gray-50">
+                      {course.category}
+                    </Badge>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      <span className="text-sm ml-1 font-medium">{course.rating}</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="border-t pt-4">
-                <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90 shadow-md">
-                  <Link to={`/curso/${course.id}`}>
-                    Matricule-se
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                  <CardTitle className="text-lg mt-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
+                    <Link 
+                      to={`/curso/${course.id}`} 
+                      className="hover:text-primary transition-colors"
+                    >
+                      {course.title}
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="pb-2">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span>{course.duration}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>{course.students} alunos</span>
+                    </div>
+                    <div className="flex items-center">
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      <span>Certificado</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 bg-gray-50 -mx-6 px-6 py-3">
+                    <div className="text-xl font-bold text-gray-900">{course.price}</div>
+                    <div className="text-xs text-gray-500 flex items-center justify-between">
+                      <span className="line-through">{course.originalPrice || ''}</span>
+                      <span className="text-green-600 font-medium">em até 12x no cartão</span>
+                    </div>
+                  </div>
+                </CardContent>
+                
+                <CardFooter className="border-t pt-4">
+                  <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90 shadow-md">
+                    <Link to={`/curso/${course.id}`}>
+                      Matricule-se
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
