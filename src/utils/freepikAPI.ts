@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -5,23 +6,23 @@ import { supabase } from "@/integrations/supabase/client";
 const CONTEXT_IMAGES = {
   // Education categories
   "graduacao": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "segunda-licenciatura": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "segunda-licenciatura": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "segunda-graduacao-bacharelado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "pos-graduacao": null,
   "mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "formacao-livre": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "capacitacao-profissional": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "formacao-pedagogica": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "formacao-pedagogica": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   
   // Course topics
   "education graduation university": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "teaching license education": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "teaching license education": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "bachelor degree education": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "postgraduate education specialization": null,
   "business management mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "free education training": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "professional training course": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "pedagogical training education": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "pedagogical training education": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   
   // Subject areas
   "project management business": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
@@ -31,8 +32,8 @@ const CONTEXT_IMAGES = {
   
   // Course titles (adicionando correspondências específicas para títulos de cursos populares)
   "administração de empresas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
-  "pedagogia": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
-  "artes visuais": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+  "pedagogia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "artes visuais": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "gestão de recursos humanos": null,
   "marketing digital": null,
   "excel avançado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
@@ -43,7 +44,7 @@ const CONTEXT_IMAGES = {
   
   // Adicionando chaves específicas para elementos da interface
   "hero-banner": "/lovable-uploads/638ad6c9-a3be-4cca-85e0-145d4f8f4974.png",
-  "about-us": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "about-us": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "testimonials": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "call-to-action": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   
@@ -66,6 +67,18 @@ const CONTEXT_IMAGES = {
   "autism": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
   "adhd": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
   
+  // Adicionando cursos específicos de segunda licenciatura
+  "sociologia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "ciências da religião": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "educação física": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "filosofia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "geografia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "história": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "letras": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "matemática": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "second degree": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "licenciatura": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -73,7 +86,7 @@ const CONTEXT_IMAGES = {
 // Fallback images when context isn't found
 const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   null,
   "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
