@@ -45,10 +45,10 @@ const categories = [
     id: 4,
     name: "Pós-Graduação",
     icon: Award,
-    courses: 75,
+    courses: 88,
     color: "bg-green-500",
     slug: "pos-graduacao",
-    description: "Especialização na área educacional"
+    description: "Especialização nas áreas educacional e saúde mental"
   },
   {
     id: 5,

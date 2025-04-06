@@ -16,38 +16,39 @@ import {
 
 // Dados simulados para o curso de exemplo
 const mockCourseData = {
-  id: 1,
-  title: "Administração de Empresas",
-  category: "Graduação",
-  duration: "4 anos",
+  id: 176,
+  title: "Neuropsicopedagogia Institucional, Clínica e Hospitalar",
+  category: "Pós-Graduação",
+  duration: "6 meses",
   modalidade: "EAD",
-  price: "R$ 597,00",
-  originalPrice: "R$ 897,00",
-  payment: "mensalidade",
-  certification: "Diploma de Graduação",
-  image: "/placeholder.svg",
-  description: "O curso de Administração forma profissionais capacitados para gerenciar recursos, pessoas e negócios, com uma visão sistêmica e estratégica das organizações.",
+  price: "R$ 150,00",
+  originalPrice: "R$ 155,00",
+  payment: "mensalidade (16x)",
+  certification: "Certificado de Pós-Graduação",
+  image: "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  description: "Este curso de pós-graduação em Neuropsicopedagogia Institucional, Clínica e Hospitalar prepara profissionais para atuar na avaliação, diagnóstico e intervenção em distúrbios de aprendizagem no contexto clínico, hospitalar e institucional.",
   requirements: [
-    "Ensino médio completo",
+    "Diploma de graduação em áreas relacionadas à educação ou saúde",
     "Documentação pessoal",
     "Aprovação no processo seletivo"
   ],
   ementa: [
-    "Fundamentos da Administração",
-    "Economia e Mercado",
-    "Gestão de Pessoas",
-    "Marketing",
-    "Finanças Corporativas",
-    "Estratégia Empresarial",
-    "Empreendedorismo",
-    "Logística e Operações"
+    "Fundamentos da Neuropsicopedagogia",
+    "Neurociências e Aprendizagem",
+    "Avaliação Neuropsicopedagógica",
+    "Intervenção Neuropsicopedagógica",
+    "Neuropsicopedagogia Institucional",
+    "Neuropsicopedagogia Clínica",
+    "Neuropsicopedagogia Hospitalar",
+    "Transtornos e Distúrbios de Aprendizagem"
   ],
   benefits: [
     "Aulas 100% online",
     "Material didático digital incluso",
     "Plataforma de aprendizado intuitiva",
     "Tutores especializados",
-    "Avaliações online"
+    "Avaliações online",
+    "Flexibilidade de horários"
   ]
 };
 
