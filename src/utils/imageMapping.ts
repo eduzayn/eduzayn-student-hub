@@ -6,7 +6,7 @@ export const CONTEXT_IMAGES = {
   "segunda-licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "segunda-graduacao-bacharelado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "pos-graduacao": null,
-  "mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "mba": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "formacao-livre": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "capacitacao-profissional": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "formacao-pedagogica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
@@ -16,25 +16,25 @@ export const CONTEXT_IMAGES = {
   "teaching license education": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "bachelor degree education": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "postgraduate education specialization": null,
-  "business management mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "business management mba": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "free education training": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "professional training course": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "pedagogical training education": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   
   // Subject areas
-  "project management business": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "project management business": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "web development coding": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "neuropsychology clinical": null,
   "data analysis python": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   
   // Course titles (adicionando correspondências específicas para títulos de cursos populares)
-  "administração de empresas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "administração de empresas": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "pedagogia": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "artes visuais": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
-  "gestão de recursos humanos": null,
+  "gestão de recursos humanos": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "marketing digital": null,
   "excel avançado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "técnicas de vendas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "técnicas de vendas": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "data science": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "neuropsicopedagogia": null,
   "psicanálise": null,
@@ -97,6 +97,25 @@ export const CONTEXT_IMAGES = {
   "academia": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   "gym": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   
+  // Novos termos para administração com a nova imagem
+  "administração": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "administracao": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "gestão": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "gestao": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "negócios": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "negocios": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "business": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "management": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "administrador": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "finanças": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "financas": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "contabilidade": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "contábeis": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "contabeis": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "economia": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "rh": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "recursos humanos": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -107,10 +126,9 @@ export const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   null,
-  "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 ];
 
 // Cache para armazenar imagens já buscadas por categoria
 export const imageCache: Record<string, string> = {};
-

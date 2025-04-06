@@ -1,3 +1,4 @@
+
 import { CONTEXT_IMAGES, PLACEHOLDER_IMAGES, imageCache } from './imageMapping';
 
 /**
@@ -25,15 +26,30 @@ export function getContextImage(context: string): string {
     "second degree", "licenciatura"
   ];
   
-  // Novos termos para verificar se o contexto está relacionado à educação física
+  // Termos para verificar se o contexto está relacionado à educação física
   const physicalEducationTerms = [
     "educação física", "educacao fisica", "physical education", 
     "educacao fisic", "educação fisic", "ed física", "ed fisica", 
     "sports", "esportes", "fitness", "academia", "gym"
   ];
   
+  // Novos termos para verificar se o contexto está relacionado à administração
+  const administrationTerms = [
+    "administração", "administracao", "gestão", "gestao", "negócios", "negocios",
+    "business", "management", "administrador", "finanças", "financas", 
+    "contabilidade", "contábeis", "contabeis", "economia", "rh", "recursos humanos",
+    "mba", "empreendedor", "empreendedorismo"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica se o contexto contém termos relacionados à administração
+  for (const term of administrationTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png";
+    }
+  }
   
   // Verifica se o contexto contém termos relacionados à educação física
   for (const term of physicalEducationTerms) {
