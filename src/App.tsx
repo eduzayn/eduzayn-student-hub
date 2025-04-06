@@ -42,6 +42,9 @@ import ModuloPolo from "./pages/admin/ModuloPolo";
 import ModuloRH from "./pages/admin/ModuloRH";
 import ModuloAplicacoes from "./pages/admin/ModuloAplicacoes";
 
+// Nova página de matrícula
+import NovaMatricula from "./pages/admin/matriculas/NovaMatricula";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -97,6 +100,7 @@ const App = () => (
               <Route path="financeiro" element={<ModuloFinanceiro />} />
               <Route path="material" element={<ModuloMaterial />} />
               <Route path="matriculas" element={<ModuloMatriculas />} />
+              <Route path="matriculas/nova" element={<NovaMatricula />} />
               <Route path="professor" element={<ModuloProfessor />} />
               <Route path="parceiro" element={<ModuloParceiro />} />
               <Route path="polo" element={<ModuloPolo />} />
