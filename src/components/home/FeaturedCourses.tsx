@@ -1,10 +1,10 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, BookOpen, Star } from "lucide-react";
+import { getCachedFreepikImage } from "@/utils/freepikAPI";
 
 // Mock featured courses data
 const featuredCourses = [
@@ -19,6 +19,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 597,00",
+    imageQuery: "project management business"
   },
   {
     id: 2,
@@ -31,6 +32,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 997,00",
+    imageQuery: "web development coding"
   },
   {
     id: 176,
@@ -43,6 +45,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 150,00",
+    imageQuery: "neuropsychology clinical"
   },
   {
     id: 4,
@@ -55,10 +58,43 @@ const featuredCourses = [
     isFeatured: true,
     popular: false,
     price: "R$ 697,00",
+    imageQuery: "data analysis python"
   },
 ];
 
 const FeaturedCourses = () => {
+  const [courseImages, setCourseImages] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch images for each featured course
+    const loadImages = async () => {
+      setLoading(true);
+      
+      const imagePromises = featuredCourses.map(async (course) => {
+        // Skip courses that already have a custom image
+        if (course.image.startsWith("/lovable-uploads/")) {
+          return { id: course.id, imageUrl: course.image };
+        }
+        
+        const imageUrl = await getCachedFreepikImage(course.imageQuery);
+        return { id: course.id, imageUrl };
+      });
+      
+      const results = await Promise.all(imagePromises);
+      
+      const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+        acc[id] = imageUrl;
+        return acc;
+      }, {} as Record<number, string>);
+      
+      setCourseImages(imagesMap);
+      setLoading(false);
+    };
+    
+    loadImages();
+  }, []);
+
   return (
     <section className="eduzayn-section bg-white">
       <div className="eduzayn-container">
@@ -80,7 +116,7 @@ const FeaturedCourses = () => {
             <Card key={course.id} className="eduzayn-card animate-fade-in group">
               <div className="relative overflow-hidden">
                 <img 
-                  src={course.image} 
+                  src={courseImages[course.id] || course.image} 
                   alt={course.title}
                   className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -97,6 +133,7 @@ const FeaturedCourses = () => {
                   )}
                 </div>
               </div>
+              
               
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
@@ -133,13 +170,17 @@ const FeaturedCourses = () => {
                     <span>Certificado</span>
                   </div>
                 </div>
+                
                 <div className="mt-4">
                   <div className="text-xl font-bold text-gray-900">{course.price}</div>
-                  <div className="text-xs text-gray-500">Em até 12x no cartão</div>
+                  <div className="text-xs text-gray-500">
+                    <span className="line-through">{course.originalPrice}</span>
+                    <span className="ml-2">em até 12x no cartão</span>
+                  </div>
                 </div>
               </CardContent>
               
-              <CardFooter>
+              <CardFooter className="border-t pt-4">
                 <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90">
                   <Link to={`/matricula/checkout/${course.id}`}>
                     Matricule-se

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -11,6 +11,7 @@ import {
   School,
   BookmarkCheck
 } from "lucide-react";
+import { getCachedFreepikImage } from "@/utils/freepikAPI";
 
 // Categorias atualizadas incluindo número de cursos de pós-graduação
 const categories = [
@@ -21,7 +22,8 @@ const categories = [
     courses: 74, 
     color: "bg-blue-500",
     slug: "graduacao",
-    description: "Bacharelados, Licenciaturas e Tecnológicos"
+    description: "Bacharelados, Licenciaturas e Tecnológicos",
+    imageQuery: "education graduation university"
   },
   {
     id: 2,
@@ -30,7 +32,8 @@ const categories = [
     courses: 31, 
     color: "bg-purple-500",
     slug: "segunda-licenciatura",
-    description: "Segunda Licenciatura para Licenciados"
+    description: "Segunda Licenciatura para Licenciados",
+    imageQuery: "teaching license education"
   },
   {
     id: 3,
@@ -39,7 +42,8 @@ const categories = [
     courses: 7,
     color: "bg-indigo-500",
     slug: "segunda-graduacao-bacharelado",
-    description: "Exclusivo para quem já possui diploma de bacharel"
+    description: "Exclusivo para quem já possui diploma de bacharel",
+    imageQuery: "bachelor degree education"
   },
   {
     id: 4,
@@ -48,7 +52,8 @@ const categories = [
     courses: 115,
     color: "bg-green-500",
     slug: "pos-graduacao",
-    description: "Especialização nas áreas educacional, saúde e direito"
+    description: "Especialização nas áreas educacional, saúde e direito",
+    imageQuery: "postgraduate education specialization"
   },
   {
     id: 5,
@@ -57,7 +62,8 @@ const categories = [
     courses: 20,
     color: "bg-yellow-500",
     slug: "mba",
-    description: "Cursos de especialização em gestão empresarial"
+    description: "Cursos de especialização em gestão empresarial",
+    imageQuery: "business management mba"
   },
   {
     id: 6,
@@ -66,7 +72,8 @@ const categories = [
     courses: 16,
     color: "bg-orange-500",
     slug: "formacao-livre",
-    description: "Cursos livres para capacitação profissional"
+    description: "Cursos livres para capacitação profissional",
+    imageQuery: "free education training"
   },
   {
     id: 7,
@@ -74,7 +81,8 @@ const categories = [
     icon: Briefcase,
     courses: 22,
     color: "bg-red-500",
-    slug: "capacitacao-profissional"
+    slug: "capacitacao-profissional",
+    imageQuery: "professional training course"
   },
   {
     id: 8,
@@ -83,11 +91,35 @@ const categories = [
     courses: 13,
     color: "bg-teal-500",
     slug: "formacao-pedagogica",
-    description: "Exclusivo para bacharéis e tecnólogos"
+    description: "Exclusivo para bacharéis e tecnólogos",
+    imageQuery: "pedagogical training education"
   }
 ];
 
 const CategorySection = () => {
+  const [categoryImages, setCategoryImages] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    // Fetch images for each category
+    const loadImages = async () => {
+      const imagePromises = categories.map(async (category) => {
+        const imageUrl = await getCachedFreepikImage(category.imageQuery);
+        return { id: category.id, imageUrl };
+      });
+      
+      const results = await Promise.all(imagePromises);
+      
+      const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+        acc[id] = imageUrl;
+        return acc;
+      }, {} as Record<number, string>);
+      
+      setCategoryImages(imagesMap);
+    };
+    
+    loadImages();
+  }, []);
+
   return (
     <section className="eduzayn-section bg-gray-50">
       <div className="eduzayn-container">
@@ -97,14 +129,24 @@ const CategorySection = () => {
           impulsionar sua carreira acadêmica e profissional.
         </p>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {categories.map((category) => (
             <Link key={category.id} to={`/cursos/${category.slug}`}>
-              <Card className="border-none shadow-sm hover:shadow-md transition-shadow h-full">
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className={`${category.color} text-white p-3 rounded-lg mb-4`}>
-                    <category.icon className="h-6 w-6" />
-                  </div>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow h-full overflow-hidden">
+                <div className="h-32 overflow-hidden">
+                  {categoryImages[category.id] ? (
+                    <img 
+                      src={categoryImages[category.id]} 
+                      alt={category.name} 
+                      className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className={`${category.color} w-full h-full flex items-center justify-center`}>
+                      <category.icon className="h-12 w-12 text-white" />
+                    </div>
+                  )}
+                </div>
+                <CardContent className="p-4 flex flex-col items-center text-center">
                   <h3 className="font-medium text-gray-900 mb-1">{category.name}</h3>
                   <p className="text-sm text-gray-500">
                     {category.description ? category.description : `${category.courses} cursos`}
