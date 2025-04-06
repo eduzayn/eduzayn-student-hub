@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +85,44 @@ const mockCourses: Record<string, Course> = {
       "Plataforma de aprendizado intuitiva",
       "Tutores especializados",
       "Avaliações online",
+      "Flexibilidade de horários"
+    ]
+  },
+  
+  // Adicionar curso com ID 1
+  "1": {
+    id: 1,
+    title: "Gestão de Projetos",
+    category: "Administração",
+    duration: "60 horas",
+    modalidade: "Online",
+    price: "R$ 597,00",
+    originalPrice: "R$ 797,00",
+    payment: "1 matrícula de R$ 597,00 + 12x de R$ 59,00",
+    certification: "Certificado Profissional",
+    image: "/placeholder.svg",
+    description: "O curso de Gestão de Projetos proporciona aos participantes conhecimentos avançados em planejamento, execução e controle de projetos em diferentes áreas, utilizando metodologias ágeis e tradicionais para garantir resultados de excelência.",
+    requirements: [
+      "Ensino médio completo",
+      "Conhecimentos básicos em administração",
+      "Acesso a computador com internet"
+    ],
+    ementa: [
+      "Fundamentos da Gestão de Projetos",
+      "Metodologias Ágeis e Tradicionais",
+      "Planejamento e Escopo",
+      "Gestão de Riscos",
+      "Cronograma e Orçamento",
+      "Liderança em Projetos",
+      "Ferramentas de Gestão",
+      "Estudos de Caso Práticos"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Professores com experiência de mercado",
+      "Certificado reconhecido",
+      "Estudos de caso reais",
       "Flexibilidade de horários"
     ]
   },
@@ -233,7 +271,14 @@ const mockCourses: Record<string, Course> = {
 
 const DetalheCurso = () => {
   const { id } = useParams();
-  const curso = mockCourses[id || "176"]; // Usar 176 como padrão se id não for encontrado
+  
+  // Check if the course exists
+  if (!id || !mockCourses[id]) {
+    console.error(`Course with id ${id} not found`);
+    return <Navigate to="/cursos" replace />;
+  }
+  
+  const curso = mockCourses[id];
   
   return (
     <MainLayout>
