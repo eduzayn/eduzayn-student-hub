@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { MessageSquare } from "lucide-react";
 
 const HeroBanner = () => {
   return (
@@ -10,18 +11,21 @@ const HeroBanner = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="order-2 lg:order-1 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-              Transforme seu <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">futuro</span> com nossos cursos
+              Transforme seu <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">futuro</span> com a EduZayn
             </h1>
             <p className="mt-6 text-lg text-gray-600 leading-relaxed">
-              A EduZayn oferece uma plataforma completa para sua jornada educacional. 
-              Matricule-se, gerencie seus cursos e acompanhe sua evolução em um único lugar.
+              Oferecemos cursos de Graduação, Segunda Graduação, Pós-Graduação e Capacitação Profissional 
+              para impulsionar sua carreira e mudar sua vida.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-base">
-                <Link to="/cursos">Conheça Nossos Cursos</Link>
+                <Link to="/cursos">Quero me Matricular</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="text-base">
-                <Link to="/quem-somos">Saiba Mais</Link>
+              <Button asChild size="lg" variant="outline" className="text-base flex items-center gap-2">
+                <Link to="/contato">
+                  <MessageSquare className="h-5 w-5" />
+                  Fale com um Consultor
+                </Link>
               </Button>
             </div>
             

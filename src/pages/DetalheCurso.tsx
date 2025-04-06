@@ -1,22 +1,192 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Clock, 
+  Calendar, 
+  CheckCircle2, 
+  FileText, 
+  Award, 
+  Users, 
+  BookOpen
+} from "lucide-react";
+
+// Dados simulados para o curso de exemplo
+const mockCourseData = {
+  id: 1,
+  title: "Administração de Empresas",
+  category: "Graduação",
+  duration: "4 anos",
+  modalidade: "EAD",
+  price: "R$ 597,00",
+  originalPrice: "R$ 897,00",
+  payment: "mensalidade",
+  certification: "Diploma de Graduação",
+  image: "/placeholder.svg",
+  description: "O curso de Administração forma profissionais capacitados para gerenciar recursos, pessoas e negócios, com uma visão sistêmica e estratégica das organizações.",
+  requirements: [
+    "Ensino médio completo",
+    "Documentação pessoal",
+    "Aprovação no processo seletivo"
+  ],
+  ementa: [
+    "Fundamentos da Administração",
+    "Economia e Mercado",
+    "Gestão de Pessoas",
+    "Marketing",
+    "Finanças Corporativas",
+    "Estratégia Empresarial",
+    "Empreendedorismo",
+    "Logística e Operações"
+  ],
+  benefits: [
+    "Aulas 100% online",
+    "Material didático digital incluso",
+    "Plataforma de aprendizado intuitiva",
+    "Tutores especializados",
+    "Avaliações online"
+  ]
+};
 
 const DetalheCurso = () => {
   const { id } = useParams();
+  const curso = mockCourseData; // Em uma implementação real, buscaria com base no ID
   
   return (
     <MainLayout>
-      <div className="eduzayn-container py-12">
-        <h1 className="text-3xl font-bold mb-6">Detalhes do Curso</h1>
-        <p className="text-gray-600 mb-4">
-          Página de detalhes do curso ID: {id}
-        </p>
-        <p className="text-gray-600">
-          Aqui serão exibidas informações completas do curso, como descrição,
-          programa, professores, avaliações e opções de matrícula.
-        </p>
+      <div className="bg-gray-50 py-8">
+        <div className="eduzayn-container">
+          {/* Breadcrumb */}
+          <div className="text-sm text-gray-500 mb-6">
+            <Link to="/" className="hover:text-primary">Home</Link>
+            <span className="mx-2">/</span>
+            <Link to="/cursos" className="hover:text-primary">Cursos</Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-700">{curso.title}</span>
+          </div>
+          
+          {/* Seção principal */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Informações do curso */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="relative h-72">
+                  <img 
+                    src={curso.image} 
+                    alt={curso.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-primary text-white px-3 py-1">{curso.category}</Badge>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-4">{curso.title}</h1>
+                  
+                  <div className="flex flex-wrap gap-4 mb-6">
+                    <div className="flex items-center text-gray-600">
+                      <Clock className="h-5 w-5 mr-2 text-primary" />
+                      <span>Duração: {curso.duration}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Calendar className="h-5 w-5 mr-2 text-primary" />
+                      <span>Modalidade: {curso.modalidade}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Award className="h-5 w-5 mr-2 text-primary" />
+                      <span>Certificação: {curso.certification}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-100 pt-6">
+                    <h2 className="text-xl font-semibold mb-4">Descrição do Curso</h2>
+                    <p className="text-gray-600 mb-6">{curso.description}</p>
+                    
+                    <h2 className="text-xl font-semibold mb-4">Ementa Resumida</h2>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                      {curso.ementa.map((item, index) => (
+                        <li key={index} className="flex items-start">
+                          <CheckCircle2 className="h-5 w-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <h2 className="text-xl font-semibold mb-4">Pré-requisitos</h2>
+                    <ul className="space-y-2 mb-6">
+                      {curso.requirements.map((item, index) => (
+                        <li key={index} className="flex items-start">
+                          <FileText className="h-5 w-5 mr-2 text-primary flex-shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <h2 className="text-xl font-semibold mb-4">Benefícios</h2>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <ul className="space-y-2">
+                        {curso.benefits.map((item, index) => (
+                          <li key={index} className="flex items-start">
+                            <CheckCircle2 className="h-5 w-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card de matrícula */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+                <div className="mb-4">
+                  <div className="text-gray-500 mb-1">Investimento:</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-primary">{curso.price}</span>
+                    <span className="text-gray-400 line-through">{curso.originalPrice}</span>
+                  </div>
+                  <div className="text-sm text-gray-500">{curso.payment}</div>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center">
+                    <Users className="h-5 w-5 mr-3 text-primary" />
+                    <span>Vagas limitadas</span>
+                  </div>
+                  <div className="flex items-center">
+                    <BookOpen className="h-5 w-5 mr-3 text-primary" />
+                    <span>Material didático incluso</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Award className="h-5 w-5 mr-3 text-primary" />
+                    <span>Certificado reconhecido</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  asChild 
+                  className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-lg py-6"
+                >
+                  <Link to={`/matricula/checkout/${id}`}>
+                    Matricule-se Agora
+                  </Link>
+                </Button>
+                
+                <div className="mt-4 text-center">
+                  <Link to="/contato" className="text-primary hover:underline">
+                    Precisa de ajuda? Fale com um consultor
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

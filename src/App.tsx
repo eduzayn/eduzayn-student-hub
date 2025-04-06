@@ -28,6 +28,7 @@ const App = () => (
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/cursos" element={<Cursos />} />
+          <Route path="/cursos/:categoria" element={<Cursos />} />
           <Route path="/curso/:id" element={<DetalheCurso />} />
           <Route path="/matricula/checkout/:id" element={<Checkout />} />
           <Route path="/confirmacao-sucesso" element={<Confirmacao />} />
