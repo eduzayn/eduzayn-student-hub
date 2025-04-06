@@ -23,3 +23,30 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     }
   }
 });
+
+// Verificar se o usuário com bypass está logado
+export const isAdminBypassAuthenticated = () => {
+  return localStorage.getItem('adminBypassAuthenticated') === 'true';
+};
+
+// Verificar qualquer tipo de autenticação (normal ou bypass)
+export const isAuthenticated = async () => {
+  // Verificar primeiro bypass de admin
+  if (isAdminBypassAuthenticated()) {
+    return true;
+  }
+  
+  // Verificar autenticação normal
+  const { data } = await supabase.auth.getSession();
+  return !!data.session;
+};
+
+// Função para logout (limpa tanto o auth do Supabase quanto o bypass de admin)
+export const logoutUser = async () => {
+  // Limpar bypass de admin se existir
+  localStorage.removeItem('adminBypassAuthenticated');
+  localStorage.removeItem('adminBypassEmail');
+  
+  // Logout normal do Supabase
+  await supabase.auth.signOut();
+};

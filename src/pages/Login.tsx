@@ -50,6 +50,12 @@ const registroSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegistroFormValues = z.infer<typeof registroSchema>;
 
+// Credencial de administrador para bypass
+const ADMIN_BYPASS = {
+  email: "ana.diretoria@eduzayn.com.br",
+  password: "Zayn@2025"
+};
+
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -80,6 +86,22 @@ const Login = () => {
     setIsLoading(true);
     setAuthError(null);
     
+    // Verificar se é o usuário admin com bypass
+    if (values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password) {
+      // Salvar no localStorage para manter o estado de bypass
+      localStorage.setItem('adminBypassAuthenticated', 'true');
+      localStorage.setItem('adminBypassEmail', ADMIN_BYPASS.email);
+      
+      // Redirecionar para dashboard
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/dashboard");
+      }, 500);
+      
+      return;
+    }
+    
+    // Login normal pelo supabase para outros usuários
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
