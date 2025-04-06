@@ -16,10 +16,43 @@ import {
   DollarSign
 } from "lucide-react";
 
+// Define proper types for our courses
+type CourseModule = {
+  module: string;
+  hours: number;
+};
+
+type BaseCourse = {
+  id: number;
+  title: string;
+  category: string;
+  duration: string;
+  modalidade: string;
+  price: string;
+  originalPrice: string;
+  payment: string;
+  certification: string;
+  image: string;
+  description: string;
+  requirements: string[];
+  benefits: string[];
+};
+
+type CourseWithEmenta = BaseCourse & {
+  ementa: string[];
+};
+
+type CourseWithCurriculum = BaseCourse & {
+  curriculum: CourseModule[];
+  totalHours: string;
+};
+
+type Course = CourseWithEmenta | CourseWithCurriculum;
+
 // Dados simulados para os cursos
-const mockCourses = {
+const mockCourses: Record<string, Course> = {
   // Curso básico padrão
-  176: {
+  "176": {
     id: 176,
     title: "Neuropsicopedagogia Institucional, Clínica e Hospitalar",
     category: "Pós-Graduação",
@@ -57,7 +90,7 @@ const mockCourses = {
   },
   
   // Curso de Nutrição Esportiva
-  422: {
+  "422": {
     id: 422,
     title: "Nutrição Esportiva",
     category: "Pós-Graduação",
@@ -94,8 +127,8 @@ const mockCourses = {
     ]
   },
   
-  // Novo curso de Formação Livre em Psicanálise
-  500: {
+  // Formação Livre em Psicanálise
+  "500": {
     id: 500,
     title: "Formação Livre em Psicanálise",
     category: "Formação Livre",
@@ -143,12 +176,64 @@ const mockCourses = {
       "Flexibilidade de horários",
       "Certificado de conclusão reconhecido"
     ]
+  },
+  
+  // Novo curso de Pós-Graduação em Psicanálise
+  "501": {
+    id: 501,
+    title: "Pós-Graduação em Psicanálise",
+    category: "Pós-Graduação",
+    duration: "6 meses",
+    modalidade: "Online",
+    price: "R$ 150,00",
+    originalPrice: "R$ 155,00",
+    payment: "1 matrícula de R$ 150,00 + 16x de R$ 155,00",
+    certification: "Certificado de Pós-Graduação",
+    image: "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+    description: "O curso de Pós-Graduação em Psicanálise oferece formação especializada para profissionais que desejam atuar na área clínica psicanalítica, desenvolvendo competências para o atendimento terapêutico e compreensão dos processos psíquicos.",
+    totalHours: "600 horas",
+    curriculum: [
+      { module: "Introdução à EAD", hours: 30 },
+      { module: "Diversidade Étnico Racial, Gênero e Direitos Humanos", hours: 40 },
+      { module: "Formação e Ética do Psicanalista", hours: 40 },
+      { module: "Complexo de Édipo e Castração", hours: 40 },
+      { module: "Introdução à Psicanálise", hours: 40 },
+      { module: "Libido, Pulsões e Sexualidade", hours: 40 },
+      { module: "Metodologia da Pesquisa Científica", hours: 40 },
+      { module: "Narcisismo e a Cultura da Indiferença", hours: 40 },
+      { module: "O Aparelho psíquico, aspectos clínicos e Teóricos", hours: 40 },
+      { module: "O Método Psicanalítico", hours: 40 },
+      { module: "Práticas e Procedimentos em Clínica", hours: 40 },
+      { module: "Processos de Transferência e Resistência", hours: 40 },
+      { module: "Psicanálise da Criança e do Adolescente", hours: 40 },
+      { module: "Psicanálise II", hours: 40 },
+      { module: "Psicopatologias I", hours: 40 },
+      { module: "Psicopatologias II", hours: 40 },
+      { module: "Sonhos, Simbologia e Representação", hours: 40 },
+      { module: "Tópicos Avançados em Clínica", hours: 40 },
+      { module: "Tópicos Avançados em Sexualidade", hours: 40 },
+      { module: "Trabalho de Conclusão de Curso (Opcional)", hours: 0 }
+    ],
+    requirements: [
+      "Diploma de graduação em Psicologia ou áreas relacionadas à saúde mental",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Plataforma de aprendizado intuitiva",
+      "Tutores especializados",
+      "Avaliações online",
+      "Flexibilidade de horários",
+      "Certificado de Pós-Graduação reconhecido pelo MEC"
+    ]
   }
 };
 
 const DetalheCurso = () => {
   const { id } = useParams();
-  const curso = mockCourses[id as keyof typeof mockCourses] || mockCourses[176]; // Default to 176 if not found
+  const curso = mockCourses[id || "176"]; // Usar 176 como padrão se id não for encontrado
   
   return (
     <MainLayout>
@@ -202,7 +287,7 @@ const DetalheCurso = () => {
                     <p className="text-gray-600 mb-6">{curso.description}</p>
                     
                     {/* Exibir grade curricular se existir */}
-                    {curso.curriculum && (
+                    {"curriculum" in curso && (
                       <>
                         <h2 className="text-xl font-semibold mb-4">Grade Curricular</h2>
                         <div className="bg-gray-50 rounded-lg p-6 mb-6">
@@ -228,7 +313,7 @@ const DetalheCurso = () => {
                     )}
                     
                     {/* Ementa resumida se não tiver curriculum detalhado */}
-                    {!curso.curriculum && curso.ementa && (
+                    {"ementa" in curso && (
                       <>
                         <h2 className="text-xl font-semibold mb-4">Ementa Resumida</h2>
                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">

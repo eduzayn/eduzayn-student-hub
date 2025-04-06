@@ -45,7 +45,7 @@ const categories = [
     id: 4,
     name: "Pós-Graduação",
     icon: Award,
-    courses: 114,
+    courses: 115,
     color: "bg-green-500",
     slug: "pos-graduacao",
     description: "Especialização nas áreas educacional, saúde e direito"

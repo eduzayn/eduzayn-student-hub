@@ -1039,6 +1039,41 @@ const mockCourses = [
       { module: "Tópicos Avançados em Clínica", hours: 40 },
       { module: "Tópicos Avançados em Sexualidade", hours: 40 }
     ]
+  },
+  
+  // Novo curso de Pós-Graduação em Psicanálise
+  {
+    id: 501,
+    title: "Pós-Graduação em Psicanálise",
+    category: "Pós-Graduação",
+    categorySlug: "pos-graduacao",
+    duration: "6 meses",
+    price: "R$ 150,00",
+    originalPrice: "R$ 155,00",
+    image: "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+    description: "Curso de pós-graduação em psicanálise para formação de profissionais para atuação clínica com base na teoria psicanalítica.",
+    curriculum: [
+      { module: "Introdução à EAD", hours: 30 },
+      { module: "Diversidade Étnico Racial, Gênero e Direitos Humanos", hours: 40 },
+      { module: "Formação e Ética do Psicanalista", hours: 40 },
+      { module: "Complexo de Édipo e Castração", hours: 40 },
+      { module: "Introdução à Psicanálise", hours: 40 },
+      { module: "Libido, Pulsões e Sexualidade", hours: 40 },
+      { module: "Metodologia da Pesquisa Científica", hours: 40 },
+      { module: "Narcisismo e a Cultura da Indiferença", hours: 40 },
+      { module: "O Aparelho psíquico, aspectos clínicos e Teóricos", hours: 40 },
+      { module: "O Método Psicanalítico", hours: 40 },
+      { module: "Práticas e Procedimentos em Clínica", hours: 40 },
+      { module: "Processos de Transferência e Resistência", hours: 40 },
+      { module: "Psicanálise da Criança e do Adolescente", hours: 40 },
+      { module: "Psicanálise II", hours: 40 },
+      { module: "Psicopatologias I", hours: 40 },
+      { module: "Psicopatologias II", hours: 40 },
+      { module: "Sonhos, Simbologia e Representação", hours: 40 },
+      { module: "Tópicos Avançados em Clínica", hours: 40 },
+      { module: "Tópicos Avançados em Sexualidade", hours: 40 },
+      { module: "Trabalho de Conclusão de Curso (Opcional)", hours: 0 }
+    ]
   }
 ];
 
