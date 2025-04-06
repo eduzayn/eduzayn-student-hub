@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +10,6 @@ import { getCachedFreepikImage } from "@/utils/freepikAPI";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// Dados simulados para os cursos
 const mockCourses = [
   // Cursos existentes
   {
@@ -1089,28 +1086,23 @@ const Cursos = () => {
   
   const [filteredCourses, setFilteredCourses] = useState(mockCourses);
   
-  // Carregar imagens para os cursos
   useEffect(() => {
     const loadCourseImages = async () => {
       try {
         setLoading(true);
         
-        // Preparar objeto inicial
         const initialImages = filteredCourses.reduce((acc, course) => {
-          // Use a imagem existente se for um upload personalizado
           if (course.image.startsWith("/lovable-uploads/")) {
             acc[course.id] = course.image;
           } else {
-            acc[course.id] = '/placeholder.svg'; // Placeholder inicial
+            acc[course.id] = '/placeholder.svg';
           }
           return acc;
         }, {} as Record<number, string>);
         
         setCourseImages(initialImages);
         
-        // Tentar carregar imagens do bucket do Supabase para cada categoria
         const imagePromises = filteredCourses.map(async (course) => {
-          // Pular cursos que já têm imagem personalizada
           if (course.image.startsWith("/lovable-uploads/")) {
             return { id: course.id, imageUrl: course.image };
           }
@@ -1118,14 +1110,12 @@ const Cursos = () => {
           const categoryName = course.category.toLowerCase().replace(/\s+/g, '-');
           
           try {
-            // Listar arquivos no bucket com um prefixo correspondente à categoria
             const { data: files, error } = await supabase
               .storage
               .from('category_images')
               .list(categoryName);
               
             if (error || !files?.length) {
-              // Tentar usar a imagem específica do curso se disponível
               const courseSlug = course.title.toLowerCase().replace(/\s+/g, '-');
               const { data: courseFiles } = await supabase
                 .storage
@@ -1144,15 +1134,12 @@ const Cursos = () => {
                 return { id: course.id, imageUrl: publicURL.publicUrl };
               }
               
-              // Usar placeholder se não encontrar
               return { id: course.id, imageUrl: '/placeholder.svg' };
             }
             
-            // Escolher uma imagem aleatória se várias estiverem disponíveis
             const randomIndex = Math.floor(Math.random() * files.length);
             const selectedFile = files[randomIndex];
             
-            // Obter a URL pública para o arquivo
             const { data: publicURL } = supabase
               .storage
               .from('category_images')
@@ -1184,15 +1171,12 @@ const Cursos = () => {
     loadCourseImages();
   }, [filteredCourses]);
   
-  // Filter courses based on category slug and search query
   useEffect(() => {
     const filtered = mockCourses.filter(course => {
-      // Filter by category if provided
       const categoryMatch = categoria 
         ? course.categorySlug === categoria
         : true;
       
-      // Filter by search query if provided
       const searchMatch = searchQuery
         ? course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
           course.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1204,7 +1188,6 @@ const Cursos = () => {
     setFilteredCourses(filtered);
   }, [categoria, searchQuery]);
 
-  // Function to get the page title based on category
   const getPageTitle = () => {
     if (!categoria) return "Todos os Cursos";
     
@@ -1222,110 +1205,107 @@ const Cursos = () => {
   };
 
   return (
-    <MainLayout>
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-2">{getPageTitle()}</h1>
-          <p className="text-gray-600 mb-8">
-            Encontre o curso ideal para sua formação acadêmica e profissional
-          </p>
-          
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Buscar por nome de curso ou categoria..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {loading && (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2">Carregando cursos...</span>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {!loading && filteredCourses.length > 0 ? (
-              filteredCourses.map((course) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="relative">
-                    <img 
-                      src={courseImages[course.id] || '/placeholder.svg'} 
-                      alt={course.title} 
-                      className="w-full h-48 object-cover" 
-                      onError={(e) => {
-                        // Fallback para placeholder se a imagem falhar
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder.svg';
-                      }}
-                    />
-                    <Badge 
-                      className="absolute top-3 right-3"
-                      variant="secondary"
-                    >
-                      {course.category}
-                    </Badge>
-                  </div>
-                  
-                  <CardHeader>
-                    <CardTitle className="text-xl">
-                      <Link 
-                        to={`/curso/${course.id}`}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {course.title}
-                      </Link>
-                    </CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex items-center text-gray-500 mb-4">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span className="text-sm">{course.duration}</span>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <div className="text-2xl font-bold text-gray-900">{course.price}</div>
-                      <div className="text-sm text-gray-500">
-                        <span className="line-through">{course.originalPrice}</span>
-                        <span className="ml-2">em até 12x no cartão</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  
-                  <CardFooter className="border-t pt-4">
-                    <Button asChild className="w-full">
-                      <Link to={`/curso/${course.id}`}>
-                        Saiba Mais
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              !loading && (
-                <div className="col-span-full text-center py-16">
-                  <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-xl font-medium mb-2">Nenhum curso encontrado</h3>
-                  <p className="text-gray-600 mb-6">
-                    Tente ajustar seus filtros ou busca para encontrar o curso desejado.
-                  </p>
-                  <Button onClick={() => setSearchQuery("")}>
-                    Limpar Busca
-                  </Button>
-                </div>
-              )
-            )}
+    <section className="bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-2">{getPageTitle()}</h1>
+        <p className="text-gray-600 mb-8">
+          Encontre o curso ideal para sua formação acadêmica e profissional
+        </p>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar por nome de curso ou categoria..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
-      </section>
-    </MainLayout>
+        
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Carregando cursos...</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {!loading && filteredCourses.length > 0 ? (
+            filteredCourses.map((course) => (
+              <Card key={course.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <div className="relative">
+                  <img 
+                    src={courseImages[course.id] || '/placeholder.svg'} 
+                    alt={course.title} 
+                    className="w-full h-48 object-cover" 
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
+                  <Badge 
+                    className="absolute top-3 right-3"
+                    variant="secondary"
+                  >
+                    {course.category}
+                  </Badge>
+                </div>
+                
+                <CardHeader>
+                  <CardTitle className="text-xl">
+                    <Link 
+                      to={`/curso/${course.id}`}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {course.title}
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="flex items-center text-gray-500 mb-4">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="text-sm">{course.duration}</span>
+                  </div>
+                  
+                  <div className="flex flex-col">
+                    <div className="text-2xl font-bold text-gray-900">{course.price}</div>
+                    <div className="text-sm text-gray-500">
+                      <span className="line-through">{course.originalPrice}</span>
+                      <span className="ml-2">em até 12x no cartão</span>
+                    </div>
+                  </div>
+                </CardContent>
+                
+                <CardFooter className="border-t pt-4">
+                  <Button asChild className="w-full">
+                    <Link to={`/curso/${course.id}`}>
+                      Saiba Mais
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            !loading && (
+              <div className="col-span-full text-center py-16">
+                <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-xl font-medium mb-2">Nenhum curso encontrado</h3>
+                <p className="text-gray-600 mb-6">
+                  Tente ajustar seus filtros ou busca para encontrar o curso desejado.
+                </p>
+                <Button onClick={() => setSearchQuery("")}>
+                  Limpar Busca
+                </Button>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 
