@@ -15,8 +15,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     storage: localStorage,
     detectSessionInUrl: true,
-    flowType: 'pkce'
-    // Durante o desenvolvimento, desabilite a confirmação de e-mail no dashboard do Supabase:
-    // Authentication > Providers > Email > Confirm email
+    flowType: 'pkce',
+    // Adicionando configurações específicas para permitir login com email
+    // mesmo se a confirmação de e-mail estiver desabilitada
+    emailRedirectTo: window.location.origin
   }
 });

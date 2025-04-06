@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, LogIn, UserPlus, Mail, Lock, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -56,6 +57,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showEmailDisabledDialog, setShowEmailDisabledDialog] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -121,6 +123,11 @@ const Login = () => {
       }
       
       if (error) {
+        // Verificar se é o erro de "Email logins are disabled"
+        if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
+          setShowEmailDisabledDialog(true);
+          throw new Error("O login com email está desativado no Supabase. O administrador precisa ativar esta funcionalidade.");
+        }
         throw new Error("Não foi possível fazer login. Verifique suas credenciais ou entre em contato com o administrador.");
       }
     } catch (err: any) {
@@ -148,11 +155,15 @@ const Login = () => {
       });
       
       if (error) {
+        // Verificar tipos específicos de erro
         if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
           setEmailNotConfirmed(values.email);
           throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique no botão abaixo para acessar mesmo assim.");
         } else if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
-          throw new Error("O login com email está desativado. Entre em contato com o administrador para ativar essa funcionalidade.");
+          setShowEmailDisabledDialog(true);
+          throw new Error("O login com email está desativado no Supabase. O administrador precisa ativar esta funcionalidade.");
+        } else if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
         }
         throw error;
       }
@@ -189,13 +200,16 @@ const Login = () => {
             first_name: values.first_name,
             last_name: values.last_name,
             role: 'student'
-          }
+          },
+          emailRedirectTo: window.location.origin
         }
       });
       
       if (error) {
+        // Verificar se é o erro de "Email logins are disabled"
         if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
-          throw new Error("O cadastro com email está desativado. Entre em contato com o administrador para ativar essa funcionalidade.");
+          setShowEmailDisabledDialog(true);
+          throw new Error("O cadastro com email está desativado no Supabase. O administrador precisa ativar essa funcionalidade.");
         }
         throw error;
       }
@@ -512,6 +526,43 @@ const Login = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Modal informativo sobre logins por email desativados */}
+      <Dialog open={showEmailDisabledDialog} onOpenChange={setShowEmailDisabledDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Login por email desativado</DialogTitle>
+            <DialogDescription>
+              O login por email está desativado nas configurações do Supabase. 
+              O administrador precisa ativar essa funcionalidade para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border rounded-lg p-4 bg-amber-50 text-amber-800">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> 
+                Como resolver:
+              </h4>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>Acesse o painel do Supabase</li>
+                <li>Vá para Authentication &gt; Providers</li>
+                <li>Ative o provedor "Email"</li>
+                <li>Certifique-se que o botão "Enable Email provider" está ligado</li>
+              </ol>
+            </div>
+            <img 
+              src="/lovable-uploads/ba640304-8303-4e28-bdde-1ebef881bfba.png"
+              alt="Configuração do Supabase"
+              className="w-full rounded-lg border"
+            />
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowEmailDisabledDialog(false)}>
+              Entendi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
