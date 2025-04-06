@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,7 +23,7 @@ const categories = [
     color: "bg-blue-500",
     slug: "graduacao",
     description: "Bacharelados, Licenciaturas e Tecnológicos",
-    imageQuery: "education graduation university"
+    imageQuery: "graduacao"
   },
   {
     id: 2,
@@ -32,7 +33,7 @@ const categories = [
     color: "bg-purple-500",
     slug: "segunda-licenciatura",
     description: "Segunda Licenciatura para Licenciados",
-    imageQuery: "teaching license education"
+    imageQuery: "segunda-licenciatura"
   },
   {
     id: 3,
@@ -42,7 +43,7 @@ const categories = [
     color: "bg-indigo-500",
     slug: "segunda-graduacao-bacharelado",
     description: "Exclusivo para quem já possui diploma de bacharel",
-    imageQuery: "bachelor degree education"
+    imageQuery: "segunda-graduacao-bacharelado"
   },
   {
     id: 4,
@@ -52,7 +53,7 @@ const categories = [
     color: "bg-green-500",
     slug: "pos-graduacao",
     description: "Especialização nas áreas educacional, saúde e direito",
-    imageQuery: "postgraduate education specialization"
+    imageQuery: "pos-graduacao"
   },
   {
     id: 5,
@@ -62,7 +63,7 @@ const categories = [
     color: "bg-yellow-500",
     slug: "mba",
     description: "Cursos de especialização em gestão empresarial",
-    imageQuery: "business management mba"
+    imageQuery: "mba"
   },
   {
     id: 6,
@@ -72,7 +73,7 @@ const categories = [
     color: "bg-orange-500",
     slug: "formacao-livre",
     description: "Cursos livres para capacitação profissional",
-    imageQuery: "free education training"
+    imageQuery: "formacao-livre"
   },
   {
     id: 7,
@@ -81,7 +82,7 @@ const categories = [
     courses: 22,
     color: "bg-red-500",
     slug: "capacitacao-profissional",
-    imageQuery: "professional training course"
+    imageQuery: "capacitacao-profissional"
   },
   {
     id: 8,
@@ -91,7 +92,7 @@ const categories = [
     color: "bg-teal-500",
     slug: "formacao-pedagogica",
     description: "Exclusivo para bacharéis e tecnólogos",
-    imageQuery: "pedagogical training education"
+    imageQuery: "formacao-pedagogica"
   }
 ];
 
@@ -108,17 +109,18 @@ const CategorySection = () => {
     
     setCategoryImages(initialImages);
     
-    // Carregar imagens
+    // Load context-specific images
     const loadImages = async () => {
       try {
         setLoading(true);
         
-        // Para cada categoria, buscar uma imagem de placeholder
+        // For each category, get a context-appropriate image
         const imagesMap = {} as Record<number, string>;
         
         for (const category of categories) {
           try {
-            const imageUrl = await getCachedFreepikImage(category.imageQuery);
+            // Use the category slug as the context key
+            const imageUrl = await getCachedFreepikImage(category.slug);
             imagesMap[category.id] = imageUrl;
           } catch (error) {
             console.warn(`Failed to load image for ${category.name}:`, error);

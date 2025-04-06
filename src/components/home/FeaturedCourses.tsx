@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, BookOpen, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getCachedFreepikImage } from "@/utils/freepikAPI";
 
 // Mock featured courses data
 const featuredCourses = [
@@ -13,6 +15,7 @@ const featuredCourses = [
     id: 1,
     title: "Gestão de Projetos",
     category: "Administração",
+    categorySlug: "mba",
     duration: "60 horas",
     students: 1240,
     rating: 4.8,
@@ -27,6 +30,7 @@ const featuredCourses = [
     id: 2,
     title: "Desenvolvimento Web Full Stack",
     category: "Tecnologia",
+    categorySlug: "capacitacao-profissional",
     duration: "120 horas",
     students: 2150,
     rating: 4.9,
@@ -41,6 +45,7 @@ const featuredCourses = [
     id: 176,
     title: "Neuropsicopedagogia Institucional, Clínica e Hospitalar",
     category: "Saúde Mental",
+    categorySlug: "pos-graduacao",
     duration: "6 meses",
     students: 845,
     rating: 4.8,
@@ -55,6 +60,7 @@ const featuredCourses = [
     id: 4,
     title: "Análise de Dados com Python",
     category: "Dados",
+    categorySlug: "capacitacao-profissional",
     duration: "80 horas",
     students: 760,
     rating: 4.6,
@@ -76,21 +82,44 @@ const FeaturedCourses = () => {
       try {
         setLoading(true);
         
-        // Configurar imagens iniciais (usar o placeholder ou imagens existentes)
+        // Prepare initial images (use existing custom uploads if available)
         const initialImages = featuredCourses.reduce((acc, course) => {
-          // Use a imagem existente se for um upload personalizado
           if (course.image.startsWith("/lovable-uploads/")) {
             acc[course.id] = course.image;
           } else {
-            acc[course.id] = '/placeholder.svg'; // Placeholder inicial
+            acc[course.id] = '/placeholder.svg'; // Initial placeholder
           }
           return acc;
         }, {} as Record<number, string>);
         
         setCourseImages(initialImages);
         
-        // Como temporariamente não estamos usando a API Freepik ou Supabase,
-        // vamos apenas manter as imagens iniciais
+        // Load context-specific images for each course
+        const imagesPromises = featuredCourses.map(async (course) => {
+          // Skip courses with custom images
+          if (course.image.startsWith("/lovable-uploads/")) {
+            return { id: course.id, imageUrl: course.image };
+          }
+          
+          try {
+            // Use category slug or image query as context
+            const contextKey = course.categorySlug || course.imageQuery;
+            const imageUrl = await getCachedFreepikImage(contextKey);
+            return { id: course.id, imageUrl };
+          } catch (error) {
+            console.warn(`Failed to load image for ${course.title}:`, error);
+            return { id: course.id, imageUrl: '/placeholder.svg' };
+          }
+        });
+        
+        const results = await Promise.all(imagesPromises);
+        
+        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+          acc[id] = imageUrl;
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCourseImages(imagesMap);
       } catch (err) {
         console.error("Failed to load course images:", err);
         toast.error("Não foi possível carregar algumas imagens");
@@ -102,10 +131,8 @@ const FeaturedCourses = () => {
     loadImages();
   }, []);
 
-  // Verificar se o curso existe nos cursos mockados antes de redirecionar
+  // Check if the course exists in mocked courses before redirecting
   const checkCourseExists = (courseId: number) => {
-    // Para a página de detalhes do curso, verificamos se o ID está no mockCourses
-    // Aqui estamos apenas verificando se o ID está em featuredCourses
     return featuredCourses.some(course => course.id === courseId);
   };
 
@@ -141,7 +168,7 @@ const FeaturedCourses = () => {
                   alt={course.title}
                   className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
-                    // Fallback para placeholder se a imagem falhar
+                    // Fallback to placeholder if image fails
                     const target = e.target as HTMLImageElement;
                     target.src = '/placeholder.svg';
                   }}
