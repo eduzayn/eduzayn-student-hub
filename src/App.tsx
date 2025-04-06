@@ -46,6 +46,14 @@ import ModuloAplicacoes from "./pages/admin/ModuloAplicacoes";
 // Nova página de matrícula
 import NovaMatricula from "./pages/admin/matriculas/NovaMatricula";
 
+// Páginas adicionais do módulo de matrículas
+import MatriculasLista from "./pages/admin/matriculas/MatriculasLista";
+import MatriculasAlunos from "./pages/admin/matriculas/MatriculasAlunos";
+import MatriculasCursos from "./pages/admin/matriculas/MatriculasCursos";
+import MatriculasContratos from "./pages/admin/matriculas/MatriculasContratos";
+import MatriculasPagamentos from "./pages/admin/matriculas/MatriculasPagamentos";
+import MatriculasConfiguracoes from "./pages/admin/matriculas/MatriculasConfiguracoes";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -105,6 +113,12 @@ const App = () => (
               <Route path="material" element={<ModuloMaterial />} />
               <Route path="matriculas" element={<ModuloMatriculas />} />
               <Route path="matriculas/nova" element={<NovaMatricula />} />
+              <Route path="matriculas/lista" element={<MatriculasLista />} />
+              <Route path="matriculas/alunos" element={<MatriculasAlunos />} />
+              <Route path="matriculas/cursos" element={<MatriculasCursos />} />
+              <Route path="matriculas/contratos" element={<MatriculasContratos />} />
+              <Route path="matriculas/pagamentos" element={<MatriculasPagamentos />} />
+              <Route path="matriculas/configuracoes" element={<MatriculasConfiguracoes />} />
               <Route path="professor" element={<ModuloProfessor />} />
               <Route path="parceiro" element={<ModuloParceiro />} />
               <Route path="polo" element={<ModuloPolo />} />
