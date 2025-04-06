@@ -2,20 +2,21 @@
 import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isAuthenticated } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // Verificar autenticação ao carregar o componente
+  // Verificar autenticação ao carregar o componente e redirecionar para o novo portal
   useEffect(() => {
     const checkAuth = async () => {
       // Verificar bypass de admin
       const isAdminBypass = localStorage.getItem('adminBypassAuthenticated') === 'true';
       
       if (isAdminBypass) {
-        console.log("Admin bypass ativado");
-        return; // Permitir acesso sem verificar autenticação
+        // Redirecionar para o novo portal do aluno na raiz /dashboard
+        console.log("Admin bypass ativado, redirecionando para o novo portal do aluno");
+        return; // O componente AlunoLayout será renderizado automaticamente
       }
       
       // Verificar autenticação normal para usuários comuns
