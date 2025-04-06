@@ -4,7 +4,10 @@ import { CONTEXT_IMAGES, PLACEHOLDER_IMAGES, imageCache } from './imageMapping';
  * Função para encontrar imagens correspondentes para contextos educacionais
  */
 export function getContextImage(context: string): string {
-  // Verifica se o contexto está relacionado à educação especial e retorna a nova imagem
+  const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica PRIMEIRO se o contexto contém termos relacionados à educação especial
+  // Movido para o topo das verificações para garantir prioridade
   const specialEducationTerms = [
     "educação especial", "educacao especial", "inclusão", "inclusao", 
     "autismo", "deficiência", "deficiencia", "transtorno", 
@@ -12,35 +15,54 @@ export function getContextImage(context: string): string {
     "aee", "special education", "special needs", "autism", "adhd"
   ];
   
-  // Verifica se o contexto está relacionado à formação pedagógica
-  const pedagogicalTrainingTerms = [
-    "formacao pedagogica", "formação pedagógica", "pedagogical training", 
-    "teacher training", "formação de professores", "formacao de professores"
-  ];
-  
-  // Verifica se o contexto está relacionado à segunda licenciatura
-  const secondDegreeTerms = [
-    "segunda licenciatura", "segunda-licenciatura", "sociologia", "filosofia",
-    "geografia", "história", "letras", "matemática", "ciências da religião",
-    "second degree", "licenciatura"
-  ];
+  for (const term of specialEducationTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
+    }
+  }
   
   // Termos para verificar se o contexto está relacionado à educação física
+  // Movido para SEGUNDO lugar nas verificações para garantir prioridade
   const physicalEducationTerms = [
     "educação física", "educacao fisica", "physical education", 
     "educacao fisic", "educação fisic", "ed física", "ed fisica", 
     "sports", "esportes", "fitness", "academia", "gym"
   ];
   
-  // Termos para verificar se o contexto está relacionado à administração
-  const administrationTerms = [
-    "administração", "administracao", "gestão", "gestao", "negócios", "negocios",
-    "business", "management", "administrador", "finanças", "financas", 
-    "contabilidade", "contábeis", "contabeis", "economia", "rh", "recursos humanos",
-    "mba", "empreendedor", "empreendedorismo"
+  for (const term of physicalEducationTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png";
+    }
+  }
+  
+  // Verifica se o contexto está relacionado a idosos
+  const elderlyTerms = [
+    "idosos", "idoso", "terceira idade", "geriatria", "gerontologia",
+    "cuidado de idosos", "elderly", "senior", "geriatria e gerontologia",
+    "envelhecimento", "atenção e cuidado com idosos"
   ];
   
-  // Termos para verificar se o contexto está relacionado a cursos de direito
+  for (const term of elderlyTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png";
+    }
+  }
+  
+  // Verifica se o contexto contém termos relacionados a artes visuais
+  const visualArtsTerms = [
+    "artes visuais", "arte", "visual arts", "arte digital", "design gráfico",
+    "desenho", "pintura", "escultura", "fotografia", "história da arte",
+    "estética", "criatividade", "ilustração", "artes", "artista", 
+    "expressão artística", "comunicação visual", "educação artística"
+  ];
+  
+  for (const term of visualArtsTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png";
+    }
+  }
+  
+  // Verifica se o contexto contém termos relacionados a cursos de direito
   const lawTerms = [
     "direito", "direito administrativo", "direito civil", "direito constitucional",
     "direito penal", "direito tributário", "direito empresarial", "direito do trabalho",
@@ -50,47 +72,6 @@ export function getContextImage(context: string): string {
     "law", "legal", "jurídico", "legislação"
   ];
   
-  // Termos para verificar se o contexto está relacionado a artes visuais
-  const visualArtsTerms = [
-    "artes visuais", "arte", "visual arts", "arte digital", "design gráfico",
-    "desenho", "pintura", "escultura", "fotografia", "história da arte",
-    "estética", "criatividade", "ilustração", "artes", "artista", 
-    "expressão artística", "comunicação visual", "educação artística"
-  ];
-  
-  // Termos para verificar se o contexto está relacionado a idosos
-  const elderlyTerms = [
-    "idosos", "idoso", "terceira idade", "geriatria", "gerontologia",
-    "cuidado de idosos", "elderly", "senior", "geriatria e gerontologia",
-    "envelhecimento", "atenção e cuidado com idosos"
-  ];
-  
-  // Verificar se é um curso de pós-graduação, exceto educação especial
-  const normalizedContext = context.toLowerCase().trim();
-  
-  // Verifica se o contexto contém termos relacionados a idosos
-  for (const term of elderlyTerms) {
-    if (normalizedContext.includes(term)) {
-      return "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png";
-    }
-  }
-  
-  // Verifica se o contexto contém termos relacionados a artes visuais
-  for (const term of visualArtsTerms) {
-    if (normalizedContext.includes(term)) {
-      return "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png";
-    }
-  }
-  
-  // Verifica PRIMEIRO se o contexto contém termos relacionados à educação especial
-  // Movido para o topo das verificações para garantir prioridade
-  for (const term of specialEducationTerms) {
-    if (normalizedContext.includes(term)) {
-      return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
-    }
-  }
-  
-  // Verifica se o contexto contém termos relacionados a cursos de direito
   for (const term of lawTerms) {
     if (normalizedContext.includes(term)) {
       // Usa o mapeamento específico se existe, ou faz alternância com base no termo
@@ -106,20 +87,25 @@ export function getContextImage(context: string): string {
   }
   
   // Verifica se o contexto contém termos relacionados à administração
+  const administrationTerms = [
+    "administração", "administracao", "gestão", "gestao", "negócios", "negocios",
+    "business", "management", "administrador", "finanças", "financas", 
+    "contabilidade", "contábeis", "contabeis", "economia", "rh", "recursos humanos",
+    "mba", "empreendedor", "empreendedorismo"
+  ];
+  
   for (const term of administrationTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png";
     }
   }
   
-  // Verifica se o contexto contém termos relacionados à educação física
-  for (const term of physicalEducationTerms) {
-    if (normalizedContext.includes(term)) {
-      return "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png";
-    }
-  }
-  
   // Verifica se o contexto contém termos relacionados à formação pedagógica
+  const pedagogicalTrainingTerms = [
+    "formacao pedagogica", "formação pedagógica", "pedagogical training", 
+    "teacher training", "formação de professores", "formacao de professores"
+  ];
+  
   for (const term of pedagogicalTrainingTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png";
@@ -127,13 +113,19 @@ export function getContextImage(context: string): string {
   }
   
   // Verifica se o contexto contém termos relacionados à segunda licenciatura
+  const secondDegreeTerms = [
+    "segunda licenciatura", "segunda-licenciatura", "sociologia", "filosofia",
+    "geografia", "história", "letras", "matemática", "ciências da religião",
+    "second degree", "licenciatura"
+  ];
+  
   for (const term of secondDegreeTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png";
     }
   }
   
-  // Se for de pós-graduação e não for de educação especial, não retorna imagem
+  // Verificar se é de pós-graduação e não for de educação especial, não retorna imagem
   if (
     normalizedContext.includes("pós-graduação") || 
     normalizedContext.includes("pos-graduacao") || 

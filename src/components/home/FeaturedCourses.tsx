@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,14 @@ const FeaturedCourses = () => {
             return { id: course.id, imageUrl: '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png' };
           }
           
+          // Verifica se o título contém "Educação Física" para usar imagem específica
+          if (course.title.toLowerCase().includes("educação física") ||
+              course.title.toLowerCase().includes("educacao fisica") ||
+              course.title.toLowerCase().includes("ed física") ||
+              course.title.toLowerCase().includes("ed fisica")) {
+            return { id: course.id, imageUrl: '/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png' };
+          }
+          
           try {
             // Use title first for best matching, then fallback to category
             const contextKey = course.title || course.imageQuery || course.categorySlug;
@@ -168,10 +177,21 @@ const FeaturedCourses = () => {
               course.title.toLowerCase().includes("educação especial") || 
               course.title.toLowerCase().includes("educacao especial");
             
+            // Verificar se é curso de educação física
+            const isPhysicalEducation =
+              course.title.toLowerCase().includes("educação física") || 
+              course.title.toLowerCase().includes("educacao fisica") ||
+              course.title.toLowerCase().includes("ed física") || 
+              course.title.toLowerCase().includes("ed fisica");
+            
             // Definir imagem apropriada
-            const courseImage = isSpecialEducation 
-              ? '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png' 
-              : (courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png');
+            let courseImage = courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
+            
+            if (isSpecialEducation) {
+              courseImage = '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png';
+            } else if (isPhysicalEducation) {
+              courseImage = '/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png';
+            }
             
             return (
               <Card key={course.id} className="eduzayn-card animate-fade-in group hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-200">

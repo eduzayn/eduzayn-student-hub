@@ -18,11 +18,25 @@ const CourseImage: React.FC<CourseImageProps> = ({ image, title, category, loadi
     title.toLowerCase().includes("educação especial") || 
     title.toLowerCase().includes("educacao especial");
   
-  // Imagem específica para cursos de educação especial
+  // Verifica se o título contém "Educação Física" para usar imagem específica
+  const isPhysicalEducation = 
+    title.toLowerCase().includes("educação física") || 
+    title.toLowerCase().includes("educacao fisica") ||
+    title.toLowerCase().includes("ed física") || 
+    title.toLowerCase().includes("ed fisica");
+  
+  // Imagens específicas para cursos
   const specialEducationImage = '/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png';
+  const physicalEducationImage = '/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png';
   
   // Determina qual imagem usar
-  const displayImage = isSpecialEducation ? specialEducationImage : (image || defaultImage);
+  let displayImage = image || defaultImage;
+  
+  if (isSpecialEducation) {
+    displayImage = specialEducationImage;
+  } else if (isPhysicalEducation) {
+    displayImage = physicalEducationImage;
+  }
   
   return (
     <div className="relative h-64">
