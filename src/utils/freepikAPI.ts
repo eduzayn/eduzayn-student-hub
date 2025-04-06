@@ -42,6 +42,12 @@ const CONTEXT_IMAGES = {
   "neuropsicopedagogia": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   "psicanálise": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   
+  // Adicionando chaves específicas para elementos da interface
+  "hero-banner": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
+  "about-us": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "testimonials": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+  "call-to-action": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -154,7 +160,7 @@ export async function getCachedFreepikImage(query: string): Promise<string> {
 export async function uploadImage(
   file: File,
   path: string,
-  bucket: 'course_images' | 'category_images' | 'avatars'
+  bucket: 'course_images' | 'category_images' | 'avatars' | 'site_images'
 ): Promise<string | undefined> {
   try {
     // Upload do arquivo
@@ -193,5 +199,23 @@ export function setManualCourseImage(courseId: number, imageUrl: string): void {
 
 // Adicionando uma função para atualizar uma correspondência de contexto específica
 export function setContextImage(context: string, imageUrl: string): void {
-  CONTEXT_IMAGES[context.toLowerCase().trim()] = imageUrl;
+  if (context) {
+    CONTEXT_IMAGES[context.toLowerCase().trim()] = imageUrl;
+  }
+}
+
+/**
+ * Obtém todas as imagens disponíveis no sistema
+ * @returns Um objeto com todas as imagens do contexto
+ */
+export function getAllContextImages(): Record<string, string> {
+  return { ...CONTEXT_IMAGES };
+}
+
+/**
+ * Obtém todas as imagens disponíveis no cache
+ * @returns Um objeto com todas as imagens do cache
+ */
+export function getAllCachedImages(): Record<string, string> {
+  return { ...imageCache };
 }

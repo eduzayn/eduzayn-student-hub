@@ -15,6 +15,10 @@ interface ImageEditorProps {
   associatedText?: string;
   onTextUpdate?: (newText: string) => void;
   title?: string;
+  buttonText?: string;
+  previewSize?: "small" | "medium" | "large";
+  hideCancel?: boolean;
+  onCancel?: () => void;
 }
 
 const ImageEditor: React.FC<ImageEditorProps> = ({
@@ -23,7 +27,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
   onImageUpdate,
   associatedText,
   onTextUpdate,
-  title = "Editor de Imagem"
+  title = "Editor de Imagem",
+  buttonText = "Enviar imagem",
+  previewSize = "medium",
+  hideCancel = true,
+  onCancel
 }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
@@ -89,6 +97,13 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     }
   };
 
+  // Determinar classes de tamanho para o preview da imagem
+  const previewSizeClasses = {
+    small: "h-32",
+    medium: "h-48",
+    large: "h-64"
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -112,7 +127,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             <img 
               src={previewUrl} 
               alt="Preview" 
-              className="w-full h-48 object-cover rounded-md border"
+              className={`w-full ${previewSizeClasses[previewSize]} object-cover rounded-md border`}
             />
           </div>
         )}
@@ -125,12 +140,22 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="min-h-[100px]"
+              placeholder="Digite o texto aqui..."
             />
           </div>
         )}
       </CardContent>
       
       <CardFooter className="flex gap-2 justify-end">
+        {!hideCancel && onCancel && (
+          <Button 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancelar
+          </Button>
+        )}
+        
         {associatedText !== undefined && (
           <Button 
             variant="outline" 
@@ -144,7 +169,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
           onClick={handleUpload} 
           disabled={!imageFile || uploading}
         >
-          {uploading ? "Enviando..." : "Enviar imagem"}
+          {uploading ? "Enviando..." : buttonText}
         </Button>
       </CardFooter>
     </Card>
