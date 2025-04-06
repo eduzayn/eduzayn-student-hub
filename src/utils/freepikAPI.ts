@@ -47,6 +47,25 @@ const CONTEXT_IMAGES = {
   "testimonials": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "call-to-action": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   
+  // Cursos de educação especial (nova imagem)
+  "educação especial": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "educacao especial": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "inclusão": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "inclusao": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "autismo": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "deficiência": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "deficiencia": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "transtorno": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "tea": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "tdah": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "neurodiversidade": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "atendimento educacional especializado": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "aee": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "special education": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "special needs": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "autism": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  "adhd": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -63,8 +82,23 @@ const PLACEHOLDER_IMAGES = [
 
 // Função mais poderosa e flexível para encontrar imagens correspondentes para contextos educacionais
 function getContextImage(context: string): string {
+  // Verifica se o contexto está relacionado à educação especial e retorna a nova imagem
+  const specialEducationTerms = [
+    "educação especial", "educacao especial", "inclusão", "inclusao", 
+    "autismo", "deficiência", "deficiencia", "transtorno", 
+    "tea", "tdah", "neurodiversidade", "atendimento educacional especializado", 
+    "aee", "special education", "special needs", "autism", "adhd"
+  ];
+  
   // Normaliza o contexto para melhorar a correspondência
   const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica se o contexto contém termos relacionados à educação especial
+  for (const term of specialEducationTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
+    }
+  }
   
   // Tenta encontrar uma correspondência direta
   if (CONTEXT_IMAGES[normalizedContext]) {
