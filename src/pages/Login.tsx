@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,7 +55,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null);
 
-  // Verificar se o usuário já está autenticado
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -68,7 +66,6 @@ const Login = () => {
     
     checkSession();
     
-    // Configurar um listener para mudanças no status de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate("/dashboard");
@@ -80,7 +77,6 @@ const Login = () => {
     };
   }, [navigate]);
 
-  // Formulário de login
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -89,7 +85,6 @@ const Login = () => {
     },
   });
 
-  // Formulário de cadastro
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -101,29 +96,35 @@ const Login = () => {
     },
   });
 
-  // Função para tentar acesso mesmo com email não confirmado
   const handleForceSignIn = async () => {
     if (!emailNotConfirmed) return;
     
     setIsLoading(true);
     
     try {
-      // Tenta obter o usuário pelo email
-      const { data: { user }, error } = await supabase.auth.admin.getUserByEmail(emailNotConfirmed);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Acesso concedido",
-        description: "Redirecionando para o dashboard...",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailNotConfirmed,
+        password: loginForm.getValues("password"),
       });
       
-      navigate("/dashboard");
-    } catch (err) {
+      if (data.session) {
+        toast({
+          title: "Acesso concedido",
+          description: "Redirecionando para o dashboard...",
+        });
+        
+        navigate("/dashboard");
+        return;
+      }
+      
+      if (error) {
+        throw new Error("Não foi possível fazer login. Verifique suas credenciais ou entre em contato com o administrador.");
+      }
+    } catch (err: any) {
       console.error(err);
       toast({
         title: "Falha ao tentar acessar",
-        description: "Entre em contato com o administrador.",
+        description: err?.message || "Entre em contato com o administrador.",
         variant: "destructive",
       });
     } finally {
@@ -131,7 +132,6 @@ const Login = () => {
     }
   };
 
-  // Função de login
   async function onLogin(values: LoginFormValues) {
     setIsLoading(true);
     setEmailNotConfirmed(null);
@@ -143,7 +143,6 @@ const Login = () => {
       });
       
       if (error) {
-        // Verificar se o erro é de email não confirmado
         if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
           setEmailNotConfirmed(values.email);
           throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique no botão abaixo para acessar mesmo assim.");
@@ -169,7 +168,6 @@ const Login = () => {
     }
   }
 
-  // Função de cadastro
   async function onSignup(values: SignupFormValues) {
     setIsLoading(true);
     
@@ -195,10 +193,8 @@ const Login = () => {
         description: "Por favor, verifique seu email para confirmar sua conta ou entre em contato com o administrador.",
       });
       
-      // Resetar o formulário
       signupForm.reset();
       
-      // Trocar para a aba de login
       setActiveTab("login");
     } catch (error: any) {
       console.error(error);
@@ -258,7 +254,6 @@ const Login = () => {
               <TabsTrigger value="signup">Cadastro</TabsTrigger>
             </TabsList>
             
-            {/* Conteúdo da aba de Login */}
             <TabsContent value="login">
               <Card>
                 <CardHeader>
@@ -352,7 +347,6 @@ const Login = () => {
               </Card>
             </TabsContent>
             
-            {/* Conteúdo da aba de Cadastro */}
             <TabsContent value="signup">
               <Card>
                 <CardHeader>
