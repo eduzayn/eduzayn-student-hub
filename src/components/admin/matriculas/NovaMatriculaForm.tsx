@@ -92,7 +92,8 @@ const NovaMatriculaForm: React.FC = () => {
           
           if (resultadoLearnWorlds) {
             // Se tiver ID de matrícula do LearnWorlds, adicionar aos dados da matrícula
-            matriculaData.learning_worlds_enrollment_id = resultadoLearnWorlds.id;
+            // Usando a propriedade correta conforme o tipo Matricula
+            matriculaData.learnworlds_enrollment_id = resultadoLearnWorlds.id;
             console.log("Matrícula criada no LearnWorlds:", resultadoLearnWorlds.id);
           }
         } catch (learnWorldsError: any) {

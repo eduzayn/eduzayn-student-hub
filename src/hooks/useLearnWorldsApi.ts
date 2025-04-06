@@ -164,6 +164,13 @@ export const useLearnWorldsApi = () => {
   };
 
   /**
+   * Método alternativo para obter todos os cursos (para compatibilidade com CursosAluno.tsx)
+   */
+  const getAllCourses = async (page: number = 1, limit: number = 100, searchTerm?: string) => {
+    return getCourses(page, limit, searchTerm);
+  };
+
+  /**
    * Busca informações de um curso específico
    * @param courseId ID do curso na LearnWorlds
    */
@@ -214,6 +221,7 @@ export const useLearnWorldsApi = () => {
     cadastrarAluno,
     matricularAlunoEmCurso,
     getCourses,
+    getAllCourses,
     getCourseDetails,
     getUsers,
     getUserCourseProgress,
