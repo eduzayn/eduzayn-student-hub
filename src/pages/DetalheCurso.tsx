@@ -11,7 +11,9 @@ import {
   FileText, 
   Award, 
   Users, 
-  BookOpen
+  BookOpen,
+  Laptop,
+  DollarSign
 } from "lucide-react";
 
 // Dados simulados para o curso de exemplo
@@ -20,10 +22,10 @@ const mockCourseData = {
   title: "Neuropsicopedagogia Institucional, Clínica e Hospitalar",
   category: "Pós-Graduação",
   duration: "6 meses",
-  modalidade: "EAD",
+  modalidade: "Online",
   price: "R$ 150,00",
   originalPrice: "R$ 155,00",
-  payment: "mensalidade (16x)",
+  payment: "1 matrícula de R$ 150,00 + 16x de R$ 155,00",
   certification: "Certificado de Pós-Graduação",
   image: "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   description: "Este curso de pós-graduação em Neuropsicopedagogia Institucional, Clínica e Hospitalar prepara profissionais para atuar na avaliação, diagnóstico e intervenção em distúrbios de aprendizagem no contexto clínico, hospitalar e institucional.",
@@ -94,7 +96,7 @@ const DetalheCurso = () => {
                       <span>Duração: {curso.duration}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
-                      <Calendar className="h-5 w-5 mr-2 text-primary" />
+                      <Laptop className="h-5 w-5 mr-2 text-primary" />
                       <span>Modalidade: {curso.modalidade}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
@@ -146,13 +148,29 @@ const DetalheCurso = () => {
             {/* Card de matrícula */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                <div className="mb-4">
-                  <div className="text-gray-500 mb-1">Investimento:</div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl font-bold text-primary">{curso.price}</span>
-                    <span className="text-gray-400 line-through">{curso.originalPrice}</span>
+                <div className="mb-6">
+                  <div className="text-xl font-semibold mb-4">Investimento:</div>
+                  <div className="p-4 bg-blue-50 rounded-lg mb-4">
+                    <div className="flex items-center mb-2">
+                      <DollarSign className="h-5 w-5 mr-2 text-primary" />
+                      <span className="font-medium">Matrícula de R$ 150,00</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-5 w-5 mr-2 text-primary" />
+                      <span className="font-medium">16x de R$ 155,00</span>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">{curso.payment}</div>
+                  
+                  <div className="p-4 bg-blue-50 rounded-lg mb-4">
+                    <div className="flex items-center mb-2">
+                      <Laptop className="h-5 w-5 mr-2 text-primary" />
+                      <span className="font-medium">Modalidade: Online</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-5 w-5 mr-2 text-primary" />
+                      <span className="font-medium">Duração: A partir de 6 meses</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="space-y-4 mb-6">
