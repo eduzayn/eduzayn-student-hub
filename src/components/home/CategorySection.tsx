@@ -98,23 +98,45 @@ const categories = [
 
 const CategorySection = () => {
   const [categoryImages, setCategoryImages] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Set initial placeholder icons
+    const initialImages = categories.reduce((acc, category) => {
+      acc[category.id] = '';
+      return acc;
+    }, {} as Record<number, string>);
+    
+    setCategoryImages(initialImages);
+    
     // Fetch images for each category
     const loadImages = async () => {
-      const imagePromises = categories.map(async (category) => {
-        const imageUrl = await getCachedFreepikImage(category.imageQuery);
-        return { id: category.id, imageUrl };
-      });
-      
-      const results = await Promise.all(imagePromises);
-      
-      const imagesMap = results.reduce((acc, { id, imageUrl }) => {
-        acc[id] = imageUrl;
-        return acc;
-      }, {} as Record<number, string>);
-      
-      setCategoryImages(imagesMap);
+      try {
+        setLoading(true);
+        
+        const imagePromises = categories.map(async (category) => {
+          try {
+            const imageUrl = await getCachedFreepikImage(category.imageQuery);
+            return { id: category.id, imageUrl };
+          } catch (error) {
+            console.warn(`Failed to load image for ${category.name}:`, error);
+            return { id: category.id, imageUrl: '' };
+          }
+        });
+        
+        const results = await Promise.all(imagePromises);
+        
+        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+          acc[id] = imageUrl;
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCategoryImages(imagesMap);
+      } catch (err) {
+        console.error("Failed to load category images:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     
     loadImages();

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 597,00",
-    originalPrice: "R$ 797,00", // Added missing originalPrice field
+    originalPrice: "R$ 797,00",
     imageQuery: "project management business"
   },
   {
@@ -34,7 +33,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 997,00",
-    originalPrice: "R$ 1.297,00", // Added missing originalPrice field
+    originalPrice: "R$ 1.297,00",
     imageQuery: "web development coding"
   },
   {
@@ -48,7 +47,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 150,00",
-    originalPrice: "R$ 250,00", // Added missing originalPrice field
+    originalPrice: "R$ 250,00",
     imageQuery: "neuropsychology clinical"
   },
   {
@@ -62,7 +61,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: false,
     price: "R$ 697,00",
-    originalPrice: "R$ 897,00", // Added missing originalPrice field
+    originalPrice: "R$ 897,00",
     imageQuery: "data analysis python"
   },
 ];
@@ -72,29 +71,52 @@ const FeaturedCourses = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Set initial placeholder images
+    const initialImages = featuredCourses.reduce((acc, course) => {
+      // Use the existing image if it's already a custom upload
+      if (course.image.startsWith("/lovable-uploads/")) {
+        acc[course.id] = course.image;
+      } else {
+        acc[course.id] = '';
+      }
+      return acc;
+    }, {} as Record<number, string>);
+    
+    setCourseImages(initialImages);
+    
     // Fetch images for each featured course
     const loadImages = async () => {
-      setLoading(true);
-      
-      const imagePromises = featuredCourses.map(async (course) => {
-        // Skip courses that already have a custom image
-        if (course.image.startsWith("/lovable-uploads/")) {
-          return { id: course.id, imageUrl: course.image };
-        }
+      try {
+        setLoading(true);
         
-        const imageUrl = await getCachedFreepikImage(course.imageQuery);
-        return { id: course.id, imageUrl };
-      });
-      
-      const results = await Promise.all(imagePromises);
-      
-      const imagesMap = results.reduce((acc, { id, imageUrl }) => {
-        acc[id] = imageUrl;
-        return acc;
-      }, {} as Record<number, string>);
-      
-      setCourseImages(imagesMap);
-      setLoading(false);
+        const imagePromises = featuredCourses.map(async (course) => {
+          // Skip courses that already have a custom image
+          if (course.image.startsWith("/lovable-uploads/")) {
+            return { id: course.id, imageUrl: course.image };
+          }
+          
+          try {
+            const imageUrl = await getCachedFreepikImage(course.imageQuery);
+            return { id: course.id, imageUrl };
+          } catch (error) {
+            console.warn(`Failed to load image for course ${course.title}:`, error);
+            return { id: course.id, imageUrl: course.image };
+          }
+        });
+        
+        const results = await Promise.all(imagePromises);
+        
+        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+          acc[id] = imageUrl;
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCourseImages(imagesMap);
+      } catch (err) {
+        console.error("Failed to load course images:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     
     loadImages();
@@ -139,7 +161,6 @@ const FeaturedCourses = () => {
                 </div>
               </div>
               
-              
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <Badge variant="outline" className="bg-gray-50">
@@ -179,7 +200,7 @@ const FeaturedCourses = () => {
                 <div className="mt-4">
                   <div className="text-xl font-bold text-gray-900">{course.price}</div>
                   <div className="text-xs text-gray-500">
-                    <span className="line-through">{course.originalPrice}</span>
+                    <span className="line-through">{course.originalPrice || ''}</span>
                     <span className="ml-2">em até 12x no cartão</span>
                   </div>
                 </div>
