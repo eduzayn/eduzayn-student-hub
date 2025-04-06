@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 597,00",
+    originalPrice: "R$ 797,00", // Added missing originalPrice field
     imageQuery: "project management business"
   },
   {
@@ -32,6 +34,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 997,00",
+    originalPrice: "R$ 1.297,00", // Added missing originalPrice field
     imageQuery: "web development coding"
   },
   {
@@ -45,6 +48,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: true,
     price: "R$ 150,00",
+    originalPrice: "R$ 250,00", // Added missing originalPrice field
     imageQuery: "neuropsychology clinical"
   },
   {
@@ -58,6 +62,7 @@ const featuredCourses = [
     isFeatured: true,
     popular: false,
     price: "R$ 697,00",
+    originalPrice: "R$ 897,00", // Added missing originalPrice field
     imageQuery: "data analysis python"
   },
 ];
