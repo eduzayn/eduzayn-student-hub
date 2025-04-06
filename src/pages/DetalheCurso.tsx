@@ -984,24 +984,24 @@ const DetalheCurso = () => {
             {/* Informações do curso */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="relative h-72">
+                <div className="relative h-64">
                   {loading ? (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : (
-                    <AspectRatio ratio={16/9} className="h-full">
+                    <div className="h-full">
                       <img 
                         src={courseImage || curso.image || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
                         alt={curso.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         onError={(e) => {
                           // Fallback para imagem padrão se falhar
                           const target = e.target as HTMLImageElement;
                           target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
                         }}
                       />
-                    </AspectRatio>
+                    </div>
                   )}
                   <div className="absolute top-4 left-4">
                     <Badge className="bg-primary text-white px-3 py-1">{curso.category}</Badge>
