@@ -54,7 +54,7 @@ export const CONTEXT_IMAGES = {
   "autism": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
   "adhd": "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png",
   
-  // Adicionando cursos específicos de segunda licenciatura
+  // Segunda licenciatura
   "segunda licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "sociologia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "filosofia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
@@ -66,7 +66,7 @@ export const CONTEXT_IMAGES = {
   "second degree": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   
-  // Atualização - Termos para formação pedagógica
+  // Termos para formação pedagógica
   "formacao pedagogica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "formação pedagógica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "pedagogical training": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
@@ -98,15 +98,13 @@ export const CONTEXT_IMAGES = {
   "business": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "management": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "administrador": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
-  "finanças": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
-  "financas": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "finance": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "contabilidade": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "contábeis": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "contabeis": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "economia": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "rh": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
-  "recursos humanos": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
-  "mba": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
+  "human resources": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "empreendedor": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "empreendedorismo": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   
@@ -127,18 +125,12 @@ export const CONTEXT_IMAGES = {
   "direito ambiental": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "direito digital": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "direito contratual": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "direito lgbt+": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
-  "direito notarial": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "direito aduaneiro": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
-  "direito público": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "compliance": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "law": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "legal": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "jurídico": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
-  "arbitragem": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "legislação": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
-  "mediação": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "perícia": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
+  "mediacao": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
+  "pericia": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "auditoria": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   
   // Termos para cursos de artes visuais
