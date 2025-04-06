@@ -1,4 +1,3 @@
-
 import { CONTEXT_IMAGES, PLACEHOLDER_IMAGES, imageCache } from './imageMapping';
 
 /**
@@ -13,6 +12,12 @@ export function getContextImage(context: string): string {
     "aee", "special education", "special needs", "autism", "adhd"
   ];
   
+  // Verifica se o contexto está relacionado à formação pedagógica
+  const pedagogicalTrainingTerms = [
+    "formacao pedagogica", "formação pedagógica", "pedagogical training", 
+    "teacher training", "formação de professores", "formacao de professores"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
   
@@ -20,6 +25,13 @@ export function getContextImage(context: string): string {
   for (const term of specialEducationTerms) {
     if (normalizedContext.includes(term)) {
       return "/lovable-uploads/bf2e50f8-5fef-4124-88f6-aae80ba3daaf.png";
+    }
+  }
+  
+  // Verifica se o contexto contém termos relacionados à formação pedagógica
+  for (const term of pedagogicalTrainingTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png";
     }
   }
   

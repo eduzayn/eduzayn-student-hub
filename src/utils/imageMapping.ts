@@ -9,7 +9,7 @@ export const CONTEXT_IMAGES = {
   "mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "formacao-livre": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "capacitacao-profissional": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "formacao-pedagogica": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "formacao-pedagogica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   
   // Course topics
   "education graduation university": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
@@ -19,7 +19,7 @@ export const CONTEXT_IMAGES = {
   "business management mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "free education training": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "professional training course": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "pedagogical training education": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "pedagogical training education": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   
   // Subject areas
   "project management business": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
@@ -29,8 +29,8 @@ export const CONTEXT_IMAGES = {
   
   // Course titles (adicionando correspondências específicas para títulos de cursos populares)
   "administração de empresas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
-  "pedagogia": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
-  "artes visuais": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
+  "pedagogia": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "artes visuais": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "gestão de recursos humanos": null,
   "marketing digital": null,
   "excel avançado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
@@ -76,6 +76,14 @@ export const CONTEXT_IMAGES = {
   "second degree": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   "licenciatura": "/lovable-uploads/fbc20ed2-cbd8-4e89-9578-2dae5ed8330b.png",
   
+  // Atualização - Termos para formação pedagógica
+  "formacao pedagogica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "formação pedagógica": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "pedagogical training": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "teacher training": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "formação de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  "formacao de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -92,3 +100,4 @@ export const PLACEHOLDER_IMAGES = [
 
 // Cache para armazenar imagens já buscadas por categoria
 export const imageCache: Record<string, string> = {};
+
