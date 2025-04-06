@@ -10,7 +10,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { BookOpen, BookText, BookCheck } from "lucide-react";
+import { BookOpen, BookText, BookCheck, School } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Componente para os itens de menu com dropdown
@@ -72,6 +72,16 @@ const MenuNavigation = () => {
                 <div className="flex items-center gap-1">
                   <BookOpen className="h-4 w-4" />
                   <span>Explore todos os nossos cursos disponíveis.</span>
+                </div>
+              </ListItem>
+              <ListItem
+                title="Formação Pedagógica"
+                href="/cursos/formacao-pedagogica"
+                className="flex items-center gap-2"
+              >
+                <div className="flex items-center gap-1">
+                  <School className="h-4 w-4" />
+                  <span>Cursos de formação pedagógica para bacharéis.</span>
                 </div>
               </ListItem>
               <ListItem

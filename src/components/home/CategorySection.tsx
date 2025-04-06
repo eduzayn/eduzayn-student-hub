@@ -82,6 +82,7 @@ const categories = [
     courses: 22,
     color: "bg-red-500",
     slug: "capacitacao-profissional",
+    description: "Cursos de curta duração para aprimoramento profissional",
     imageQuery: "capacitacao-profissional"
   },
   {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { getCachedFreepikImage } from "@/utils/freepikAPI";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import CourseImage from "@/components/curso/CourseImage";
 
 // Mock featured courses data
 const mockCourses = [
@@ -877,8 +879,10 @@ const CourseList = () => {
     { name: "Todos os Cursos", slug: undefined },
     { name: "Graduação", slug: "graduacao" },
     { name: "Segunda Licenciatura", slug: "segunda-licenciatura" },
+    { name: "Segunda Graduação Bacharelado", slug: "segunda-graduacao-bacharelado" },
     { name: "Pós-Graduação", slug: "pos-graduacao" },
     { name: "MBA", slug: "mba" },
+    { name: "Formação Pedagógica", slug: "formacao-pedagogica" },
     { name: "Formação Livre", slug: "formacao-livre" },
     { name: "Capacitação Profissional", slug: "capacitacao-profissional" },
   ];
@@ -972,13 +976,11 @@ const CourseList = () => {
               <Card className="h-full flex flex-col transition-transform hover:shadow-lg hover:-translate-y-1">
                 <CardHeader className="p-0">
                   <AspectRatio ratio={16/9} className="bg-muted">
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="object-cover w-full h-full rounded-t-lg"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg";
-                      }}
+                    <CourseImage 
+                      image={course.image} 
+                      title={course.title}
+                      category={course.category}
+                      loading={false}
                     />
                   </AspectRatio>
                 </CardHeader>
