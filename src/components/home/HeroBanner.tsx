@@ -50,8 +50,8 @@ const HeroBanner = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-30"></div>
               <div className="relative bg-white p-6 rounded-2xl shadow-xl">
                 <img 
-                  src="/placeholder.svg" 
-                  alt="Estudantes da EduZayn" 
+                  src="/lovable-uploads/638ad6c9-a3be-4cca-85e0-145d4f8f4974.png" 
+                  alt="Estudante da EduZayn estudando online" 
                   className="w-full h-auto rounded-lg"
                 />
                 <div className="absolute -bottom-4 -right-4 bg-white rounded-full p-4 shadow-lg">

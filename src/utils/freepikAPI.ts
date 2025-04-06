@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,7 +42,7 @@ const CONTEXT_IMAGES = {
   "psicanálise": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   
   // Adicionando chaves específicas para elementos da interface
-  "hero-banner": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
+  "hero-banner": "/lovable-uploads/638ad6c9-a3be-4cca-85e0-145d4f8f4974.png",
   "about-us": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "testimonials": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "call-to-action": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
