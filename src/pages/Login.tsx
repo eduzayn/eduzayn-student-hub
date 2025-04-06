@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, LogIn, UserPlus, Mail, Lock } from "lucide-react";
+import { Loader2, LogIn, UserPlus, Mail, Lock, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -53,6 +54,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState<string | null>(null);
 
   // Verificar se o usuário já está autenticado
   useEffect(() => {
@@ -99,9 +101,40 @@ const Login = () => {
     },
   });
 
+  // Função para tentar acesso mesmo com email não confirmado
+  const handleForceSignIn = async () => {
+    if (!emailNotConfirmed) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Tenta obter o usuário pelo email
+      const { data: { user }, error } = await supabase.auth.admin.getUserByEmail(emailNotConfirmed);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Acesso concedido",
+        description: "Redirecionando para o dashboard...",
+      });
+      
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Falha ao tentar acessar",
+        description: "Entre em contato com o administrador.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Função de login
   async function onLogin(values: LoginFormValues) {
     setIsLoading(true);
+    setEmailNotConfirmed(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -110,6 +143,11 @@ const Login = () => {
       });
       
       if (error) {
+        // Verificar se o erro é de email não confirmado
+        if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
+          setEmailNotConfirmed(values.email);
+          throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique no botão abaixo para acessar mesmo assim.");
+        }
         throw error;
       }
       
@@ -154,7 +192,7 @@ const Login = () => {
       
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Por favor, verifique seu email para confirmar sua conta.",
+        description: "Por favor, verifique seu email para confirmar sua conta ou entre em contato com o administrador.",
       });
       
       // Resetar o formulário
@@ -188,6 +226,31 @@ const Login = () => {
                 : "Cadastre-se para começar sua jornada de aprendizado"}
             </p>
           </div>
+
+          {emailNotConfirmed && (
+            <Alert className="mb-6 border-amber-500">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertTitle>Email não confirmado</AlertTitle>
+              <AlertDescription className="space-y-3">
+                <p>Seu email ainda não foi confirmado. Por favor, verifique sua caixa de entrada ou spam.</p>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-amber-500 text-amber-600 hover:text-amber-700"
+                  onClick={handleForceSignIn}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    "Acessar mesmo assim"
+                  )}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
