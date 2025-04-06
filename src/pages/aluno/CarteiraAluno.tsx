@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Download, Printer, Share2, QrCode, Check } from "lucide-react";
+import { Download, Printer, Share2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,23 +10,38 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CarteiraAluno: React.FC = () => {
-  const { userId, userDetails } = useAuth();
+  // Utilizamos as propriedades disponíveis no contexto de autenticação
+  const { isLoggedIn, userEmail, isAdminBypass } = useAuth();
   const [loading, setLoading] = useState(true);
   const [carteiraInfo, setCarteiraInfo] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Buscar informações da carteira no banco de dados
   useEffect(() => {
     const fetchCarteiraInfo = async () => {
       try {
         setLoading(true);
         
+        // Buscar o ID do usuário pela sessão atual
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Erro ao buscar sessão:", sessionError);
+          throw new Error("Não foi possível verificar sua identidade");
+        }
+        
+        const userId = sessionData.session?.user?.id;
+        
+        if (!userId && !isAdminBypass) {
+          throw new Error("Usuário não identificado");
+        }
+        
         // Primeiro, tentamos pegar o perfil do usuário para dados pessoais
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Erro ao buscar perfil:", profileError);
@@ -49,8 +64,8 @@ const CarteiraAluno: React.FC = () => {
         const aluno = {
           nome: profileData?.first_name && profileData?.last_name 
             ? `${profileData.first_name} ${profileData.last_name}`
-            : userDetails?.email 
-              ? userDetails.email.split('@')[0].replace('.', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ')
+            : userEmail 
+              ? userEmail.split('@')[0].replace('.', ' ').split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ')
               : "Nome do Aluno",
           matricula: profileData?.numero_matricula || "202501234",
           curso: "Desenvolvimento Web Frontend", // Este dado precisaria vir de uma consulta adicional
@@ -87,7 +102,7 @@ const CarteiraAluno: React.FC = () => {
       }
     };
 
-    if (userId) {
+    if (isLoggedIn) {
       fetchCarteiraInfo();
     } else {
       // Se não tiver ID do usuário (caso de admin bypass), usar dados mockados
@@ -105,7 +120,7 @@ const CarteiraAluno: React.FC = () => {
         dataEmissao: new Date().toLocaleDateString('pt-BR')
       });
     }
-  }, [userId, userDetails]);
+  }, [isLoggedIn, userEmail, isAdminBypass]);
 
   // Função para gerar um código de verificação aleatório
   const gerarCodigoVerificacao = () => {
@@ -304,24 +319,26 @@ const CarteiraAluno: React.FC = () => {
         </div>
       </div>
       
-      {/* Estilo para impressão */}
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
+      {/* Estilo para impressão - corrigido para usar o formato correto da tag style */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #carteira-estudante, #carteira-estudante * {
+              visibility: visible;
+            }
+            #carteira-estudante {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              height: 100%;
+            }
           }
-          #carteira-estudante, #carteira-estudante * {
-            visibility: visible;
-          }
-          #carteira-estudante {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-          }
-        }
-      `}</style>
+        `
+      }} />
     </div>
   );
 };
