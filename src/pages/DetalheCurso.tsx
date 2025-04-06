@@ -15,6 +15,7 @@ import {
   Laptop,
   DollarSign
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Define proper types for our courses
 type CourseModule = {
@@ -274,8 +275,27 @@ const DetalheCurso = () => {
   
   // Check if the course exists
   if (!id || !mockCourses[id]) {
-    console.error(`Course with id ${id} not found`);
-    return <Navigate to="/cursos" replace />;
+    // Mostrar mensagem amigável quando o curso não for encontrado
+    toast.error(`Curso com ID ${id} não encontrado`);
+    console.warn(`Course with id ${id} not found`);
+    
+    // Ao invés de redirecionar direto, vamos renderizar uma mensagem amigável
+    return (
+      <MainLayout>
+        <div className="bg-gray-50 py-12">
+          <div className="eduzayn-container text-center">
+            <Award className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h1 className="text-3xl font-bold mb-4">Curso não encontrado</h1>
+            <p className="text-gray-600 mb-6">
+              O curso que você está procurando não está disponível ou pode ter sido removido.
+            </p>
+            <Button asChild className="bg-primary hover:bg-primary/90">
+              <Link to="/cursos">Ver todos os cursos</Link>
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
   
   const curso = mockCourses[id];

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -121,6 +122,13 @@ const FeaturedCourses = () => {
     
     loadImages();
   }, []);
+
+  // Verificar se o curso existe nos cursos mockados antes de redirecionar
+  const checkCourseExists = (courseId: number) => {
+    // Para a página de detalhes do curso, verificamos se o ID está no mockCourses
+    // Aqui estamos apenas verificando se o ID está em featuredCourses
+    return featuredCourses.some(course => course.id === courseId);
+  };
 
   return (
     <section className="eduzayn-section bg-white">
