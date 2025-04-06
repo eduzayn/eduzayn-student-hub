@@ -16,6 +16,35 @@ EduZayn é uma plataforma educacional online completa que permite a criação, d
 - **Formulários**: React Hook Form com validação Zod
 - **Estilização**: Tailwind CSS com sistema de design personalizado
 
+## Integrações Externas
+
+### 1. Supabase
+- **Autenticação**: Sistema completo de login, registro e recuperação de senha
+- **Banco de Dados**: PostgreSQL para armazenamento estruturado de dados
+- **Storage**: Armazenamento de arquivos como imagens, vídeos e documentos
+- **Row Level Security (RLS)**: Controle de acesso granular aos dados
+- **Edge Functions**: Para processamento em backend
+
+### 2. Gateway de Pagamento (ASAAS)
+- Processamento seguro de pagamentos
+- Suporte a pagamentos recorrentes para assinaturas
+- Gestão de faturas e notificações
+- Armazenamento seguro de informações de pagamento
+
+### 3. Plataforma Learning Worlds
+- Integração para consumo de conteúdos educacionais
+- Rastreamento de progresso de aprendizagem
+- Sistema de avaliação e certificados
+
+### 4. Sistemas de Email
+- Notificações automáticas
+- Emails de confirmação e boas-vindas
+- Lembretes de aulas e eventos
+
+### 5. Integração com Redes Sociais
+- Login social (Google, Facebook)
+- Compartilhamento de conquistas e certificados
+
 ## Estrutura do Banco de Dados
 
 ### Tabelas Principais
@@ -90,7 +119,7 @@ EduZayn é uma plataforma educacional online completa que permite a criação, d
 
 ### Fase 5: Sistema de Matrículas
 - [ ] Processo de checkout para matrícula em cursos
-- [ ] Integração com gateway de pagamento
+- [ ] Integração com gateway de pagamento ASAAS
 - [ ] Geração de comprovantes de matrícula
 - [ ] Configuração de acesso aos materiais do curso
 
