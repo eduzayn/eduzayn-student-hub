@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, BookOpen, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getCachedFreepikImage } from "@/utils/freepikAPI";
+import { getCachedFreepikImage } from "@/utils/imageUtils";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // Mock featured courses data
