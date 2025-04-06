@@ -8,10 +8,11 @@ import {
   Award, 
   Library,
   Briefcase,
-  School
+  School,
+  BookmarkCheck
 } from "lucide-react";
 
-// Categorias atualizadas incluindo Formação Pedagógica
+// Categorias atualizadas incluindo Segunda Graduação Bacharelado
 const categories = [
   {
     id: 1,
@@ -33,6 +34,15 @@ const categories = [
   },
   {
     id: 3,
+    name: "Segunda Graduação Bacharelado",
+    icon: BookmarkCheck,
+    courses: 7,
+    color: "bg-indigo-500",
+    slug: "segunda-graduacao-bacharelado",
+    description: "Exclusivo para quem já possui diploma de bacharel"
+  },
+  {
+    id: 4,
     name: "Pós-Graduação",
     icon: Award,
     courses: 32,
@@ -40,7 +50,7 @@ const categories = [
     slug: "pos-graduacao"
   },
   {
-    id: 4,
+    id: 5,
     name: "Formação Livre",
     icon: Library,
     courses: 15,
@@ -48,7 +58,7 @@ const categories = [
     slug: "formacao-livre"
   },
   {
-    id: 5,
+    id: 6,
     name: "Capacitação Profissional",
     icon: Briefcase,
     courses: 22,
@@ -56,7 +66,7 @@ const categories = [
     slug: "capacitacao-profissional"
   },
   {
-    id: 6,
+    id: 7,
     name: "Formação Pedagógica",
     icon: School,
     courses: 13,
