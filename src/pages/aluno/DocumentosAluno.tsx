@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileCheck, FileWarning } from 'lucide-react';
-import { DocumentoCard } from '@/components/documentos/DocumentoCard';
-import { TipoDocumentoCard } from '@/components/documentos/TipoDocumentoCard';
-import { UploadDialog } from '@/components/documentos/UploadDialog';
-import { ViewDocumentDialog } from '@/components/documentos/ViewDocumentDialog';
-import { DocumentosTable } from '@/components/documentos/DocumentosTable';
-import { EmptyState } from '@/components/documentos/EmptyState';
-import { LoadingSkeleton } from '@/components/documentos/LoadingSkeleton';
-import { ErrorDisplay } from '@/components/documentos/ErrorDisplay';
+import DocumentoCard from '@/components/documentos/DocumentoCard';
+import TipoDocumentoCard from '@/components/documentos/TipoDocumentoCard';
+import UploadDialog from '@/components/documentos/UploadDialog';
+import ViewDocumentDialog from '@/components/documentos/ViewDocumentDialog';
+import DocumentosTable from '@/components/documentos/DocumentosTable';
+import EmptyState from '@/components/documentos/EmptyState';
+import LoadingSkeleton from '@/components/documentos/LoadingSkeleton';
+import ErrorDisplay from '@/components/documentos/ErrorDisplay';
 import { supabase } from '@/integrations/supabase/client';
 
 const DocumentosAluno = () => {
@@ -214,12 +213,10 @@ const DocumentosAluno = () => {
     setIsViewDialogOpen(true);
   };
 
-  // Verificar documentos pendentes para cada tipo
   const getDocumentosParaTipo = (tipoId) => {
     return documentos.filter(doc => doc.tipo_documento_id === tipoId);
   };
-  
-  // Determinar status geral dos documentos
+
   const totalDocumentosRequeridos = tiposDocumento.filter(tipo => tipo.obrigatorio).length;
   const documentosEnviados = documentos.length;
   const documentosAprovados = documentos.filter(doc => doc.status === 'aprovado').length;
@@ -230,6 +227,13 @@ const DocumentosAluno = () => {
   if (error) {
     return <ErrorDisplay message={error} />;
   }
+
+  const handleSwitchToTiposTab = () => {
+    const tiposTab = document.querySelector('[data-value="tipos"]');
+    if (tiposTab instanceof HTMLElement) {
+      tiposTab.click();
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -321,7 +325,7 @@ const DocumentosAluno = () => {
               description="Você ainda não enviou nenhum documento. Vá para a aba 'Tipos de Documentos' para enviar."
               action={
                 <Button 
-                  onClick={() => document.querySelector('[data-value="tipos"]')?.click()}
+                  onClick={handleSwitchToTiposTab}
                   variant="outline"
                 >
                   Ver tipos de documentos

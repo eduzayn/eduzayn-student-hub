@@ -5,17 +5,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
 
 interface ErrorDisplayProps {
-  error: string | null;
+  message: string;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message }) => {
   return (
     <Card className="border-red-200">
       <CardContent className="flex flex-col items-center justify-center py-12">
         <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
         <h3 className="text-lg font-medium mb-2">Não foi possível carregar seus certificados</h3>
         <p className="text-muted-foreground text-center mb-4">
-          {error || "Ocorreu um erro ao carregar os dados. Tente novamente mais tarde."}
+          {message || "Ocorreu um erro ao carregar os dados. Tente novamente mais tarde."}
         </p>
         <Button 
           variant="outline"

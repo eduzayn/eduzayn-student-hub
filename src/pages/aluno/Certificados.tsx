@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CertificadoCard } from "@/components/certificados/CertificadoCard";
-import { DetalhesCertificadoDialog } from "@/components/certificados/DetalhesCertificadoDialog";
+import CertificadoCard from "@/components/certificados/CertificadoCard";
+import DetalhesCertificadoDialog from "@/components/certificados/DetalhesCertificadoDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoadingSkeleton } from "@/components/certificados/LoadingSkeleton";
-import { ErrorDisplay } from "@/components/certificados/ErrorDisplay";
-import { CertificadosGrid } from "@/components/certificados/CertificadosGrid";
+import LoadingSkeleton from "@/components/certificados/LoadingSkeleton";
+import ErrorDisplay from "@/components/certificados/ErrorDisplay";
+import CertificadosGrid from "@/components/certificados/CertificadosGrid";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
