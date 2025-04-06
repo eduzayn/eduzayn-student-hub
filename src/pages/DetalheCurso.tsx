@@ -267,17 +267,646 @@ const mockCourses: Record<string, Course> = {
       "Flexibilidade de horários",
       "Certificado de Pós-Graduação reconhecido pelo MEC"
     ]
+  },
+  
+  // Adicionar cursos da página Cursos.tsx
+  "2": {
+    id: 2,
+    title: "Pedagogia",
+    category: "Graduação",
+    duration: "4 anos",
+    modalidade: "Online",
+    price: "R$ 547,00",
+    originalPrice: "R$ 847,00",
+    payment: "1 matrícula de R$ 547,00 + 48x de R$ 547,00",
+    certification: "Diploma de Licenciatura",
+    image: "/placeholder.svg",
+    description: "O curso de Pedagogia prepara profissionais para atuar na educação infantil, ensino fundamental e gestão escolar, com foco em metodologias pedagógicas modernas e inclusivas.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Fundamentos da Educação",
+      "Psicologia da Educação",
+      "Didática",
+      "Educação Inclusiva",
+      "Gestão Educacional",
+      "Alfabetização e Letramento",
+      "Tecnologias na Educação",
+      "Estágio Supervisionado"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Tutoria especializada",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "3": {
+    id: 3,
+    title: "Artes Visuais",
+    category: "Segunda Licenciatura",
+    duration: "1 ano",
+    modalidade: "Online",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    payment: "1 matrícula de R$ 397,00 + 12x de R$ 397,00",
+    certification: "Diploma de Segunda Licenciatura",
+    image: "/placeholder.svg",
+    description: "O curso de Segunda Licenciatura em Artes Visuais é destinado a profissionais já licenciados em outras áreas que desejam expandir sua atuação para o ensino de artes.",
+    requirements: [
+      "Diploma de licenciatura em qualquer área",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "História da Arte",
+      "Fundamentos da Linguagem Visual",
+      "Metodologias do Ensino de Artes",
+      "Expressão Bidimensional",
+      "Expressão Tridimensional",
+      "Cultura Visual",
+      "Estágio Supervisionado",
+      "Trabalho de Conclusão de Curso"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Tutoria especializada",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "4": {
+    id: 4,
+    title: "Gestão de Recursos Humanos",
+    category: "Pós-Graduação",
+    duration: "1.5 anos",
+    modalidade: "Online",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    payment: "1 matrícula de R$ 397,00 + 18x de R$ 397,00",
+    certification: "Certificado de Pós-Graduação",
+    image: "/placeholder.svg",
+    description: "A pós-graduação em Gestão de Recursos Humanos prepara profissionais para atuar estrategicamente na gestão de pessoas, com foco em recrutamento, desenvolvimento, retenção de talentos e legislação trabalhista.",
+    requirements: [
+      "Diploma de graduação em qualquer área",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Gestão Estratégica de Pessoas",
+      "Recrutamento e Seleção",
+      "Treinamento e Desenvolvimento",
+      "Remuneração e Benefícios",
+      "Clima e Cultura Organizacional",
+      "Legislação Trabalhista e Previdenciária",
+      "Gestão de Desempenho",
+      "Gestão por Competências"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Tutoria especializada",
+      "Certificado reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  // Adicionando cursos que estavam faltando, começando pelos IDs menores
+  "5": {
+    id: 5,
+    title: "Marketing Digital",
+    category: "Pós-Graduação",
+    duration: "1.5 anos",
+    modalidade: "Online",
+    price: "R$ 427,00",
+    originalPrice: "R$ 627,00",
+    payment: "1 matrícula de R$ 427,00 + 18x de R$ 427,00",
+    certification: "Certificado de Pós-Graduação",
+    image: "/placeholder.svg",
+    description: "A pós-graduação em Marketing Digital forma profissionais capacitados para planejar, implementar e gerenciar estratégias de marketing no ambiente digital, utilizando as mais recentes ferramentas e tecnologias do mercado.",
+    requirements: [
+      "Diploma de graduação em qualquer área",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Fundamentos do Marketing Digital",
+      "SEO e SEM",
+      "Mídias Sociais",
+      "E-mail Marketing",
+      "Análise de Dados e Métricas",
+      "Gestão de Conteúdo",
+      "Inbound Marketing",
+      "Planejamento de Campanhas Digitais"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Tutoria especializada",
+      "Certificado reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "6": {
+    id: 6,
+    title: "Excel Avançado",
+    category: "Formação Livre",
+    duration: "60 horas",
+    modalidade: "Online",
+    price: "R$ 197,00",
+    originalPrice: "R$ 297,00",
+    payment: "1 matrícula de R$ 197,00 + 6x de R$ 197,00",
+    certification: "Certificado de Formação Livre",
+    image: "/placeholder.svg",
+    description: "O curso de Excel Avançado oferece um aprofundamento nas funcionalidades mais complexas desta ferramenta, permitindo ao aluno dominar fórmulas avançadas, VBA, macros e tabelas dinâmicas para uso profissional.",
+    requirements: [
+      "Conhecimentos básicos de Excel",
+      "Acesso a computador com Excel instalado",
+      "Documentação pessoal"
+    ],
+    ementa: [
+      "Fórmulas Avançadas",
+      "Tabelas Dinâmicas",
+      "Gráficos Avançados",
+      "Macros",
+      "Programação em VBA",
+      "Power Query",
+      "Power Pivot",
+      "Dashboards Profissionais"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Exemplos práticos",
+      "Certificado de conclusão",
+      "Flexibilidade de horários",
+      "Suporte técnico"
+    ]
+  },
+  
+  "7": {
+    id: 7,
+    title: "Técnicas de Vendas",
+    category: "Capacitação Profissional",
+    duration: "80 horas",
+    modalidade: "Online",
+    price: "R$ 247,00",
+    originalPrice: "R$ 347,00",
+    payment: "1 matrícula de R$ 247,00 + 6x de R$ 247,00",
+    certification: "Certificado Profissional",
+    image: "/placeholder.svg",
+    description: "O curso de Técnicas de Vendas capacita profissionais para atuarem de forma eficiente no processo comercial, desenvolvendo habilidades de negociação, abordagem ao cliente e fechamento de vendas.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Acesso a computador com internet"
+    ],
+    ementa: [
+      "Fundamentos de Vendas",
+      "Prospecção de Clientes",
+      "Abordagem Eficiente",
+      "Identificação de Necessidades",
+      "Técnicas de Negociação",
+      "Objeções e Contornos",
+      "Fechamento de Vendas",
+      "Pós-venda e Fidelização"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Estudos de caso práticos",
+      "Certificado profissional",
+      "Flexibilidade de horários",
+      "Suporte técnico"
+    ]
+  },
+  
+  "8": {
+    id: 8,
+    title: "Data Science",
+    category: "Capacitação Profissional",
+    duration: "120 horas",
+    modalidade: "Online",
+    price: "R$ 347,00",
+    originalPrice: "R$ 447,00",
+    payment: "1 matrícula de R$ 347,00 + 6x de R$ 347,00",
+    certification: "Certificado Profissional",
+    image: "/placeholder.svg",
+    description: "O curso de Data Science capacita profissionais para extrair conhecimento e insights valiosos a partir de dados estruturados e não estruturados, utilizando técnicas estatísticas, programação e visualização de dados.",
+    requirements: [
+      "Conhecimentos básicos de matemática e estatística",
+      "Noções de programação são recomendáveis",
+      "Documentação pessoal",
+      "Acesso a computador com internet"
+    ],
+    ementa: [
+      "Introdução à Ciência de Dados",
+      "Linguagem Python para Análise de Dados",
+      "Estatística Aplicada",
+      "Machine Learning",
+      "Visualização de Dados",
+      "Big Data",
+      "Projetos Práticos",
+      "Ética em Ciência de Dados"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Projetos práticos",
+      "Certificado profissional",
+      "Flexibilidade de horários",
+      "Suporte técnico especializado"
+    ]
+  },
+  
+  "9": {
+    id: 9,
+    title: "Análise e Desenvolvimento de Sistemas",
+    category: "Graduação",
+    duration: "18 meses",
+    modalidade: "Online",
+    price: "R$ 497,00",
+    originalPrice: "R$ 797,00",
+    payment: "1 matrícula de R$ 497,00 + 18x de R$ 497,00",
+    certification: "Diploma de Tecnólogo",
+    image: "/placeholder.svg",
+    description: "O curso de Análise e Desenvolvimento de Sistemas forma profissionais capacitados para projetar, implementar e gerenciar sistemas de informação, com conhecimentos em programação, banco de dados e engenharia de software.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Lógica de Programação",
+      "Linguagens de Programação",
+      "Banco de Dados",
+      "Engenharia de Software",
+      "Desenvolvimento Web",
+      "Desenvolvimento Mobile",
+      "Redes de Computadores",
+      "Gestão de Projetos de Software"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Projetos práticos",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Laboratórios virtuais"
+    ]
+  },
+  
+  "10": {
+    id: 10,
+    title: "Gestão da Tecnologia da Informação",
+    category: "Graduação",
+    duration: "18 meses",
+    modalidade: "Online",
+    price: "R$ 497,00",
+    originalPrice: "R$ 797,00",
+    payment: "1 matrícula de R$ 497,00 + 18x de R$ 497,00",
+    certification: "Diploma de Tecnólogo",
+    image: "/placeholder.svg",
+    description: "O curso de Gestão da Tecnologia da Informação forma profissionais capazes de planejar, implementar e gerenciar a infraestrutura de TI em organizações, alinhando recursos tecnológicos aos objetivos estratégicos do negócio.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Fundamentos de TI",
+      "Infraestrutura Tecnológica",
+      "Governança de TI",
+      "Segurança da Informação",
+      "Gestão de Projetos em TI",
+      "Gestão de Serviços de TI",
+      "Sistemas de Informação",
+      "Inovação Tecnológica"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Estudos de caso reais",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "11": {
+    id: 11,
+    title: "Marketing Digital",
+    category: "Graduação",
+    duration: "18 meses",
+    modalidade: "Online",
+    price: "R$ 497,00",
+    originalPrice: "R$ 797,00",
+    payment: "1 matrícula de R$ 497,00 + 18x de R$ 497,00",
+    certification: "Diploma de Tecnólogo",
+    image: "/placeholder.svg",
+    description: "O curso de Marketing Digital forma profissionais especialistas em estratégias de marketing para o ambiente digital, com conhecimentos em mídias sociais, SEO, marketing de conteúdo e análise de dados.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Introdução ao Marketing Digital",
+      "Comportamento do Consumidor Online",
+      "SEO e SEM",
+      "Mídias Sociais",
+      "Marketing de Conteúdo",
+      "E-commerce",
+      "Analytics e Métricas",
+      "Planejamento de Marketing Digital"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Projetos práticos",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "14": {
+    id: 14,
+    title: "Ciências Contábeis",
+    category: "Graduação",
+    duration: "4 anos",
+    modalidade: "Online",
+    price: "R$ 597,00",
+    originalPrice: "R$ 897,00",
+    payment: "1 matrícula de R$ 597,00 + 48x de R$ 597,00",
+    certification: "Diploma de Bacharelado",
+    image: "/placeholder.svg",
+    description: "O curso de Ciências Contábeis forma profissionais capacitados para atuar na gestão contábil de empresas, com conhecimentos em contabilidade financeira, tributária, auditoria e perícia contábil.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Contabilidade Básica",
+      "Contabilidade Avançada",
+      "Contabilidade de Custos",
+      "Contabilidade Tributária",
+      "Auditoria",
+      "Perícia Contábil",
+      "Análise das Demonstrações Contábeis",
+      "Controladoria"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Casos práticos",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  },
+  
+  "15": {
+    id: 15,
+    title: "Engenharia Civil",
+    category: "Graduação",
+    duration: "5 anos",
+    modalidade: "Online",
+    price: "R$ 647,00",
+    originalPrice: "R$ 947,00",
+    payment: "1 matrícula de R$ 647,00 + 60x de R$ 647,00",
+    certification: "Diploma de Bacharelado",
+    image: "/placeholder.svg",
+    description: "O curso de Engenharia Civil forma profissionais capacitados para projetar, construir e manter obras de infraestrutura, com conhecimentos em estruturas, hidráulica, materiais de construção e gestão de obras.",
+    requirements: [
+      "Ensino médio completo",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      "Cálculo e Física",
+      "Resistência dos Materiais",
+      "Estruturas de Concreto",
+      "Estruturas Metálicas",
+      "Hidráulica e Hidrologia",
+      "Materiais de Construção",
+      "Geotecnia",
+      "Gestão de Obras"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Laboratórios virtuais",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
   }
 };
+
+// Adicionar mais cursos por intervalos
+Object.entries({
+  "100": "Sociologia",
+  "101": "Ciências da Religião",
+  "102": "Educação Especial",
+  "103": "Educação Física",
+  "104": "Filosofia",
+  "105": "Geografia",
+  "106": "História"
+}).forEach(([id, title]) => {
+  mockCourses[id] = {
+    id: Number(id),
+    title,
+    category: "Segunda Licenciatura",
+    duration: "1 ano",
+    modalidade: "Online",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    payment: "1 matrícula de R$ 397,00 + 12x de R$ 397,00",
+    certification: "Diploma de Segunda Licenciatura",
+    image: "/placeholder.svg",
+    description: `O curso de Segunda Licenciatura em ${title} é destinado a profissionais já licenciados em outras áreas que desejam expandir sua atuação para o ensino desta disciplina.`,
+    requirements: [
+      "Diploma de licenciatura em qualquer área",
+      "Documentação pessoal",
+      "Aprovação no processo seletivo"
+    ],
+    ementa: [
+      `Fundamentos de ${title}`,
+      `História do Ensino de ${title} no Brasil`,
+      `Metodologias do Ensino de ${title}`,
+      "Didática Aplicada",
+      "Tecnologias Educacionais",
+      "Avaliação da Aprendizagem",
+      "Estágio Supervisionado",
+      "Trabalho de Conclusão de Curso"
+    ],
+    benefits: [
+      "Aulas 100% online",
+      "Material didático digital incluso",
+      "Tutoria especializada",
+      "Diploma reconhecido pelo MEC",
+      "Flexibilidade de horários",
+      "Plataforma de aprendizado intuitiva"
+    ]
+  };
+});
+
+// Adicionar todos os cursos MBA (200-220)
+for (let id = 200; id <= 220; id++) {
+  // Verifica se já existe um curso com este ID
+  if (!mockCourses[id.toString()]) {
+    const titles = {
+      200: "MBA em Administração de Pessoal",
+      201: "MBA em Auditoria Contábil",
+      202: "MBA em Contabilidade Gerencial",
+      203: "MBA em Finanças Corporativas e Controladoria",
+      204: "MBA em Gestão Ambiental",
+      205: "MBA em Gestão da Produção",
+      206: "MBA em Gestão da Tecnologia da Informação",
+      207: "MBA em Gestão de Cadeia de Suprimentos",
+      208: "MBA em Gestão Estratégica e Inovação",
+      209: "MBA em Gestão de Farmácias e Drogarias",
+      210: "MBA em Gestão de Marketing Digital",
+      211: "MBA em Gestão de Pessoas e Talentos",
+      212: "MBA em Gestão de Saúde",
+      213: "MBA em Gestão Empresarial",
+      214: "MBA em Gestão Hospitalar",
+      215: "MBA em Gestão Pública",
+      216: "MBA em Gestão Social",
+      217: "MBA em Logística Empresarial",
+      218: "MBA em Logística e Supply Chain Management",
+      219: "MBA em Marketing Estratégico",
+      220: "MBA em Modelagem e Gestão de Processos"
+    };
+    
+    mockCourses[id.toString()] = {
+      id: id,
+      title: titles[id] || `MBA em Gestão Empresarial ${id}`,
+      category: "MBA",
+      duration: "6 meses",
+      modalidade: "Online",
+      price: "R$ 150,00",
+      originalPrice: "R$ 155,00",
+      payment: "1 matrícula de R$ 150,00 + 16x de R$ 155,00",
+      certification: "Certificado de MBA",
+      image: "/placeholder.svg",
+      description: `O ${titles[id] || 'MBA'} proporciona conhecimentos avançados em gestão para profissionais que buscam aprimorar suas competências e assumir posições de liderança em organizações.`,
+      requirements: [
+        "Diploma de graduação em qualquer área",
+        "Documentação pessoal",
+        "Aprovação no processo seletivo"
+      ],
+      ementa: [
+        "Gestão Estratégica",
+        "Liderança e Desenvolvimento de Equipes",
+        "Finanças Corporativas",
+        "Marketing Estratégico",
+        "Gestão de Projetos",
+        "Inovação e Empreendedorismo",
+        "Governança Corporativa",
+        "Estudos de Caso e Aplicações Práticas"
+      ],
+      benefits: [
+        "Aulas 100% online",
+        "Material didático digital incluso",
+        "Estudos de caso de empresas reais",
+        "Certificado reconhecido pelo MEC",
+        "Flexibilidade de horários",
+        "Networking com profissionais da área"
+      ]
+    };
+  }
+}
+
+// Adicionar templates para todos os outros cursos de pós-graduação
+for (let id = 300; id <= 425; id++) {
+  // Pular se já existe
+  if (id === 422) {
+    continue; // Este já foi definido anteriormente
+  }
+  
+  if (!mockCourses[id.toString()]) {
+    const area = id >= 400 ? "Saúde" : "Direito";
+    const titleBase = id >= 400
+      ? [
+          "Análises Clínicas", "Atenção e Cuidado com Idosos", "Atendimento na UBS", 
+          "Farmacologia Clínica", "Fisioterapia", "Gestão da Saúde", 
+          "Neuropsicologia", "Psicanálise", "Psicologia", "Nutrição"
+        ]
+      : [
+          "Direito Administrativo", "Direito Civil", "Direito Penal",
+          "Direito Tributário", "Direito Digital", "Direito do Trabalho",
+          "Direito Empresarial", "Direito Ambiental", "Direito Previdenciário"
+        ];
+    
+    const randomTitle = `${area === "Saúde" ? "Especialização em" : "Pós-Graduação em"} ${
+      titleBase[id % titleBase.length]
+    } ${id}`;
+    
+    mockCourses[id.toString()] = {
+      id: id,
+      title: randomTitle,
+      category: "Pós-Graduação",
+      duration: "6 meses",
+      modalidade: "Online",
+      price: "R$ 150,00",
+      originalPrice: "R$ 155,00",
+      payment: "1 matrícula de R$ 150,00 + 16x de R$ 155,00",
+      certification: "Certificado de Pós-Graduação",
+      image: "/placeholder.svg",
+      description: `O curso de Pós-Graduação em ${randomTitle} forma especialistas qualificados para atuar em sua área de especialização, com conhecimentos teóricos e práticos atualizados.`,
+      requirements: [
+        "Diploma de graduação em áreas relacionadas",
+        "Documentação pessoal",
+        "Aprovação no processo seletivo"
+      ],
+      ementa: [
+        "Fundamentos Teóricos",
+        "Aspectos Práticos e Aplicados",
+        "Metodologia de Pesquisa",
+        "Estudos de Caso",
+        "Tendências e Inovações",
+        "Ética Profissional",
+        "Legislação Aplicada",
+        "Trabalho de Conclusão de Curso"
+      ],
+      benefits: [
+        "Aulas 100% online",
+        "Material didático digital incluso",
+        "Tutoria especializada",
+        "Certificado reconhecido pelo MEC",
+        "Flexibilidade de horários",
+        "Plataforma de aprendizado intuitiva"
+      ]
+    };
+  }
+}
 
 const DetalheCurso = () => {
   const { id } = useParams();
   
-  // Check if the course exists
-  if (!id || !mockCourses[id]) {
+  // Verifica se o parâmetro ID é um número ou uma string
+  const courseId = id ? id.toString() : "";
+  
+  // Verifica se o curso existe
+  if (!courseId || !mockCourses[courseId]) {
     // Mostrar mensagem amigável quando o curso não for encontrado
-    toast.error(`Curso com ID ${id} não encontrado`);
-    console.warn(`Course with id ${id} not found`);
+    toast.error(`Curso com ID ${courseId} não encontrado`);
+    console.warn(`Curso com ID ${courseId} não encontrado na lista de cursos disponíveis`);
     
     // Ao invés de redirecionar direto, vamos renderizar uma mensagem amigável
     return (
@@ -298,7 +927,7 @@ const DetalheCurso = () => {
     );
   }
   
-  const curso = mockCourses[id];
+  const curso = mockCourses[courseId];
   
   return (
     <MainLayout>

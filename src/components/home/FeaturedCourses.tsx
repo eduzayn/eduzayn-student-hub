@@ -131,11 +131,6 @@ const FeaturedCourses = () => {
     loadImages();
   }, []);
 
-  // Check if the course exists in mocked courses before redirecting
-  const checkCourseExists = (courseId: number) => {
-    return featuredCourses.some(course => course.id === courseId);
-  };
-
   return (
     <section className="eduzayn-section bg-white">
       <div className="eduzayn-container">
@@ -234,7 +229,7 @@ const FeaturedCourses = () => {
               
               <CardFooter className="border-t pt-4">
                 <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90">
-                  <Link to={checkCourseExists(course.id) ? `/matricula/checkout/${course.id}` : `/curso/${course.id}`}>
+                  <Link to={`/curso/${course.id}`}>
                     Matricule-se
                   </Link>
                 </Button>
