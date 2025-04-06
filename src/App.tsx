@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import CursosAluno from "./pages/aluno/CursosAluno";
 import FinanceiroAluno from "./pages/aluno/FinanceiroAluno";
 import DocumentosAluno from "./pages/aluno/DocumentosAluno";
 import CarteiraAluno from "./pages/aluno/CarteiraAluno";
+import RotaAprendizagem from "./pages/aluno/RotaAprendizagem";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
 
@@ -57,7 +59,7 @@ const App = () => (
               <Route path="financeiro" element={<FinanceiroAluno />} />
               <Route path="documentos" element={<DocumentosAluno />} />
               <Route path="carteira" element={<CarteiraAluno />} />
-              <Route path="aprendizagem" element={<div className="text-2xl font-bold">Rota de Aprendizagem</div>} />
+              <Route path="aprendizagem" element={<RotaAprendizagem />} />
               <Route path="calendario" element={<div className="text-2xl font-bold">Calendário</div>} />
               <Route path="materiais" element={<div className="text-2xl font-bold">Materiais</div>} />
               <Route path="certificados" element={<div className="text-2xl font-bold">Certificados</div>} />

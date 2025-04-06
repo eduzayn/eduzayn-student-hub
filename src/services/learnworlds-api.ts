@@ -1,9 +1,9 @@
-
 /**
  * Serviço de integração com a API da LearnWorlds e Supabase
  * Documentação: https://developers.learnworlds.com/
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { RotaAprendizagemType } from "@/types/aprendizagem";
 
 interface LearnWorldsCourse {
   id: string;
@@ -410,6 +410,267 @@ export const getCurrentUserId = async (): Promise<string | null> => {
     console.error("Erro ao buscar usuário atual:", error);
     return null;
   }
+};
+
+/**
+ * Busca a rota de aprendizagem do aluno
+ * @param userId ID do usuário/aluno
+ */
+export const getRotaAprendizagem = async (userId: string): Promise<RotaAprendizagemType> => {
+  try {
+    // Tenta buscar a rota de aprendizagem do aluno pelo Supabase
+    const { data: rotaData, error: rotaError } = await supabase
+      .from('rotas_aprendizagem')
+      .select(`
+        id,
+        titulo,
+        descricao,
+        progresso
+      `)
+      .eq('aluno_id', userId)
+      .maybeSingle();
+    
+    if (rotaError) {
+      console.error("Erro ao buscar rota de aprendizagem:", rotaError);
+      throw new Error("Erro ao buscar rota de aprendizagem");
+    }
+    
+    // Se não houver dados no Supabase, retorna os dados mockados
+    if (!rotaData) {
+      console.log("Nenhuma rota de aprendizagem encontrada, usando dados mockados");
+      return getMockRotaAprendizagem();
+    }
+    
+    // Busca os módulos da rota
+    const { data: modulosData, error: modulosError } = await supabase
+      .from('modulos_rota_aprendizagem')
+      .select(`
+        id,
+        titulo,
+        descricao,
+        concluido,
+        bloqueado,
+        em_andamento,
+        ordem,
+        curso_id
+      `)
+      .eq('rota_id', rotaData.id)
+      .order('ordem', { ascending: true });
+    
+    if (modulosError) {
+      console.error("Erro ao buscar módulos da rota:", modulosError);
+      throw new Error("Erro ao buscar módulos da rota de aprendizagem");
+    }
+    
+    // Mapeamento dos módulos para o formato esperado
+    const modulos = await Promise.all(
+      (modulosData || []).map(async (modulo) => {
+        // Se tiver curso associado, busca detalhes do curso
+        let curso;
+        if (modulo.curso_id) {
+          const cursoData = await getUserCourses(userId);
+          curso = cursoData.find(c => c.id === modulo.curso_id);
+          
+          if (curso) {
+            curso = {
+              id: curso.id,
+              title: curso.title,
+              thumbnail: curso.thumbnail,
+              progress: curso.progress,
+              lessions: 0 // Valor padrão
+            };
+            
+            // Obter número de aulas
+            try {
+              const aulas = await getCourseLessons(modulo.curso_id, userId);
+              if (curso) {
+                curso.lessions = aulas.length;
+              }
+            } catch (err) {
+              console.warn("Não foi possível obter número de aulas:", err);
+            }
+          }
+        }
+        
+        return {
+          id: modulo.id,
+          titulo: modulo.titulo,
+          descricao: modulo.descricao || "",
+          concluido: modulo.concluido || false,
+          bloqueado: modulo.bloqueado || false,
+          emAndamento: modulo.em_andamento || false,
+          curso
+        };
+      })
+    );
+    
+    // Busca o módulo recomendado
+    let moduloRecomendado = modulos.find(m => m.emAndamento) || 
+                           modulos.find(m => !m.concluido && !m.bloqueado);
+    
+    // Retorna a rota de aprendizagem completa
+    return {
+      id: rotaData.id,
+      titulo: rotaData.titulo,
+      descricao: rotaData.descricao || "",
+      progresso: rotaData.progresso || 0,
+      modulos,
+      moduloRecomendado
+    };
+  } catch (error) {
+    console.error("Erro ao buscar rota de aprendizagem:", error);
+    
+    // Em caso de erro, usa os dados mockados como fallback
+    console.log("Usando dados mockados devido a erro");
+    return getMockRotaAprendizagem();
+  }
+};
+
+/**
+ * Função auxiliar para retornar uma rota de aprendizagem mockada
+ */
+const getMockRotaAprendizagem = (): RotaAprendizagemType => {
+  const cursosFake = getMockCourses();
+  
+  return {
+    id: "rota-1",
+    titulo: "Desenvolvimento Web Fullstack",
+    descricao: "Trilha completa de desenvolvimento web, do básico ao avançado.",
+    progresso: 45,
+    tempoEstimado: "6 meses",
+    modulos: [
+      {
+        id: "modulo-1",
+        titulo: "Fundamentos de Desenvolvimento Web",
+        descricao: "Conceitos básicos de HTML, CSS e JavaScript",
+        concluido: true,
+        bloqueado: false,
+        emAndamento: false,
+        curso: {
+          id: cursosFake[0].id,
+          title: cursosFake[0].title,
+          thumbnail: cursosFake[0].thumbnail,
+          progress: 100,
+          lessions: 12
+        },
+        submodulos: [
+          {
+            id: "submodulo-1-1",
+            titulo: "HTML5 Semântico",
+            concluido: true
+          },
+          {
+            id: "submodulo-1-2",
+            titulo: "CSS3 e Design Responsivo",
+            concluido: true
+          },
+          {
+            id: "submodulo-1-3",
+            titulo: "JavaScript Básico",
+            concluido: true
+          }
+        ]
+      },
+      {
+        id: "modulo-2",
+        titulo: "Desenvolvimento Frontend",
+        descricao: "Frameworks e bibliotecas para desenvolvimento frontend moderno",
+        concluido: false,
+        bloqueado: false,
+        emAndamento: true,
+        curso: {
+          id: cursosFake[0].id,
+          title: "React Native para Iniciantes",
+          thumbnail: "https://via.placeholder.com/300x180?text=React+Native",
+          progress: 45,
+          lessions: 10
+        },
+        submodulos: [
+          {
+            id: "submodulo-2-1",
+            titulo: "Introdução ao React",
+            concluido: true
+          },
+          {
+            id: "submodulo-2-2",
+            titulo: "Componentes e Props",
+            concluido: true
+          },
+          {
+            id: "submodulo-2-3",
+            titulo: "Estado e Ciclo de Vida",
+            concluido: false
+          },
+          {
+            id: "submodulo-2-4",
+            titulo: "Hooks e Context API",
+            concluido: false
+          }
+        ]
+      },
+      {
+        id: "modulo-3",
+        titulo: "Desenvolvimento Backend",
+        descricao: "Criação de APIs e serviços de backend",
+        concluido: false,
+        bloqueado: true,
+        emAndamento: false,
+        curso: {
+          id: cursosFake[1].id,
+          title: cursosFake[1].title,
+          thumbnail: cursosFake[1].thumbnail,
+          progress: 0,
+          lessions: 15
+        }
+      },
+      {
+        id: "modulo-4",
+        titulo: "Bancos de Dados e ORM",
+        descricao: "Trabalho com bancos de dados relacionais e não-relacionais",
+        concluido: false,
+        bloqueado: true,
+        emAndamento: false
+      },
+      {
+        id: "modulo-5",
+        titulo: "DevOps e Deploy",
+        descricao: "Implementação de aplicações em produção",
+        concluido: false,
+        bloqueado: true,
+        emAndamento: false
+      }
+    ],
+    moduloRecomendado: {
+      id: "modulo-2",
+      titulo: "Desenvolvimento Frontend",
+      descricao: "Frameworks e bibliotecas para desenvolvimento frontend moderno",
+      concluido: false,
+      bloqueado: false,
+      emAndamento: true,
+      curso: {
+        id: cursosFake[0].id,
+        title: "React Native para Iniciantes",
+        thumbnail: "https://via.placeholder.com/300x180?text=React+Native",
+        progress: 45,
+        lessions: 10
+      }
+    },
+    certificados: [
+      {
+        id: "cert-1",
+        titulo: "Certificado de Fundamentos Web",
+        descricao: "Conclusão do módulo de Fundamentos de Desenvolvimento Web",
+        disponivel: true,
+        dataEmissao: "2023-06-15"
+      },
+      {
+        id: "cert-2",
+        titulo: "Certificado de Desenvolvedor Frontend",
+        descricao: "Conclusão do módulo de Desenvolvimento Frontend",
+        disponivel: false
+      }
+    ]
+  };
 };
 
 // Exportamos os tipos para uso em outros componentes
