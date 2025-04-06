@@ -30,8 +30,20 @@ const CONTEXT_IMAGES = {
   "neuropsychology clinical": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
   "data analysis python": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   
+  // Course titles (adicionando correspondências específicas para títulos de cursos populares)
+  "administração de empresas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "pedagogia": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  "artes visuais": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+  "gestão de recursos humanos": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "marketing digital": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png", 
+  "excel avançado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
+  "técnicas de vendas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "data science": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
+  "neuropsicopedagogia": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "psicanálise": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  
   // Generic fallback
-  "default": "/placeholder.svg"
+  "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
 
 // Fallback images when context isn't found
@@ -40,7 +52,8 @@ const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
-  "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png"
+  "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
+  "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 ];
 
 /**
@@ -49,14 +62,17 @@ const PLACEHOLDER_IMAGES = [
  * @returns A placeholder image URL that matches the context
  */
 function getContextImage(context: string): string {
+  // Normalize the context to improve matching
+  const normalizedContext = context.toLowerCase().trim();
+  
   // Try to find a direct match
-  if (CONTEXT_IMAGES[context]) {
-    return CONTEXT_IMAGES[context];
+  if (CONTEXT_IMAGES[normalizedContext]) {
+    return CONTEXT_IMAGES[normalizedContext];
   }
   
   // Try to find partial matches
   for (const key in CONTEXT_IMAGES) {
-    if (context.includes(key) || key.includes(context)) {
+    if (normalizedContext.includes(key.toLowerCase()) || key.toLowerCase().includes(normalizedContext)) {
       return CONTEXT_IMAGES[key];
     }
   }
@@ -95,13 +111,15 @@ const imageCache: Record<string, string> = {};
  * @returns A promise resolving to a context-matching image URL
  */
 export async function getCachedFreepikImage(query: string): Promise<string> {
-  if (imageCache[query]) {
-    return imageCache[query];
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  if (imageCache[normalizedQuery]) {
+    return imageCache[normalizedQuery];
   }
   
-  // Get a context-appropriate image
-  const contextImage = getContextImage(query);
-  imageCache[query] = contextImage;
+  // Use both category and title for matching
+  const contextImage = getContextImage(normalizedQuery);
+  imageCache[normalizedQuery] = contextImage;
   
   return contextImage;
 }

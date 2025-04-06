@@ -102,13 +102,13 @@ const FeaturedCourses = () => {
           }
           
           try {
-            // Use category slug or image query as context
-            const contextKey = course.categorySlug || course.imageQuery;
+            // Use title first for best matching, then fallback to category
+            const contextKey = course.title || course.imageQuery || course.categorySlug;
             const imageUrl = await getCachedFreepikImage(contextKey);
             return { id: course.id, imageUrl };
           } catch (error) {
             console.warn(`Failed to load image for ${course.title}:`, error);
-            return { id: course.id, imageUrl: '/placeholder.svg' };
+            return { id: course.id, imageUrl: '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png' };
           }
         });
         
@@ -164,13 +164,13 @@ const FeaturedCourses = () => {
             <Card key={course.id} className="eduzayn-card animate-fade-in group">
               <div className="relative overflow-hidden">
                 <img 
-                  src={courseImages[course.id] || '/placeholder.svg'} 
+                  src={courseImages[course.id] || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
                   alt={course.title}
                   className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     // Fallback to placeholder if image fails
                     const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder.svg';
+                    target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
                   }}
                 />
                 <div className="absolute top-3 left-3 flex gap-2">
