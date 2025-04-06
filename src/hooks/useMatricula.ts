@@ -1,216 +1,273 @@
 
-import { useState, useEffect } from 'react';
-import { Matricula } from '@/types/matricula';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { Matricula } from "@/types/matricula";
 
-export function useMatricula(matriculaId?: string) {
-  const [matricula, setMatricula] = useState<Matricula | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
+export const useMatricula = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (matriculaId) {
-      fetchMatricula(matriculaId);
-    }
-  }, [matriculaId]);
-
-  const fetchMatricula = async (id: string) => {
+  /**
+   * Busca todas as matrículas
+   */
+  const buscarMatriculas = async () => {
     setLoading(true);
     setError(null);
-
-    try {
-      const { data, error } = await supabase
-        .from('matriculas')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      setMatricula(data as Matricula);
-    } catch (err: any) {
-      setError(err);
-      toast.error('Erro ao carregar a matrícula');
-      console.error('Erro ao buscar matrícula:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateMatricula = async (updatedData: Partial<Matricula>) => {
-    if (!matriculaId) return { success: false, error: new Error('ID da matrícula não fornecido') };
     
     try {
-      setLoading(true);
-      
-      // Atualizar os dados da matrícula
       const { data, error } = await supabase
         .from('matriculas')
-        .update(updatedData)
-        .eq('id', matriculaId)
-        .select();
-
+        .select(`
+          id,
+          aluno_id,
+          curso_id,
+          data_inicio,
+          data_conclusao,
+          status,
+          progresso,
+          forma_ingresso,
+          origem_matricula,
+          turno,
+          observacoes
+        `)
+        .order('data_inicio', { ascending: false });
+        
       if (error) throw error;
       
-      // Atualizar o estado local
-      setMatricula(prev => prev ? { ...prev, ...updatedData } : null);
-      
-      toast.success('Matrícula atualizada com sucesso');
-      return { success: true, data };
-      
+      return data;
     } catch (err: any) {
-      setError(err);
-      toast.error('Erro ao atualizar a matrícula');
-      console.error('Erro ao atualizar matrícula:', err);
-      return { success: false, error: err };
+      const errorMsg = err.message || 'Erro ao buscar matrículas';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  const createMatricula = async (matriculaData: Omit<Matricula, 'id'>) => {
+  /**
+   * Busca uma matrícula específica
+   */
+  const buscarMatricula = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
+      const { data, error } = await supabase
+        .from('matriculas')
+        .select(`
+          id,
+          aluno_id,
+          curso_id,
+          data_inicio,
+          data_conclusao,
+          status,
+          progresso,
+          forma_ingresso,
+          origem_matricula,
+          turno,
+          observacoes
+        `)
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
       
-      // Criar nova matrícula
+      return data;
+    } catch (err: any) {
+      const errorMsg = err.message || `Erro ao buscar matrícula com ID: ${id}`;
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Cria uma nova matrícula
+   */
+  const criarMatricula = async (matriculaData: Omit<Matricula, "id">) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
       const { data, error } = await supabase
         .from('matriculas')
         .insert([matriculaData])
-        .select();
-
+        .select('id')
+        .single();
+        
       if (error) throw error;
       
-      toast.success('Matrícula criada com sucesso');
-      return { success: true, data: data[0] };
-      
+      toast.success('Matrícula criada com sucesso!');
+      return data;
     } catch (err: any) {
-      setError(err);
-      toast.error('Erro ao criar matrícula');
-      console.error('Erro ao criar matrícula:', err);
-      return { success: false, error: err };
+      const errorMsg = err.message || 'Erro ao criar matrícula';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const cancelarMatricula = async (motivo: string) => {
-    if (!matriculaId) return { success: false, error: new Error('ID da matrícula não fornecido') };
+  /**
+   * Atualiza o status de uma matrícula e registra no histórico
+   */
+  const atualizarStatusMatricula = async (
+    id: string,
+    novoStatus: string,
+    statusAnterior: string,
+    motivo: string = "",
+    userId: string
+  ) => {
+    setLoading(true);
+    setError(null);
     
     try {
-      setLoading(true);
+      // Atualizar a matrícula
+      const { error: updateError } = await supabase
+        .from('matriculas')
+        .update({ status: novoStatus })
+        .eq('id', id);
+        
+      if (updateError) throw updateError;
       
-      // Buscar o status atual antes de atualizar
-      const { data: currentData, error: fetchError } = await supabase
+      // Registrar no histórico
+      const historicoData = {
+        matricula_id: id,
+        status_anterior: statusAnterior,
+        status_novo: novoStatus,
+        motivo: motivo,
+        alterado_por: userId
+      };
+      
+      const { error: historicoError } = await supabase
+        .from('historico_matricula')
+        .insert([historicoData]);
+        
+      if (historicoError) {
+        // Reverter atualização da matrícula em caso de erro ao registrar histórico
+        await supabase
+          .from('matriculas')
+          .update({ status: statusAnterior })
+          .eq('id', id);
+          
+        throw historicoError;
+      }
+      
+      toast.success(`Status da matrícula atualizado para: ${novoStatus}`);
+      return true;
+    } catch (err: any) {
+      const errorMsg = err.message || 'Erro ao atualizar status da matrícula';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Atualiza uma matrícula existente e registra a alteração no histórico
+   */
+  const atualizarMatricula = async (
+    id: string,
+    dadosAtualizacao: Partial<Matricula>,
+    motivo: string = "",
+    userId: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Buscar matrícula atual para saber status antes da atualização
+      const { data: matriculaAtual, error: fetchError } = await supabase
         .from('matriculas')
         .select('status')
-        .eq('id', matriculaId)
+        .eq('id', id)
         .single();
         
       if (fetchError) throw fetchError;
       
-      const statusAnterior = currentData.status;
-      
-      // Atualizar o status da matrícula para inativo
-      const { data, error } = await supabase
+      // Atualizar a matrícula
+      const { data: matriculaAtualizada, error: updateError } = await supabase
         .from('matriculas')
-        .update({ status: 'inativo' })
-        .eq('id', matriculaId)
-        .select();
-
-      if (error) throw error;
-      
-      // Registrar no histórico da matrícula
-      const { error: historyError } = await supabase
-        .from('historico_matricula')
-        .insert([{
-          matricula_id: matriculaId,
-          status_anterior: statusAnterior,
-          status_novo: 'inativo',
-          motivo: motivo,
-          alterado_por: (await supabase.auth.getUser()).data.user?.id
-        }]);
-        
-      if (historyError) throw historyError;
-      
-      // Atualizar o estado local
-      setMatricula(prev => prev ? { ...prev, status: 'inativo' } : null);
-      
-      toast.success('Matrícula cancelada com sucesso');
-      return { success: true, data };
-      
-    } catch (err: any) {
-      setError(err);
-      toast.error('Erro ao cancelar a matrícula');
-      console.error('Erro ao cancelar matrícula:', err);
-      return { success: false, error: err };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const trancarMatricula = async (motivo: string) => {
-    if (!matriculaId) return { success: false, error: new Error('ID da matrícula não fornecido') };
-    
-    try {
-      setLoading(true);
-      
-      // Buscar o status atual antes de atualizar
-      const { data: currentData, error: fetchError } = await supabase
-        .from('matriculas')
-        .select('status')
-        .eq('id', matriculaId)
+        .update(dadosAtualizacao)
+        .eq('id', id)
+        .select()
         .single();
         
-      if (fetchError) throw fetchError;
+      if (updateError) throw updateError;
       
-      const statusAnterior = currentData.status;
-      
-      // Atualizar o status da matrícula para trancado
-      const { data, error } = await supabase
-        .from('matriculas')
-        .update({ status: 'trancado' })
-        .eq('id', matriculaId)
-        .select();
-
-      if (error) throw error;
-      
-      // Registrar no histórico da matrícula
-      const { error: historyError } = await supabase
-        .from('historico_matricula')
-        .insert([{
-          matricula_id: matriculaId,
-          status_anterior: statusAnterior,
-          status_novo: 'trancado',
+      // Registrar no histórico se o status foi alterado
+      if (dadosAtualizacao.status && dadosAtualizacao.status !== matriculaAtual.status) {
+        const historicoData = {
+          matricula_id: id,
+          status_anterior: matriculaAtual.status,
+          status_novo: dadosAtualizacao.status,
           motivo: motivo,
-          alterado_por: (await supabase.auth.getUser()).data.user?.id
-        }]);
+          alterado_por: userId
+        };
         
-      if (historyError) throw historyError;
+        const { error: historicoError } = await supabase
+          .from('historico_matricula')
+          .insert([historicoData]);
+          
+        if (historicoError) {
+          toast.error(`Matrícula atualizada, mas houve erro ao registrar histórico: ${historicoError.message}`);
+        }
+      }
       
-      // Atualizar o estado local
-      setMatricula(prev => prev ? { ...prev, status: 'trancado' } : null);
-      
-      toast.success('Matrícula trancada com sucesso');
-      return { success: true, data };
-      
+      toast.success('Matrícula atualizada com sucesso!');
+      return matriculaAtualizada;
     } catch (err: any) {
-      setError(err);
-      toast.error('Erro ao trancar a matrícula');
-      console.error('Erro ao trancar matrícula:', err);
-      return { success: false, error: err };
+      const errorMsg = err.message || 'Erro ao atualizar matrícula';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return null;
     } finally {
       setLoading(false);
     }
   };
-  
+
+  /**
+   * Busca o histórico de uma matrícula
+   */
+  const buscarHistoricoMatricula = async (matriculaId: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('historico_matricula')
+        .select()
+        .eq('matricula_id', matriculaId)
+        .order('data_alteracao', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data;
+    } catch (err: any) {
+      const errorMsg = err.message || 'Erro ao buscar histórico da matrícula';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
-    matricula,
     loading,
     error,
-    fetchMatricula,
-    updateMatricula,
-    createMatricula,
-    cancelarMatricula,
-    trancarMatricula
+    buscarMatriculas,
+    buscarMatricula,
+    criarMatricula,
+    atualizarMatricula,
+    atualizarStatusMatricula,
+    buscarHistoricoMatricula
   };
-}
+};

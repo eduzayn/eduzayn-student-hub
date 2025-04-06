@@ -20,13 +20,14 @@ serve(async (req) => {
   if (corsResponse) return corsResponse;
 
   try {
-    // Obter a chave API do Lytex dos secrets
-    const LYTEX_API_KEY = Deno.env.get("LYTEX_API_KEY");
+    // Obter a chave do Lytex dos secrets
+    // Usando Client Secret em vez de API Key, conforme mostrado na imagem
+    const LYTEX_CLIENT_SECRET = Deno.env.get("LYTEX_CLIENT_SECRET");
     // URL base da API do Lytex (pode ser sandbox para testes)
     const LYTEX_BASE_URL = Deno.env.get("LYTEX_API_URL") || "https://api.sandbox.lytex.com.br";
 
-    if (!LYTEX_API_KEY) {
-      throw new Error("API Key do Lytex não configurada");
+    if (!LYTEX_CLIENT_SECRET) {
+      throw new Error("Client Secret do Lytex não configurado");
     }
 
     const { operation, payload } = await req.json();
@@ -37,22 +38,22 @@ serve(async (req) => {
     switch (operation) {
       case "create-customer":
         // Criar um cliente no Lytex
-        responseData = await createCustomer(LYTEX_BASE_URL, LYTEX_API_KEY, payload);
+        responseData = await createCustomer(LYTEX_BASE_URL, LYTEX_CLIENT_SECRET, payload);
         break;
 
       case "create-payment":
         // Criar um pagamento no Lytex
-        responseData = await createPayment(LYTEX_BASE_URL, LYTEX_API_KEY, payload);
+        responseData = await createPayment(LYTEX_BASE_URL, LYTEX_CLIENT_SECRET, payload);
         break;
         
       case "create-customer-and-payment":
         // Criar cliente e pagamento em uma operação
-        responseData = await createCustomerAndPayment(LYTEX_BASE_URL, LYTEX_API_KEY, payload);
+        responseData = await createCustomerAndPayment(LYTEX_BASE_URL, LYTEX_CLIENT_SECRET, payload);
         break;
 
       case "check-payment":
         // Verificar status de um pagamento
-        responseData = await checkPayment(LYTEX_BASE_URL, LYTEX_API_KEY, payload.id);
+        responseData = await checkPayment(LYTEX_BASE_URL, LYTEX_CLIENT_SECRET, payload.id);
         break;
 
       default:
@@ -84,7 +85,7 @@ serve(async (req) => {
 // quando a documentação estiver disponível
 
 // Função para criar um cliente no Lytex
-async function createCustomer(baseUrl: string, apiKey: string, customerData: any) {
+async function createCustomer(baseUrl: string, clientSecret: string, customerData: any) {
   console.log("Criando cliente no Lytex:", customerData);
   
   // Implementação simulada - substitua pela API real do Lytex
@@ -92,7 +93,7 @@ async function createCustomer(baseUrl: string, apiKey: string, customerData: any
   //   method: "POST",
   //   headers: {
   //     "Content-Type": "application/json",
-  //     "Authorization": `Bearer ${apiKey}`
+  //     "Authorization": `Bearer ${clientSecret}`
   //   },
   //   body: JSON.stringify(customerData)
   // });
@@ -110,7 +111,7 @@ async function createCustomer(baseUrl: string, apiKey: string, customerData: any
 }
 
 // Função para criar um pagamento no Lytex
-async function createPayment(baseUrl: string, apiKey: string, paymentData: any) {
+async function createPayment(baseUrl: string, clientSecret: string, paymentData: any) {
   console.log("Criando pagamento no Lytex:", paymentData);
   
   // Implementação simulada - substitua pela API real do Lytex
@@ -118,7 +119,7 @@ async function createPayment(baseUrl: string, apiKey: string, paymentData: any) 
   //   method: "POST",
   //   headers: {
   //     "Content-Type": "application/json",
-  //     "Authorization": `Bearer ${apiKey}`
+  //     "Authorization": `Bearer ${clientSecret}`
   //   },
   //   body: JSON.stringify(paymentData)
   // });
@@ -139,11 +140,11 @@ async function createPayment(baseUrl: string, apiKey: string, paymentData: any) 
 }
 
 // Função para criar cliente e pagamento em uma operação
-async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: any) {
+async function createCustomerAndPayment(baseUrl: string, clientSecret: string, data: any) {
   console.log("Criando cliente e pagamento no Lytex:", data);
   
   // Criar ou buscar cliente
-  const customerResult = await createCustomer(baseUrl, apiKey, data.customer);
+  const customerResult = await createCustomer(baseUrl, clientSecret, data.customer);
   
   // Criar pagamento usando o ID do cliente
   const paymentData = {
@@ -151,7 +152,7 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
     customer: customerResult.customer.id
   };
   
-  const paymentResult = await createPayment(baseUrl, apiKey, paymentData);
+  const paymentResult = await createPayment(baseUrl, clientSecret, paymentData);
   
   return {
     customer: customerResult.customer,
@@ -160,14 +161,14 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
 }
 
 // Função para verificar o status de um pagamento
-async function checkPayment(baseUrl: string, apiKey: string, paymentId: string) {
+async function checkPayment(baseUrl: string, clientSecret: string, paymentId: string) {
   console.log("Verificando pagamento no Lytex:", paymentId);
   
   // Implementação simulada - substitua pela API real do Lytex
   // const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
   //   headers: {
   //     "Content-Type": "application/json",
-  //     "Authorization": `Bearer ${apiKey}`
+  //     "Authorization": `Bearer ${clientSecret}`
   //   }
   // });
 

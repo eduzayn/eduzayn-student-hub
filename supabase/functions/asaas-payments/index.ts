@@ -20,13 +20,14 @@ serve(async (req) => {
   if (corsResponse) return corsResponse;
 
   try {
-    // Obter a chave API do Asaas dos secrets
-    const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
+    // Obter a chave da API do Asaas dos secrets
+    // Usando Client Secret em vez de API Key, conforme mostrado na imagem
+    const ASAAS_CLIENT_SECRET = Deno.env.get("ASAAS_CLIENT_SECRET");
     // URL base da API do Asaas (sandbox para testes)
     const ASAAS_BASE_URL = "https://sandbox.asaas.com/api/v3";
 
-    if (!ASAAS_API_KEY) {
-      throw new Error("API Key do Asaas não configurada");
+    if (!ASAAS_CLIENT_SECRET) {
+      throw new Error("Client Secret do Asaas não configurado");
     }
 
     const { operation, payload } = await req.json();
@@ -37,22 +38,22 @@ serve(async (req) => {
     switch (operation) {
       case "create-customer":
         // Criar um cliente no Asaas
-        responseData = await createCustomer(ASAAS_BASE_URL, ASAAS_API_KEY, payload);
+        responseData = await createCustomer(ASAAS_BASE_URL, ASAAS_CLIENT_SECRET, payload);
         break;
 
       case "create-payment":
         // Criar um pagamento no Asaas
-        responseData = await createPayment(ASAAS_BASE_URL, ASAAS_API_KEY, payload);
+        responseData = await createPayment(ASAAS_BASE_URL, ASAAS_CLIENT_SECRET, payload);
         break;
         
       case "create-customer-and-payment":
         // Criar cliente e pagamento em uma operação
-        responseData = await createCustomerAndPayment(ASAAS_BASE_URL, ASAAS_API_KEY, payload);
+        responseData = await createCustomerAndPayment(ASAAS_BASE_URL, ASAAS_CLIENT_SECRET, payload);
         break;
 
       case "check-payment":
         // Verificar status de um pagamento
-        responseData = await checkPayment(ASAAS_BASE_URL, ASAAS_API_KEY, payload.id);
+        responseData = await checkPayment(ASAAS_BASE_URL, ASAAS_CLIENT_SECRET, payload.id);
         break;
 
       default:
@@ -81,12 +82,12 @@ serve(async (req) => {
 });
 
 // Função para criar um cliente no Asaas
-async function createCustomer(baseUrl: string, apiKey: string, customerData: any) {
+async function createCustomer(baseUrl: string, clientSecret: string, customerData: any) {
   const response = await fetch(`${baseUrl}/customers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "access_token": apiKey
+      "access_token": clientSecret // Usando Client Secret em vez de API Key
     },
     body: JSON.stringify(customerData)
   });
@@ -101,12 +102,12 @@ async function createCustomer(baseUrl: string, apiKey: string, customerData: any
 }
 
 // Função para criar um pagamento no Asaas
-async function createPayment(baseUrl: string, apiKey: string, paymentData: any) {
+async function createPayment(baseUrl: string, clientSecret: string, paymentData: any) {
   const response = await fetch(`${baseUrl}/payments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "access_token": apiKey
+      "access_token": clientSecret // Usando Client Secret em vez de API Key
     },
     body: JSON.stringify(paymentData)
   });
@@ -121,7 +122,7 @@ async function createPayment(baseUrl: string, apiKey: string, paymentData: any) 
 }
 
 // Função para criar cliente e pagamento em uma operação
-async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: any) {
+async function createCustomerAndPayment(baseUrl: string, clientSecret: string, data: any) {
   // Primeiro, criar ou buscar o cliente
   let customer;
   
@@ -130,7 +131,7 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
     `${baseUrl}/customers?cpfCnpj=${encodeURIComponent(data.customer.cpfCnpj)}`, 
     {
       headers: {
-        "access_token": apiKey
+        "access_token": clientSecret // Usando Client Secret em vez de API Key
       }
     }
   );
@@ -143,7 +144,7 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
     console.log("Cliente existente encontrado:", customer.id);
   } else {
     // Criar novo cliente
-    const customerResult = await createCustomer(baseUrl, apiKey, data.customer);
+    const customerResult = await createCustomer(baseUrl, clientSecret, data.customer);
     customer = customerResult.customer;
     console.log("Novo cliente criado:", customer.id);
   }
@@ -154,7 +155,7 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
     customer: customer.id
   };
   
-  const paymentResult = await createPayment(baseUrl, apiKey, paymentData);
+  const paymentResult = await createPayment(baseUrl, clientSecret, paymentData);
   
   return {
     customer,
@@ -163,11 +164,11 @@ async function createCustomerAndPayment(baseUrl: string, apiKey: string, data: a
 }
 
 // Função para verificar o status de um pagamento
-async function checkPayment(baseUrl: string, apiKey: string, paymentId: string) {
+async function checkPayment(baseUrl: string, clientSecret: string, paymentId: string) {
   const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
     headers: {
       "Content-Type": "application/json",
-      "access_token": apiKey
+      "access_token": clientSecret // Usando Client Secret em vez de API Key
     }
   });
 

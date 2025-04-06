@@ -26,12 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/card";
 import { Search, MoreHorizontal, Filter, Plus } from "lucide-react";
 import StatusMatricula from "./StatusMatricula";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Removida a importação incorreta de Badge
 
 interface Matricula {
   id: string;

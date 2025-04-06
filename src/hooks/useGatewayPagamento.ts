@@ -1,129 +1,185 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface PagamentoInput {
+export interface GatewayPaymentParams {
   matricula_id: string;
-  aluno_nome: string;
-  aluno_email: string;
-  aluno_cpf: string;
   valor: number;
-  descricao: string;
   data_vencimento: string;
   forma_pagamento: string;
-  parcelamento?: number;
+  customerData: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+  };
+  description?: string;
 }
 
-export function useGatewayPagamento() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+// Interface para os tipos de gateway de pagamento disponíveis
+export type GatewayType = 'asaas' | 'lytex';
 
-  const processarPagamentoAsaas = async (pagamento: PagamentoInput) => {
+export const useGatewayPagamento = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Processa um pagamento usando o gateway Asaas
+   */
+  const processarPagamentoAsaas = async (params: GatewayPaymentParams) => {
     setLoading(true);
     setError(null);
-
+    
     try {
-      // Chamar a edge function para criar o cliente e o pagamento no Asaas
-      const { data, error: fnError } = await supabase.functions.invoke('asaas-payments', {
+      // Chamar a edge function para processar o pagamento
+      const response = await supabase.functions.invoke('asaas-payments', {
         body: {
-          operation: 'create-customer-and-payment',
+          operation: "create-customer-and-payment",
           payload: {
-            customer: {
-              name: pagamento.aluno_nome,
-              email: pagamento.aluno_email,
-              cpfCnpj: pagamento.aluno_cpf
-            },
+            customer: params.customerData,
             payment: {
-              billingType: pagamento.forma_pagamento,
-              value: pagamento.valor,
-              dueDate: pagamento.data_vencimento,
-              description: pagamento.descricao,
-              installmentCount: pagamento.parcelamento || 1
+              customer: "id_sera_substituido", // Será substituído pela função
+              billingType: params.forma_pagamento,
+              value: params.valor,
+              dueDate: params.data_vencimento,
+              description: params.description || `Matrícula - Pagamento`
             }
           }
         }
       });
 
-      if (fnError) throw new Error(fnError.message);
-      if (!data.success) throw new Error(data.message || 'Falha ao processar pagamento');
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Erro ao processar pagamento no Asaas');
+      }
 
-      // Salvar o registro de pagamento no banco de dados
-      const { error: dbError } = await supabase
+      // Registrar o pagamento no banco de dados
+      const { data: pagamentoData, error: pagamentoError } = await supabase
         .from('pagamentos_matricula')
-        .insert([{
-          matricula_id: pagamento.matricula_id,
-          tipo: pagamento.parcelamento && pagamento.parcelamento > 1 ? 'parcelado' : 'único',
-          forma_pagamento: pagamento.forma_pagamento,
-          gateway: 'asaas',
-          valor: pagamento.valor,
-          data_vencimento: pagamento.data_vencimento,
-          status: 'pendente',
-          gateway_payment_id: data.payment.id,
-          link_pagamento: data.payment.invoiceUrl
-        }]);
+        .insert([
+          {
+            matricula_id: params.matricula_id,
+            tipo: 'matricula',
+            forma_pagamento: params.forma_pagamento,
+            gateway: 'asaas',
+            valor: params.valor,
+            data_vencimento: params.data_vencimento,
+            status: 'pendente',
+            gateway_payment_id: response.data.payment.id,
+            link_pagamento: response.data.payment.invoiceUrl
+          }
+        ]);
 
-      if (dbError) throw dbError;
+      if (pagamentoError) {
+        throw new Error(`Erro ao registrar pagamento: ${pagamentoError.message}`);
+      }
 
-      toast.success('Pagamento processado com sucesso!');
-      return { success: true, data: data.payment };
+      return {
+        success: true,
+        paymentId: response.data.payment.id,
+        invoiceUrl: response.data.payment.invoiceUrl,
+        customerCreated: response.data.customer
+      };
     } catch (err: any) {
       const errorMsg = err.message || 'Erro ao processar pagamento';
-      setError(new Error(errorMsg));
+      setError(errorMsg);
       toast.error(errorMsg);
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: errorMsg
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  const processarPagamentoLytex = async (pagamento: PagamentoInput) => {
+  /**
+   * Processa um pagamento usando o gateway Lytex
+   */
+  const processarPagamentoLytex = async (params: GatewayPaymentParams) => {
     setLoading(true);
     setError(null);
-
+    
     try {
-      // Este é um exemplo simulado, já que a integração Lytex ainda não está implementada
-      // Aqui você chamaria a edge function correspondente
+      // Chamar a edge function para processar o pagamento
+      const response = await supabase.functions.invoke('lytex-integration', {
+        body: {
+          operation: "create-customer-and-payment",
+          payload: {
+            customer: params.customerData,
+            payment: {
+              customer: "id_sera_substituido", // Será substituído pela função
+              billingType: params.forma_pagamento,
+              value: params.valor,
+              dueDate: params.data_vencimento,
+              description: params.description || `Matrícula - Pagamento`
+            }
+          }
+        }
+      });
 
-      // Simular processamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.info('Integração com Lytex ainda não implementada completamente');
-      
-      // Salvar o registro de pagamento no banco de dados (simulação)
-      const { data, error: dbError } = await supabase
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Erro ao processar pagamento no Lytex');
+      }
+
+      // Registrar o pagamento no banco de dados
+      const { data: pagamentoData, error: pagamentoError } = await supabase
         .from('pagamentos_matricula')
-        .insert([{
-          matricula_id: pagamento.matricula_id,
-          tipo: pagamento.parcelamento && pagamento.parcelamento > 1 ? 'parcelado' : 'único',
-          forma_pagamento: pagamento.forma_pagamento,
-          gateway: 'lytex',
-          valor: pagamento.valor,
-          data_vencimento: pagamento.data_vencimento,
-          status: 'pendente',
-          gateway_payment_id: `LYTEX-${Date.now()}`,
-          link_pagamento: '#'
-        }])
-        .select();
+        .insert([
+          {
+            matricula_id: params.matricula_id,
+            tipo: 'matricula',
+            forma_pagamento: params.forma_pagamento,
+            gateway: 'lytex',
+            valor: params.valor,
+            data_vencimento: params.data_vencimento,
+            status: 'pendente',
+            gateway_payment_id: response.data.payment.id,
+            link_pagamento: response.data.payment.invoiceUrl
+          }
+        ]);
 
-      if (dbError) throw dbError;
+      if (pagamentoError) {
+        throw new Error(`Erro ao registrar pagamento: ${pagamentoError.message}`);
+      }
 
-      toast.success('Pagamento registrado com sucesso!');
-      return { success: true, data };
+      return {
+        success: true,
+        paymentId: response.data.payment.id,
+        invoiceUrl: response.data.payment.invoiceUrl,
+        customerCreated: response.data.customer
+      };
     } catch (err: any) {
       const errorMsg = err.message || 'Erro ao processar pagamento';
-      setError(new Error(errorMsg));
+      setError(errorMsg);
       toast.error(errorMsg);
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        error: errorMsg
+      };
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Processa um pagamento com base no gateway escolhido
+   */
+  const processarPagamento = async (gateway: GatewayType, params: GatewayPaymentParams) => {
+    if (gateway === 'asaas') {
+      return processarPagamentoAsaas(params);
+    } else if (gateway === 'lytex') {
+      return processarPagamentoLytex(params);
+    } else {
+      const errorMsg = 'Gateway de pagamento inválido';
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
   return {
     loading,
     error,
-    processarPagamentoAsaas,
-    processarPagamentoLytex
+    processarPagamento
   };
-}
+};
