@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -90,72 +89,8 @@ const FeaturedCourses = () => {
         
         setCourseImages(initialImages);
         
-        // Tentar carregar imagens do bucket do Supabase para cada curso
-        const imagePromises = featuredCourses.map(async (course) => {
-          // Pular cursos que já têm imagem personalizada
-          if (course.image.startsWith("/lovable-uploads/")) {
-            return { id: course.id, imageUrl: course.image };
-          }
-          
-          try {
-            // Tentar buscar por categoria primeiro
-            const categoryName = course.category.toLowerCase().replace(/\s+/g, '-');
-            
-            // Listar arquivos no bucket com um prefixo correspondente à categoria
-            const { data: files, error } = await supabase
-              .storage
-              .from('category_images')
-              .list(categoryName);
-              
-            if (error || !files?.length) {
-              // Tentar usar a imageQuery como fallback
-              const querySlug = course.imageQuery.toLowerCase().replace(/\s+/g, '-');
-              const { data: queryFiles } = await supabase
-                .storage
-                .from('course_images')
-                .list(querySlug);
-                
-              if (queryFiles?.length) {
-                const randomIndex = Math.floor(Math.random() * queryFiles.length);
-                const selectedFile = queryFiles[randomIndex];
-                
-                const { data: publicURL } = supabase
-                  .storage
-                  .from('course_images')
-                  .getPublicUrl(`${querySlug}/${selectedFile.name}`);
-                  
-                return { id: course.id, imageUrl: publicURL.publicUrl };
-              }
-              
-              // Usar placeholder se não encontrar
-              return { id: course.id, imageUrl: '/placeholder.svg' };
-            }
-            
-            // Escolher uma imagem aleatória se várias estiverem disponíveis
-            const randomIndex = Math.floor(Math.random() * files.length);
-            const selectedFile = files[randomIndex];
-            
-            // Obter a URL pública para o arquivo
-            const { data: publicURL } = supabase
-              .storage
-              .from('category_images')
-              .getPublicUrl(`${categoryName}/${selectedFile.name}`);
-              
-            return { id: course.id, imageUrl: publicURL.publicUrl };
-          } catch (error) {
-            console.warn(`Failed to load image for course ${course.title}:`, error);
-            return { id: course.id, imageUrl: '/placeholder.svg' };
-          }
-        });
-        
-        const results = await Promise.all(imagePromises);
-        
-        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
-          acc[id] = imageUrl;
-          return acc;
-        }, {} as Record<number, string>);
-        
-        setCourseImages(imagesMap);
+        // Como temporariamente não estamos usando a API Freepik ou Supabase,
+        // vamos apenas manter as imagens iniciais
       } catch (err) {
         console.error("Failed to load course images:", err);
         toast.error("Não foi possível carregar algumas imagens");
