@@ -97,6 +97,73 @@ export const useLearnWorldsApi = () => {
   };
 
   /**
+   * Cadastra um novo aluno na plataforma LearnWorlds
+   * @param userData Dados do usuário a ser cadastrado
+   */
+  const cadastrarAluno = async (userData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    password?: string;
+    cpf?: string;
+    phoneNumber?: string;
+  }) => {
+    return callLearnWorldsApi<any>('users', 'POST', {
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      password: userData.password || generateRandomPassword(),
+      customField1: userData.cpf || '',
+      phoneNumber: userData.phoneNumber || ''
+    });
+  };
+
+  /**
+   * Gera uma senha aleatória segura para novos usuários
+   */
+  const generateRandomPassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&*+-=?@^_";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
+  /**
+   * Matricula um aluno em um curso na LearnWorlds
+   * @param userId ID ou e-mail do usuário na LearnWorlds
+   * @param courseId ID do curso na LearnWorlds
+   */
+  const matricularAlunoEmCurso = async (userId: string, courseId: string) => {
+    return callLearnWorldsApi<any>('enrollments', 'POST', {
+      userId: userId,
+      courseId: courseId,
+      role: "learner"
+    });
+  };
+
+  /**
+   * Busca todos os cursos disponíveis em LearnWorlds
+   * @param page Número da página, começando por 1
+   * @param limit Limite de itens por página (máx: 100)
+   * @param searchTerm Termo de busca (opcional)
+   */
+  const getCourses = async (page: number = 1, limit: number = 20, searchTerm?: string) => {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      limit: limit.toString()
+    };
+    
+    if (searchTerm) {
+      params.q = searchTerm;
+    }
+    
+    return callLearnWorldsApi<any>('courses', 'GET', undefined, params);
+  };
+
+  /**
    * Busca informações de um curso específico
    * @param courseId ID do curso na LearnWorlds
    */
@@ -105,15 +172,22 @@ export const useLearnWorldsApi = () => {
   };
 
   /**
-   * Busca lista de cursos disponíveis
+   * Busca lista de alunos cadastrados
    * @param page Número da página, começando por 1
    * @param limit Limite de itens por página (máx: 100)
+   * @param searchTerm Termo de busca (opcional)
    */
-  const getAllCourses = async (page: number = 1, limit: number = 20) => {
-    return callLearnWorldsApi<any>('courses', 'GET', undefined, {
+  const getUsers = async (page: number = 1, limit: number = 20, searchTerm?: string) => {
+    const params: Record<string, string> = {
       page: page.toString(),
       limit: limit.toString()
-    });
+    };
+    
+    if (searchTerm) {
+      params.q = searchTerm;
+    }
+    
+    return callLearnWorldsApi<any>('users', 'GET', undefined, params);
   };
 
   /**
@@ -137,8 +211,11 @@ export const useLearnWorldsApi = () => {
 
   return {
     callLearnWorldsApi,
+    cadastrarAluno,
+    matricularAlunoEmCurso,
+    getCourses,
     getCourseDetails,
-    getAllCourses,
+    getUsers,
     getUserCourseProgress,
     markContentAsCompleted,
     loading,

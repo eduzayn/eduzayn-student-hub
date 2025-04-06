@@ -5,20 +5,22 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import SelectAluno from "./SelectAluno";
 import SelectCurso from "./SelectCurso";
 import ConfiguracaoMatricula from "./ConfiguracaoMatricula";
 import ConfiguracaoPagamento from "./ConfiguracaoPagamento";
 import { useMatricula } from "@/hooks/useMatricula";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import type { Matricula } from "@/types/matricula";
 
 const novaMatriculaSchema = z.object({
-  aluno_id: z.string().uuid("Selecione um aluno válido"),
-  curso_id: z.string().uuid("Selecione um curso válido"),
+  aluno_id: z.string().min(1, "Selecione um aluno válido"),
+  curso_id: z.string().min(1, "Selecione um curso válido"),
   data_inicio: z.date({
     required_error: "A data de início é obrigatória",
   }),
@@ -33,6 +35,9 @@ const novaMatriculaSchema = z.object({
   forma_pagamento: z.string().optional(),
   valor_matricula: z.number().optional(),
   data_vencimento: z.date().optional(),
+  // Dados adicionais para integração com LearnWorlds
+  learnworlds_aluno_id: z.string().optional(),
+  learnworlds_curso_id: z.string().optional(),
 });
 
 type NovaMatriculaForm = z.infer<typeof novaMatriculaSchema>;
@@ -40,6 +45,7 @@ type NovaMatriculaForm = z.infer<typeof novaMatriculaSchema>;
 const NovaMatriculaForm: React.FC = () => {
   const navigate = useNavigate();
   const { criarMatricula } = useMatricula();
+  const { matricularAlunoEmCurso } = useLearnWorldsApi();
   const { useGatewayPagamento } = require("@/hooks/useGatewayPagamento");
   const { processarPagamento } = useGatewayPagamento();
   
@@ -47,6 +53,7 @@ const NovaMatriculaForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<any>(null);
   const [cursoSelecionado, setCursoSelecionado] = useState<any>(null);
+  const [learnworldsError, setLearnworldsError] = useState<string | null>(null);
   
   const form = useForm<NovaMatriculaForm>({
     resolver: zodResolver(novaMatriculaSchema),
@@ -59,6 +66,7 @@ const NovaMatriculaForm: React.FC = () => {
   
   const handleSubmit = async (data: NovaMatriculaForm) => {
     setSubmitting(true);
+    setLearnworldsError(null);
     
     try {
       // Preparar os dados da matrícula para o formato correto
@@ -73,6 +81,26 @@ const NovaMatriculaForm: React.FC = () => {
         observacoes: data.observacoes || "",
         progresso: 0
       };
+      
+      // Se temos IDs de LearnWorlds, tentamos matricular o aluno na plataforma
+      if (data.learnworlds_aluno_id && data.learnworlds_curso_id) {
+        try {
+          const resultadoLearnWorlds = await matricularAlunoEmCurso(
+            data.learnworlds_aluno_id,
+            data.learnworlds_curso_id
+          );
+          
+          if (resultadoLearnWorlds) {
+            // Se tiver ID de matrícula do LearnWorlds, adicionar aos dados da matrícula
+            matriculaData.learning_worlds_enrollment_id = resultadoLearnWorlds.id;
+            console.log("Matrícula criada no LearnWorlds:", resultadoLearnWorlds.id);
+          }
+        } catch (learnWorldsError: any) {
+          console.error("Erro ao matricular aluno no LearnWorlds:", learnWorldsError);
+          setLearnworldsError(learnWorldsError.message || "Erro ao matricular aluno no LearnWorlds");
+          // Não interrompemos o fluxo, continuamos com a matrícula no sistema local
+        }
+      }
       
       // Criar a matrícula no sistema
       const resultado = await criarMatricula(matriculaData);
@@ -138,18 +166,26 @@ const NovaMatriculaForm: React.FC = () => {
   const handleAlunoSelecionado = (aluno: any) => {
     setAlunoSelecionado(aluno);
     form.setValue("aluno_id", aluno.id);
-    if (Object.keys(form.formState.errors).length === 0) {
-      proximaAba();
+    
+    // Se o aluno tiver ID do LearnWorlds, armazená-lo também
+    if (aluno.learnworlds_id) {
+      form.setValue("learnworlds_aluno_id", aluno.learnworlds_id);
     }
+    
+    proximaAba();
   };
   
   // Quando um curso é selecionado
   const handleCursoSelecionado = (curso: any) => {
     setCursoSelecionado(curso);
     form.setValue("curso_id", curso.id);
-    if (Object.keys(form.formState.errors).length === 0) {
-      proximaAba();
+    
+    // Se o curso tiver ID do LearnWorlds, armazená-lo também
+    if (curso.learning_worlds_id) {
+      form.setValue("learnworlds_curso_id", curso.learning_worlds_id);
     }
+    
+    proximaAba();
   };
   
   return (
@@ -201,6 +237,16 @@ const NovaMatriculaForm: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="pagamento">
+              {learnworldsError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {learnworldsError}
+                    <p className="text-xs mt-1">A matrícula será criada apenas no sistema local.</p>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <ConfiguracaoPagamento 
                 form={form} 
                 aluno={alunoSelecionado} 

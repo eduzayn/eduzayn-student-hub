@@ -96,6 +96,20 @@ serve(async (req) => {
     let body;
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
       body = await req.json();
+      
+      // Log especial para criação de usuário ou matrícula
+      if (path === 'users' && req.method === 'POST') {
+        console.log('Criando novo usuário no LearnWorlds:', {
+          email: body.email,
+          firstName: body.firstName,
+          lastName: body.lastName,
+        });
+      } else if (path === 'enrollments' && req.method === 'POST') {
+        console.log('Criando nova matrícula no LearnWorlds:', {
+          userId: body.userId,
+          courseId: body.courseId,
+        });
+      }
     }
 
     // Adicionar parâmetros de consulta da URL original

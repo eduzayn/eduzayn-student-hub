@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, CheckCircle, BookOpen } from "lucide-react";
+import { Search, CheckCircle, BookOpen, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import { Badge } from "@/components/ui/badge";
 
 interface SelectCursoProps {
   onCursoSelecionado: (curso: any) => void;
@@ -15,65 +16,89 @@ interface SelectCursoProps {
 const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   const [busca, setBusca] = useState("");
   const [cursos, setCursos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selecionado, setSelecionado] = useState<string | null>(null);
+  const { getCourses, loading, error } = useLearnWorldsApi();
   
   useEffect(() => {
     carregarCursos();
   }, []);
   
   const carregarCursos = async (termoBusca = "") => {
-    setLoading(true);
-    
     try {
-      // Simular carregamento de cursos do banco de dados
-      // No futuro, substituir por chamada real ao Supabase
-      setTimeout(() => {
-        const dadosSimulados = [
-          {
-            id: "c1",
-            titulo: "Análise de Sistemas",
-            codigo: "AS-2023",
-            modalidade: "EAD",
-            carga_horaria: 360,
-            valor_total: 3600.00,
-            valor_mensalidade: 300.00
-          },
-          {
-            id: "c2",
-            titulo: "Engenharia de Software",
-            codigo: "ES-2023",
-            modalidade: "EAD",
-            carga_horaria: 420,
-            valor_total: 5400.00,
-            valor_mensalidade: 450.00
-          },
-          {
-            id: "c3",
-            titulo: "Ciência da Computação",
-            codigo: "CC-2023",
-            modalidade: "EAD",
-            carga_horaria: 480,
-            valor_total: 6000.00,
-            valor_mensalidade: 500.00
-          }
-        ];
-        
-        // Filtragem pela busca (se houver)
-        const filtrados = termoBusca ? 
-          dadosSimulados.filter(c => 
-            c.titulo.toLowerCase().includes(termoBusca.toLowerCase()) ||
-            c.codigo.toLowerCase().includes(termoBusca.toLowerCase())
-          ) : dadosSimulados;
-        
-        setCursos(filtrados);
-        setLoading(false);
-      }, 800);
+      // Busca cursos da API LearnWorlds
+      const resultado = await getCourses(1, 20, termoBusca);
+      
+      if (!resultado || !resultado.data) {
+        throw new Error("Erro ao carregar cursos do LearnWorlds");
+      }
+      
+      // Mapeando os dados retornados para o formato necessário para exibição
+      const cursosFormatados = resultado.data.map((curso: any) => ({
+        id: curso.id,
+        titulo: curso.title,
+        codigo: curso.id.substring(0, 8).toUpperCase(),
+        modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
+        carga_horaria: curso.duration || 0,
+        valor_total: curso.price || 0,
+        valor_mensalidade: curso.price ? curso.price / 12 : 0,
+        descricao: curso.description,
+        imagem_url: curso.image,
+        learning_worlds_id: curso.id
+      }));
+      
+      setCursos(cursosFormatados);
     } catch (error) {
       console.error("Erro ao carregar cursos:", error);
-      toast.error("Erro ao carregar a lista de cursos");
-      setLoading(false);
+      toast.error("Erro ao carregar a lista de cursos do LearnWorlds");
+      
+      // Em caso de falha, carrega dados simulados como fallback
+      carregarCursosSimulados(termoBusca);
     }
+  };
+  
+  // Função de fallback com dados simulados
+  const carregarCursosSimulados = (termoBusca = "") => {
+    const dadosSimulados = [
+      {
+        id: "c1",
+        titulo: "Análise de Sistemas",
+        codigo: "AS-2023",
+        modalidade: "EAD",
+        carga_horaria: 360,
+        valor_total: 3600.00,
+        valor_mensalidade: 300.00,
+        learning_worlds_id: "lw12345"
+      },
+      {
+        id: "c2",
+        titulo: "Engenharia de Software",
+        codigo: "ES-2023",
+        modalidade: "EAD",
+        carga_horaria: 420,
+        valor_total: 5400.00,
+        valor_mensalidade: 450.00,
+        learning_worlds_id: "lw67890"
+      },
+      {
+        id: "c3",
+        titulo: "Ciência da Computação",
+        codigo: "CC-2023",
+        modalidade: "EAD",
+        carga_horaria: 480,
+        valor_total: 6000.00,
+        valor_mensalidade: 500.00,
+        learning_worlds_id: "lw24680"
+      }
+    ];
+    
+    // Filtragem pela busca (se houver)
+    const filtrados = termoBusca ? 
+      dadosSimulados.filter(c => 
+        c.titulo.toLowerCase().includes(termoBusca.toLowerCase()) ||
+        c.codigo.toLowerCase().includes(termoBusca.toLowerCase())
+      ) : dadosSimulados;
+    
+    setCursos(filtrados);
   };
   
   const handleBusca = () => {
@@ -82,7 +107,11 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   
   const handleSelecionar = (curso: any) => {
     setSelecionado(curso.id);
-    onCursoSelecionado(curso);
+    onCursoSelecionado({
+      ...curso,
+      // Garantindo que temos o ID do LearnWorlds
+      learning_worlds_id: curso.learning_worlds_id || curso.id
+    });
   };
 
   // Formato de moeda brasileira
@@ -108,8 +137,17 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
             onKeyDown={(e) => e.key === "Enter" && handleBusca()}
           />
         </div>
-        <Button onClick={handleBusca}>Buscar</Button>
+        <Button onClick={handleBusca} disabled={loading}>
+          {loading ? "Buscando..." : "Buscar"}
+        </Button>
       </div>
+      
+      {error && (
+        <div className="bg-destructive/10 p-3 rounded-md flex items-center gap-2 text-sm">
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <span>Erro ao buscar cursos: {error}</span>
+        </div>
+      )}
       
       <div className="mt-6">
         {loading ? (
@@ -150,6 +188,11 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
                           <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
                             {curso.codigo}
                           </span>
+                          {curso.learning_worlds_id && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                              LearnWorlds
+                            </Badge>
+                          )}
                         </div>
                         
                         <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
