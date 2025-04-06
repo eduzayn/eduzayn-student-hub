@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,7 +8,8 @@ const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png"
+  "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png" // Added the new image
 ];
 
 /**
@@ -25,11 +27,15 @@ function getRandomPlaceholder(): string {
  * @param bucket The storage bucket to search in ('category_images' or 'course_images')
  * @returns A promise resolving to an image URL or undefined if not found
  */
-async function getSupabaseImage(category: string, bucket: 'category_images' | 'course_images'): Promise<string | undefined> {
+async function getSupabaseImage(category: string, bucket: 'category_images' | 'course_images' | 'avatars'): Promise<string | undefined> {
   try {
     const formattedCategory = category.toLowerCase().replace(/\s+/g, '-');
     
-    // List files in the bucket with a path prefix matching the category
+    // Just return a placeholder image for now since buckets are empty
+    return getRandomPlaceholder();
+    
+    // This code is commented out until there are actual images in the buckets
+    /*
     const { data: files, error } = await supabase
       .storage
       .from(bucket)
@@ -51,6 +57,7 @@ async function getSupabaseImage(category: string, bucket: 'category_images' | 'c
       .getPublicUrl(`${formattedCategory}/${selectedFile.name}`);
       
     return publicURL.publicUrl;
+    */
   } catch (err) {
     console.error(`Error getting image from Supabase ${bucket}:`, err);
     return undefined;
@@ -58,27 +65,14 @@ async function getSupabaseImage(category: string, bucket: 'category_images' | 'c
 }
 
 /**
- * Searches for images on Supabase based on a query
+ * Searches for images based on a query
  * @param query The search term
  * @param limit Maximum number of images to return (default: 1)
  * @returns An array of image URLs or placeholders if failed
  */
 export async function searchFreepikImages(query: string, limit: number = 1): Promise<string[]> {
-  try {
-    // Try to get from Supabase if it's a course or category related query
-    const bucket = query.includes('course') ? 'course_images' : 'category_images';
-    const supabaseImage = await getSupabaseImage(query, bucket);
-    
-    if (supabaseImage) {
-      return [supabaseImage];
-    }
-    
-    // If no image found, return placeholder(s)
-    return Array(limit).fill('').map(() => getRandomPlaceholder());
-  } catch (error) {
-    console.error("Error fetching images:", error);
-    return Array(limit).fill('').map(() => getRandomPlaceholder());
-  }
+  // For now, we'll just return placeholder images
+  return Array(limit).fill('').map(() => getRandomPlaceholder());
 }
 
 /**
@@ -87,8 +81,7 @@ export async function searchFreepikImages(query: string, limit: number = 1): Pro
  * @returns A single image URL or placeholder if failed
  */
 export async function getFreepikImage(query: string): Promise<string> {
-  const images = await searchFreepikImages(query, 1);
-  return images[0] || getRandomPlaceholder();
+  return getRandomPlaceholder();
 }
 
 // Cache mechanism to store already fetched images by category
@@ -104,18 +97,9 @@ export async function getCachedFreepikImage(query: string): Promise<string> {
     return imageCache[query];
   }
   
-  // Return a placeholder immediately and try to fetch in the background
+  // Return a placeholder immediately
   const placeholder = getRandomPlaceholder();
   imageCache[query] = placeholder;
-  
-  // Try to fetch the actual image in the background
-  getFreepikImage(query).then(imageUrl => {
-    if (imageUrl !== placeholder) {
-      imageCache[query] = imageUrl;
-    }
-  }).catch(() => {
-    // Keep using the placeholder if fetch fails
-  });
   
   return placeholder;
 }
