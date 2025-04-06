@@ -7,16 +7,17 @@ import {
   BookOpen, 
   Award, 
   Library,
-  Briefcase
+  Briefcase,
+  School
 } from "lucide-react";
 
-// Categorias atualizadas conforme solicitado
+// Categorias atualizadas incluindo Formação Pedagógica
 const categories = [
   {
     id: 1,
     name: "Graduação",
     icon: GraduationCap,
-    courses: 74, // Atualizando para 74 cursos (adicionando os 14 bacharelados)
+    courses: 74, 
     color: "bg-blue-500",
     slug: "graduacao",
     description: "Bacharelados, Licenciaturas e Tecnológicos"
@@ -25,7 +26,7 @@ const categories = [
     id: 2,
     name: "Segunda Graduação",
     icon: BookOpen,
-    courses: 31, // Atualizando para 31 (18 existentes + 13 novos cursos)
+    courses: 31, 
     color: "bg-purple-500",
     slug: "segunda-graduacao",
     description: "Segunda Licenciatura para Licenciados"
@@ -53,6 +54,15 @@ const categories = [
     courses: 22,
     color: "bg-red-500",
     slug: "capacitacao-profissional"
+  },
+  {
+    id: 6,
+    name: "Formação Pedagógica",
+    icon: School,
+    courses: 13,
+    color: "bg-teal-500",
+    slug: "formacao-pedagogica",
+    description: "Exclusivo para bacharéis e tecnólogos"
   }
 ];
 
@@ -66,7 +76,7 @@ const CategorySection = () => {
           impulsionar sua carreira acadêmica e profissional.
         </p>
         
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
           {categories.map((category) => (
             <Link key={category.id} to={`/cursos/${category.slug}`}>
               <Card className="border-none shadow-sm hover:shadow-md transition-shadow h-full">

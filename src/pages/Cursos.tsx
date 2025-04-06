@@ -697,6 +697,138 @@ const mockCourses = [
     originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
+  
+  // Cursos de Formação Pedagógica
+  {
+    id: 69,
+    title: "Artes Visuais",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 70,
+    title: "Sociologia",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 71,
+    title: "Ciências da Religião",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 72,
+    title: "Educação Especial",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 73,
+    title: "Educação Física",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 74,
+    title: "Filosofia",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 75,
+    title: "Geografia",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 76,
+    title: "História",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 77,
+    title: "Letras - Língua Portuguesa e Libras",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 78,
+    title: "Matemática",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 79,
+    title: "Música",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 80,
+    title: "Letras Português/Inglês",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
+  {
+    id: 81,
+    title: "Letras Português/Espanhol",
+    category: "Formação Pedagógica",
+    categorySlug: "formacao-pedagogica",
+    duration: "12 meses",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
+  },
 ];
 
 const Cursos = () => {
@@ -719,14 +851,15 @@ const Cursos = () => {
       course.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-  // Categorias disponíveis
+  // Categorias disponíveis - Adicionando a nova categoria
   const categories = [
     { id: "todos", name: "Todos os Cursos" },
     { id: "graduacao", name: "Graduação" },
     { id: "segunda-graduacao", name: "Segunda Graduação" },
     { id: "pos-graduacao", name: "Pós-Graduação" },
     { id: "formacao-livre", name: "Formação Livre" },
-    { id: "capacitacao-profissional", name: "Capacitação Profissional" }
+    { id: "capacitacao-profissional", name: "Capacitação Profissional" },
+    { id: "formacao-pedagogica", name: "Formação Pedagógica" }
   ];
 
   return (
