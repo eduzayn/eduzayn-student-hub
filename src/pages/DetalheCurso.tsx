@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,12 @@ import {
   Users, 
   BookOpen,
   Laptop,
-  DollarSign
+  DollarSign,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { getCachedFreepikImage } from "@/utils/imageUtils";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // Define proper types for our courses
 type CourseModule = {
@@ -898,9 +901,43 @@ for (let id = 300; id <= 425; id++) {
 
 const DetalheCurso = () => {
   const { id } = useParams();
+  const [courseImage, setCourseImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Verifica se o parâmetro ID é um número ou uma string
   const courseId = id ? id.toString() : "";
+  
+  // Carrega a imagem contextual do curso baseada no título ou categoria
+  useEffect(() => {
+    const loadCourseImage = async () => {
+      if (!courseId || !mockCourses[courseId]) return;
+      
+      try {
+        setLoading(true);
+        const curso = mockCourses[courseId];
+        
+        // Se já tiver uma imagem personalizada carregada, use-a
+        if (curso.image && curso.image.startsWith("/lovable-uploads/")) {
+          setCourseImage(curso.image);
+          setLoading(false);
+          return;
+        }
+        
+        // Caso contrário, busque uma imagem contextual baseada no título ou categoria
+        const contextKey = curso.title || curso.category;
+        const imageUrl = await getCachedFreepikImage(contextKey);
+        setCourseImage(imageUrl);
+      } catch (error) {
+        console.error("Erro ao carregar imagem do curso:", error);
+        // Fallback para uma imagem padrão em caso de erro
+        setCourseImage('/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCourseImage();
+  }, [courseId]);
   
   // Verifica se o curso existe
   if (!courseId || !mockCourses[courseId]) {
@@ -948,11 +985,24 @@ const DetalheCurso = () => {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div className="relative h-72">
-                  <img 
-                    src={curso.image} 
-                    alt={curso.title}
-                    className="w-full h-full object-cover"
-                  />
+                  {loading ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <AspectRatio ratio={16/9} className="h-full">
+                      <img 
+                        src={courseImage || curso.image || '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png'} 
+                        alt={curso.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback para imagem padrão se falhar
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png';
+                        }}
+                      />
+                    </AspectRatio>
+                  )}
                   <div className="absolute top-4 left-4">
                     <Badge className="bg-primary text-white px-3 py-1">{curso.category}</Badge>
                   </div>
