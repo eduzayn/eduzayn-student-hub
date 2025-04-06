@@ -35,7 +35,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             )}
           >
             {form.getValues(name) ? (
-              format(form.getValues(name), "dd/MM/yyyy", { locale: ptBR })
+              format(new Date(form.getValues(name)), "dd/MM/yyyy", { locale: ptBR })
             ) : (
               "Selecione uma data"
             )}
@@ -45,9 +45,11 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
-            selected={form.getValues(name)}
-            onSelect={(date) => form.setValue(name, date)}
+            selected={form.getValues(name) ? new Date(form.getValues(name)) : undefined}
+            onSelect={(date) => date && form.setValue(name, date)}
             initialFocus
+            className={cn("p-3 pointer-events-auto")}
+            locale={ptBR}
           />
         </PopoverContent>
       </Popover>
