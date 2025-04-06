@@ -9,13 +9,15 @@ interface CertificadosGridProps {
   onVerificarRequisitos: (cursoId: string) => void;
   onSolicitarCertificado: (cursoId: string) => void;
   onDownloadCertificado: (certificadoId: string) => void;
+  children?: React.ReactNode; // Adicionando suporte para children
 }
 
 const CertificadosGrid: React.FC<CertificadosGridProps> = ({
   certificados,
   onVerificarRequisitos,
   onSolicitarCertificado,
-  onDownloadCertificado
+  onDownloadCertificado,
+  children
 }) => {
   if (certificados.length === 0) {
     return (
@@ -33,7 +35,7 @@ const CertificadosGrid: React.FC<CertificadosGridProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {certificados.map((certificado) => (
+      {children ? children : certificados.map((certificado) => (
         <CertificadoCard
           key={certificado.id}
           certificado={certificado}

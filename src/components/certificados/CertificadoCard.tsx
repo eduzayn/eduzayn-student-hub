@@ -12,13 +12,15 @@ interface CertificadoCardProps {
   onVerificarRequisitos: (cursoId: string) => void;
   onSolicitarCertificado: (cursoId: string) => void;
   onDownloadCertificado: (certificadoId: string) => void;
+  onDetalhes?: (certificado: Certificado) => void; // Adicionado o prop onDetalhes
 }
 
 const CertificadoCard: React.FC<CertificadoCardProps> = ({
   certificado,
   onVerificarRequisitos,
   onSolicitarCertificado,
-  onDownloadCertificado
+  onDownloadCertificado,
+  onDetalhes
 }) => {
   // Função para renderizar o status do certificado
   const renderStatus = (status: StatusCertificado) => {
@@ -100,15 +102,22 @@ const CertificadoCard: React.FC<CertificadoCardProps> = ({
             <Download className="h-4 w-4 mr-2" /> Baixar Certificado
           </Button>
         ) : certificado.status === "disponivel" ? (
-          <Button 
-            variant="default" 
-            className="w-full"
-            onClick={() => onSolicitarCertificado(certificado.cursoId)}
-            disabled={!todosRequisitosCumpridos}
-          >
-            <FileCheck className="h-4 w-4 mr-2" /> 
-            Solicitar Certificado
-          </Button>
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button 
+              variant="outline" 
+              onClick={() => onDetalhes && onDetalhes(certificado)}
+            >
+              Ver Detalhes
+            </Button>
+            <Button 
+              variant="default"
+              onClick={() => onSolicitarCertificado(certificado.cursoId)}
+              disabled={!todosRequisitosCumpridos}
+            >
+              <FileCheck className="h-4 w-4 mr-2" /> 
+              Solicitar
+            </Button>
+          </div>
         ) : certificado.status === "em_processamento" ? (
           <Button 
             variant="outline" 

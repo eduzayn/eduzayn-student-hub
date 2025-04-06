@@ -14,11 +14,13 @@ import { TipoDocumento } from "@/types/documentos";
 
 interface TipoDocumentoCardProps {
   tipoDocumento: TipoDocumento;
+  documentos?: any[];  // Adicionado para compatibilidade
   onUpload: (tipoDoc: TipoDocumento) => void;
 }
 
 const TipoDocumentoCard: React.FC<TipoDocumentoCardProps> = ({ 
   tipoDocumento, 
+  documentos = [],
   onUpload 
 }) => {
   const renderRequisitoInfo = (tipoDoc: TipoDocumento) => {
@@ -52,6 +54,10 @@ const TipoDocumentoCard: React.FC<TipoDocumentoCardProps> = ({
     );
   };
 
+  // Verificar se já existe um documento enviado para este tipo
+  const documentoExistente = documentos.length > 0;
+  const documentoStatus = documentoExistente ? documentos[0].status : null;
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -79,9 +85,12 @@ const TipoDocumentoCard: React.FC<TipoDocumentoCardProps> = ({
             <Button 
               className="w-full" 
               onClick={() => onUpload(tipoDocumento)}
+              variant={documentoStatus === "aprovado" ? "outline" : "default"}
             >
               <FileUp className="h-5 w-5 mr-2" />
-              Enviar Documento
+              {documentoExistente && documentoStatus !== "rejeitado" 
+                ? (documentoStatus === "aprovado" ? "Substituir" : "Reenviar") 
+                : "Enviar Documento"}
             </Button>
           </div>
         </div>

@@ -29,8 +29,8 @@ const UploadDialog: React.FC<UploadDialogProps> = ({
   onClose,
   tipoDocumento,
   onUpload,
-  uploading,
-  uploadProgress
+  uploading = false,
+  uploadProgress = 0
 }) => {
   const [file, setFile] = useState<File | null>(null);
 

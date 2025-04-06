@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +25,8 @@ const DocumentosAluno = () => {
   const [isLoadingTipos, setIsLoadingTipos] = useState(true);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchTiposDocumento();
@@ -41,7 +44,7 @@ const DocumentosAluno = () => {
             nome: 'RG',
             descricao: 'Documento de identidade',
             obrigatorio: true,
-            formatos_aceitos: ['pdf', 'jpg', 'png'],
+            formatosAceitos: ['pdf', 'jpg', 'png'],
             tamanho_maximo: 5242880,
             data_criacao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString()
@@ -51,7 +54,7 @@ const DocumentosAluno = () => {
             nome: 'CPF',
             descricao: 'Cadastro de pessoa física',
             obrigatorio: true,
-            formatos_aceitos: ['pdf', 'jpg', 'png'],
+            formatosAceitos: ['pdf', 'jpg', 'png'],
             tamanho_maximo: 5242880,
             data_criacao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString()
@@ -61,7 +64,7 @@ const DocumentosAluno = () => {
             nome: 'Diploma de Graduação',
             descricao: 'Documento que comprova a formação em nível superior',
             obrigatorio: true,
-            formatos_aceitos: ['pdf'],
+            formatosAceitos: ['pdf'],
             tamanho_maximo: 10485760,
             data_criacao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString()
@@ -71,7 +74,7 @@ const DocumentosAluno = () => {
             nome: 'Certidão de Nascimento',
             descricao: 'Documento registrado em cartório',
             obrigatorio: false,
-            formatos_aceitos: ['pdf'],
+            formatosAceitos: ['pdf'],
             tamanho_maximo: 5242880,
             data_criacao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString()
@@ -81,7 +84,7 @@ const DocumentosAluno = () => {
             nome: 'Histórico Escolar',
             descricao: 'Histórico escolar completo',
             obrigatorio: true,
-            formatos_aceitos: ['pdf'],
+            formatosAceitos: ['pdf'],
             tamanho_maximo: 10485760,
             data_criacao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString()
@@ -162,12 +165,35 @@ const DocumentosAluno = () => {
     }
   };
 
-  const handleUploadDocumento = async (formData) => {
+  const handleUploadDocumento = async (file: File) => {
     try {
-      // Em produção, implemente o upload real para o Supabase Storage
+      // Simular o upload com progresso
+      setUploading(true);
+      setUploadProgress(0);
       
-      // Simular um upload bem-sucedido
-      setTimeout(() => {
+      // Simulação de progresso de upload
+      const simulateProgress = () => {
+        const interval = setInterval(() => {
+          setUploadProgress(prev => {
+            const newProgress = prev + Math.floor(Math.random() * 15);
+            if (newProgress >= 100) {
+              clearInterval(interval);
+              return 100;
+            }
+            return newProgress;
+          });
+        }, 500);
+        
+        setTimeout(() => {
+          clearInterval(interval);
+          finalizeUpload();
+        }, 3000);
+      };
+      
+      // Finalizar o upload simulado
+      const finalizeUpload = () => {
+        setUploadProgress(100);
+        
         // Criar novo documento no estado
         const novoDocumento = {
           id: `doc-${Date.now()}`,
@@ -185,16 +211,22 @@ const DocumentosAluno = () => {
           }
         };
         
-        setDocumentos([...documentos, novoDocumento]);
-        setIsUploadDialogOpen(false);
-        
-        toast({
-          title: 'Documento enviado com sucesso',
-          description: 'Seu documento foi enviado e está aguardando análise.',
-        });
-      }, 1500);
+        setTimeout(() => {
+          setDocumentos([...documentos, novoDocumento]);
+          setUploading(false);
+          setIsUploadDialogOpen(false);
+          
+          toast({
+            title: 'Documento enviado com sucesso',
+            description: 'Seu documento foi enviado e está aguardando análise.',
+          });
+        }, 500);
+      };
+      
+      simulateProgress();
     } catch (error) {
       console.error('Erro ao enviar documento:', error);
+      setUploading(false);
       toast({
         title: 'Erro ao enviar documento',
         description: 'Ocorreu um problema ao enviar seu documento. Tente novamente.',
@@ -203,17 +235,17 @@ const DocumentosAluno = () => {
     }
   };
 
-  const handleOpenUploadDialog = (tipoDocumento) => {
+  const handleOpenUploadDialog = (tipoDocumento: any) => {
     setSelectedDocType(tipoDocumento);
     setIsUploadDialogOpen(true);
   };
 
-  const handleViewDocument = (documento) => {
+  const handleViewDocument = (documento: any) => {
     setSelectedDocument(documento);
     setIsViewDialogOpen(true);
   };
 
-  const getDocumentosParaTipo = (tipoId) => {
+  const getDocumentosParaTipo = (tipoId: string) => {
     return documentos.filter(doc => doc.tipo_documento_id === tipoId);
   };
 
@@ -225,12 +257,13 @@ const DocumentosAluno = () => {
     : 0;
 
   if (error) {
-    return <ErrorDisplay message={error} />;
+    return <ErrorDisplay error={error} />;
   }
 
   const handleSwitchToTiposTab = () => {
-    const tiposTab = document.querySelector('[data-value="tipos"]');
-    if (tiposTab instanceof HTMLElement) {
+    // Usando querySelector para encontrar o elemento
+    const tiposTab = document.querySelector('[data-value="tipos"]') as HTMLElement;
+    if (tiposTab) {
       tiposTab.click();
     }
   };
@@ -342,6 +375,8 @@ const DocumentosAluno = () => {
           tipoDocumento={selectedDocType}
           onClose={() => setIsUploadDialogOpen(false)}
           onUpload={handleUploadDocumento}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
         />
       )}
 

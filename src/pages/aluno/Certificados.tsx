@@ -209,8 +209,9 @@ const Certificados = () => {
     solicitarCertificado.mutate(cursoId);
   };
 
-  const handleDownloadCertificado = (certificado: Certificado) => {
-    if (certificado.pdfUrl) {
+  const handleDownloadCertificado = (certificadoId: string) => {
+    const certificado = certificados?.find(c => c.id === certificadoId);
+    if (certificado?.pdfUrl) {
       // Em produção, implementar download real
       toast({
         title: "Download iniciado",
@@ -234,7 +235,7 @@ const Certificados = () => {
   const error = matriculasError || certificadosError;
 
   if (error) {
-    return <ErrorDisplay message="Ocorreu um erro ao carregar seus certificados." />;
+    return <ErrorDisplay error="Ocorreu um erro ao carregar seus certificados." />;
   }
 
   return (
@@ -253,14 +254,20 @@ const Certificados = () => {
           {isLoading ? (
             <LoadingSkeleton />
           ) : certificados && certificados.length > 0 ? (
-            <CertificadosGrid>
+            <CertificadosGrid
+              certificados={certificadosFiltrados || []}
+              onVerificarRequisitos={handleAbrirDetalhes}
+              onSolicitarCertificado={handleSolicitarCertificado}
+              onDownloadCertificado={handleDownloadCertificado}
+            >
               {certificadosFiltrados?.map(certificado => (
                 <CertificadoCard
                   key={certificado.id}
                   certificado={certificado}
-                  onDetalhes={() => handleAbrirDetalhes(certificado)}
-                  onSolicitar={() => handleSolicitarCertificado(certificado.cursoId)}
-                  onDownload={() => handleDownloadCertificado(certificado)}
+                  onVerificarRequisitos={handleAbrirDetalhes}
+                  onSolicitarCertificado={handleSolicitarCertificado}
+                  onDownloadCertificado={handleDownloadCertificado}
+                  onDetalhes={handleAbrirDetalhes}
                 />
               ))}
             </CertificadosGrid>
@@ -278,10 +285,11 @@ const Certificados = () => {
       {certificadoSelecionado && (
         <DetalhesCertificadoDialog
           certificado={certificadoSelecionado}
-          isOpen={isDialogOpen}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
           onClose={() => setIsDialogOpen(false)}
-          onSolicitar={() => handleSolicitarCertificado(certificadoSelecionado.cursoId)}
-          onDownload={() => handleDownloadCertificado(certificadoSelecionado)}
+          onSolicitar={handleSolicitarCertificado}
+          onDownload={handleDownloadCertificado}
         />
       )}
     </div>

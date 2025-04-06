@@ -10,28 +10,39 @@ interface DetalhesCertificadoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   certificado: Certificado | null;
-  disciplinas: Disciplina[];
-  pagamentos: Pagamento[];
-  tempoDecorrido: {
+  disciplinas?: Disciplina[];
+  pagamentos?: Pagamento[];
+  tempoDecorrido?: {
     meses: number;
     porcentagem: number;
   };
-  onSolicitarCertificado?: (cursoId: string) => void;
-  onDownloadCertificado?: (certificadoId: string) => void;
+  onSolicitar?: (cursoId: string) => void;
+  onDownload?: (certificadoId: string) => void;
+  onClose?: () => void;  // Adicionado para compatibilidade
 }
 
 const DetalhesCertificadoDialog: React.FC<DetalhesCertificadoDialogProps> = ({
   open,
   onOpenChange,
   certificado,
-  disciplinas,
-  pagamentos,
-  tempoDecorrido,
-  onSolicitarCertificado,
-  onDownloadCertificado
+  disciplinas = [],
+  pagamentos = [],
+  tempoDecorrido = { meses: 0, porcentagem: 0 },
+  onSolicitar,
+  onDownload,
+  onClose
 }) => {
   if (!certificado) return null;
   
+  // Utilize onOpenChange se disponível, caso contrário use onClose
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else if (onOpenChange) {
+      onOpenChange(false);
+    }
+  };
+
   // Calcular o progresso acadêmico
   const disciplinasConcluidas = disciplinas.filter(d => d.concluida && d.nota >= 70).length;
   const totalDisciplinas = disciplinas.length;
@@ -182,23 +193,23 @@ const DetalhesCertificadoDialog: React.FC<DetalhesCertificadoDialogProps> = ({
           
           {/* Botões de ação */}
           <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={handleClose}>
               Fechar
             </Button>
             
-            {certificado.status === "gerado" && onDownloadCertificado ? (
+            {certificado.status === "gerado" && onDownload ? (
               <Button 
                 variant="default" 
-                onClick={() => onDownloadCertificado(certificado.id)}
+                onClick={() => onDownload(certificado.id)}
               >
                 <Download className="h-4 w-4 mr-2" /> Baixar Certificado
               </Button>
-            ) : certificacaoDisponivel && certificado.status === "disponivel" && onSolicitarCertificado ? (
+            ) : certificacaoDisponivel && certificado.status === "disponivel" && onSolicitar ? (
               <Button 
                 variant="default" 
                 onClick={() => {
-                  onSolicitarCertificado(certificado.cursoId);
-                  onOpenChange(false);
+                  onSolicitar(certificado.cursoId);
+                  handleClose();
                 }}
               >
                 Solicitar Certificado
