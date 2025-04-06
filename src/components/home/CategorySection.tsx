@@ -16,9 +16,10 @@ const categories = [
     id: 1,
     name: "Graduação",
     icon: GraduationCap,
-    courses: 24,
+    courses: 48,
     color: "bg-blue-500",
-    slug: "graduacao"
+    slug: "graduacao",
+    description: "Bacharelados, Licenciaturas e Tecnológicos"
   },
   {
     id: 2,
@@ -73,7 +74,9 @@ const CategorySection = () => {
                     <category.icon className="h-6 w-6" />
                   </div>
                   <h3 className="font-medium text-gray-900 mb-1">{category.name}</h3>
-                  <p className="text-sm text-gray-500">{category.courses} cursos</p>
+                  <p className="text-sm text-gray-500">
+                    {category.description ? category.description : `${category.courses} cursos`}
+                  </p>
                 </CardContent>
               </Card>
             </Link>
