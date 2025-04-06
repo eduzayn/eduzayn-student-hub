@@ -123,7 +123,8 @@ const Login = () => {
       }
       
       if (error) {
-        // Verificar se é o erro de "Email logins are disabled"
+        console.error("Erro de login:", error);
+        
         if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
           setShowEmailDisabledDialog(true);
           throw new Error("O login com email está desativado no Supabase. O administrador precisa ativar esta funcionalidade.");
@@ -152,10 +153,14 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
+        options: {
+          redirectTo: window.location.origin
+        }
       });
       
       if (error) {
-        // Verificar tipos específicos de erro
+        console.error("Erro de autenticação:", error);
+        
         if (error.message === "Email not confirmed" || error.code === "email_not_confirmed") {
           setEmailNotConfirmed(values.email);
           throw new Error("Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique no botão abaixo para acessar mesmo assim.");
@@ -206,7 +211,8 @@ const Login = () => {
       });
       
       if (error) {
-        // Verificar se é o erro de "Email logins are disabled"
+        console.error("Erro de cadastro:", error);
+        
         if (error.message === "Email logins are disabled" || error.code === "email_provider_disabled") {
           setShowEmailDisabledDialog(true);
           throw new Error("O cadastro com email está desativado no Supabase. O administrador precisa ativar essa funcionalidade.");
