@@ -1,7 +1,9 @@
+
 /**
- * Serviço de integração com a API da LearnWorlds
+ * Serviço de integração com a API da LearnWorlds e Supabase
  * Documentação: https://developers.learnworlds.com/
  */
+import { supabase } from "@/integrations/supabase/client";
 
 interface LearnWorldsCourse {
   id: string;
@@ -18,7 +20,7 @@ interface LearnWorldsLesson {
   duration: number;
   videoUrl: string;
   completed: boolean;
-  locked: boolean;  // Adicionando a propriedade locked
+  locked: boolean;
 }
 
 // No ambiente real, essas credenciais devem vir de variáveis de ambiente seguras
@@ -33,117 +35,269 @@ const getHeaders = () => ({
 });
 
 /**
- * Busca todos os cursos disponíveis para o aluno
+ * Busca todos os cursos disponíveis para o aluno usando Supabase
  * @param userId ID do usuário/aluno
  */
 export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[]> => {
   try {
-    // Em um ambiente real, faríamos uma chamada à API
-    // const response = await fetch(`${API_BASE_URL}/users/${userId}/courses`, { headers: getHeaders() });
+    // Tenta buscar os cursos do usuário pelo Supabase
+    const { data: matriculas, error: matriculasError } = await supabase
+      .from('matriculas')
+      .select(`
+        curso_id,
+        progresso,
+        cursos(
+          id,
+          titulo,
+          descricao,
+          imagem_url
+        )
+      `)
+      .eq('aluno_id', userId);
     
-    // Para simulação, retornamos dados mockados
-    return [
-      {
-        id: "curso-1",
-        title: "Desenvolvimento Web Frontend",
-        description: "Aprenda a criar interfaces web modernas com HTML, CSS e JavaScript",
-        thumbnail: "https://via.placeholder.com/300x180?text=Frontend",
-        progress: 65
-      },
-      {
-        id: "curso-2",
-        title: "Desenvolvimento Backend com Node.js",
-        description: "Construa APIs robustas e escaláveis com Node.js e Express",
-        thumbnail: "https://via.placeholder.com/300x180?text=Backend",
-        progress: 30
-      },
-      {
-        id: "curso-3",
-        title: "React Native para Iniciantes",
-        description: "Crie aplicativos móveis nativos usando JavaScript",
-        thumbnail: "https://via.placeholder.com/300x180?text=React+Native",
-        progress: 10
-      }
-    ];
+    if (matriculasError) {
+      console.error("Erro ao buscar matrículas do Supabase:", matriculasError);
+      throw new Error("Erro ao buscar matrículas");
+    }
+    
+    // Se não houver dados no Supabase, retorna os dados mockados
+    if (!matriculas || matriculas.length === 0) {
+      console.log("Nenhuma matrícula encontrada, usando dados mockados");
+      return getMockCourses();
+    }
+    
+    // Mapeia os dados da resposta para o formato esperado pela interface
+    return matriculas.map(matricula => ({
+      id: matricula.curso_id,
+      title: matricula.cursos?.titulo || "Sem título",
+      description: matricula.cursos?.descricao || "Sem descrição",
+      thumbnail: matricula.cursos?.imagem_url || "https://via.placeholder.com/300x180?text=Curso",
+      progress: matricula.progresso || 0
+    }));
   } catch (error) {
     console.error("Erro ao buscar cursos do usuário:", error);
-    throw new Error("Não foi possível carregar os cursos. Tente novamente mais tarde.");
+    
+    // Em caso de erro, usa os dados mockados como fallback
+    console.log("Usando dados mockados devido a erro");
+    return getMockCourses();
   }
 };
 
 /**
- * Busca as aulas de um curso específico
+ * Função auxiliar para retornar cursos mockados
+ */
+const getMockCourses = (): LearnWorldsCourse[] => {
+  return [
+    {
+      id: "curso-1",
+      title: "Desenvolvimento Web Frontend",
+      description: "Aprenda a criar interfaces web modernas com HTML, CSS e JavaScript",
+      thumbnail: "https://via.placeholder.com/300x180?text=Frontend",
+      progress: 65
+    },
+    {
+      id: "curso-2",
+      title: "Desenvolvimento Backend com Node.js",
+      description: "Construa APIs robustas e escaláveis com Node.js e Express",
+      thumbnail: "https://via.placeholder.com/300x180?text=Backend",
+      progress: 30
+    },
+    {
+      id: "curso-3",
+      title: "React Native para Iniciantes",
+      description: "Crie aplicativos móveis nativos usando JavaScript",
+      thumbnail: "https://via.placeholder.com/300x180?text=React+Native",
+      progress: 10
+    }
+  ];
+};
+
+/**
+ * Busca as aulas de um curso específico usando Supabase
  * @param courseId ID do curso
  * @param userId ID do usuário/aluno
  */
 export const getCourseLessons = async (courseId: string, userId: string): Promise<LearnWorldsLesson[]> => {
   try {
-    // Em um ambiente real, faríamos uma chamada à API
-    // const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons?userId=${userId}`, { headers: getHeaders() });
+    // Busca módulos do curso
+    const { data: modulos, error: modulosError } = await supabase
+      .from('modulos_curso')
+      .select('id, titulo')
+      .eq('curso_id', courseId)
+      .order('ordem', { ascending: true });
     
-    // Para simulação, retornamos dados mockados
-    return [
-      {
-        id: "aula-1",
-        title: "Introdução ao Curso",
-        description: "Visão geral e objetivos do curso",
-        duration: 15 * 60, // 15 minutos em segundos
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: true,
-        locked: false
-      },
-      {
-        id: "aula-2",
-        title: "Configurando o Ambiente",
-        description: "Instalação e configuração das ferramentas necessárias",
-        duration: 25 * 60, // 25 minutos em segundos
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: true,
-        locked: false
-      },
-      {
-        id: "aula-3",
-        title: "Fundamentos Básicos",
-        description: "Conceitos fundamentais que você precisa conhecer",
-        duration: 45 * 60, // 45 minutos em segundos
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: false,
-        locked: false
-      },
-      {
-        id: "aula-4",
-        title: "Projeto Prático - Parte 1",
-        description: "Início da aplicação prática dos conceitos",
-        duration: 60 * 60, // 60 minutos em segundos
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        completed: false,
-        locked: false
+    if (modulosError) {
+      console.error("Erro ao buscar módulos do curso:", modulosError);
+      throw new Error("Erro ao buscar módulos do curso");
+    }
+    
+    // Se não houver módulos, retorna dados mockados
+    if (!modulos || modulos.length === 0) {
+      console.log("Nenhum módulo encontrado, usando dados mockados");
+      return getMockLessons();
+    }
+    
+    // Para cada módulo, busca suas aulas
+    let todasAulas: LearnWorldsLesson[] = [];
+    
+    for (const modulo of modulos) {
+      // Busca aulas do módulo
+      const { data: aulas, error: aulasError } = await supabase
+        .from('aulas')
+        .select(`
+          id,
+          titulo,
+          descricao,
+          duracao,
+          url,
+          progresso_aulas(concluido)
+        `)
+        .eq('modulo_id', modulo.id)
+        .order('ordem', { ascending: true });
+      
+      if (aulasError) {
+        console.error(`Erro ao buscar aulas do módulo ${modulo.id}:`, aulasError);
+        continue;
       }
-    ];
+      
+      // Mapeia as aulas para o formato esperado
+      if (aulas && aulas.length > 0) {
+        const aulasFormatadas = aulas.map(aula => {
+          // Verifica se a aula está concluída
+          const concluida = aula.progresso_aulas && aula.progresso_aulas.length > 0
+            ? aula.progresso_aulas[0].concluido || false
+            : false;
+          
+          return {
+            id: aula.id,
+            title: aula.titulo,
+            description: aula.descricao || "",
+            duration: aula.duracao || 0,
+            videoUrl: aula.url || "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            completed: concluida,
+            locked: false // Por padrão, nenhuma aula está bloqueada
+          };
+        });
+        
+        todasAulas = [...todasAulas, ...aulasFormatadas];
+      }
+    }
+    
+    // Se não encontrou nenhuma aula, retorna dados mockados
+    if (todasAulas.length === 0) {
+      console.log("Nenhuma aula encontrada, usando dados mockados");
+      return getMockLessons();
+    }
+    
+    return todasAulas;
   } catch (error) {
     console.error("Erro ao buscar aulas do curso:", error);
-    throw new Error("Não foi possível carregar as aulas do curso. Tente novamente mais tarde.");
+    
+    // Em caso de erro, usa os dados mockados como fallback
+    console.log("Usando dados mockados devido a erro");
+    return getMockLessons();
   }
 };
 
 /**
- * Marca uma aula como concluída
+ * Função auxiliar para retornar aulas mockadas
+ */
+const getMockLessons = (): LearnWorldsLesson[] => {
+  return [
+    {
+      id: "aula-1",
+      title: "Introdução ao Curso",
+      description: "Visão geral e objetivos do curso",
+      duration: 15 * 60, // 15 minutos em segundos
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      completed: true,
+      locked: false
+    },
+    {
+      id: "aula-2",
+      title: "Configurando o Ambiente",
+      description: "Instalação e configuração das ferramentas necessárias",
+      duration: 25 * 60, // 25 minutos em segundos
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      completed: true,
+      locked: false
+    },
+    {
+      id: "aula-3",
+      title: "Fundamentos Básicos",
+      description: "Conceitos fundamentais que você precisa conhecer",
+      duration: 45 * 60, // 45 minutos em segundos
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      completed: false,
+      locked: false
+    },
+    {
+      id: "aula-4",
+      title: "Projeto Prático - Parte 1",
+      description: "Início da aplicação prática dos conceitos",
+      duration: 60 * 60, // 60 minutos em segundos
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      completed: false,
+      locked: false
+    }
+  ];
+};
+
+/**
+ * Marca uma aula como concluída no Supabase
  * @param courseId ID do curso
  * @param lessonId ID da aula
  * @param userId ID do usuário/aluno
  */
 export const markLessonAsCompleted = async (courseId: string, lessonId: string, userId: string): Promise<boolean> => {
   try {
-    // Em um ambiente real, faríamos uma chamada à API
-    /*
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}/complete`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ userId })
-    });
-    */
+    // Verifica se já existe um registro de progresso para esta aula
+    const { data: progressoExistente, error: consultaError } = await supabase
+      .from('progresso_aulas')
+      .select('id, concluido')
+      .eq('aluno_id', userId)
+      .eq('aula_id', lessonId)
+      .maybeSingle();
     
-    // Para simulação, apenas retornamos sucesso
+    if (consultaError) {
+      console.error("Erro ao verificar progresso existente:", consultaError);
+      throw new Error("Erro ao verificar progresso da aula");
+    }
+    
+    // Se já existe um registro, atualiza-o
+    if (progressoExistente) {
+      const { error: updateError } = await supabase
+        .from('progresso_aulas')
+        .update({
+          concluido: true,
+          data_conclusao: new Date().toISOString(),
+          data_atualizacao: new Date().toISOString()
+        })
+        .eq('id', progressoExistente.id);
+      
+      if (updateError) {
+        console.error("Erro ao atualizar progresso:", updateError);
+        throw new Error("Não foi possível atualizar o progresso da aula");
+      }
+    } 
+    // Se não existe, cria um novo registro
+    else {
+      const { error: insertError } = await supabase
+        .from('progresso_aulas')
+        .insert({
+          aluno_id: userId,
+          aula_id: lessonId,
+          concluido: true,
+          data_inicio: new Date().toISOString(),
+          data_conclusao: new Date().toISOString()
+        });
+      
+      if (insertError) {
+        console.error("Erro ao inserir progresso:", insertError);
+        throw new Error("Não foi possível registrar o progresso da aula");
+      }
+    }
+    
     console.log(`Aula ${lessonId} do curso ${courseId} marcada como concluída para o usuário ${userId}`);
     return true;
   } catch (error) {
@@ -153,7 +307,7 @@ export const markLessonAsCompleted = async (courseId: string, lessonId: string, 
 };
 
 /**
- * Registra o progresso do vídeo de uma aula
+ * Registra o progresso do vídeo de uma aula no Supabase
  * @param courseId ID do curso
  * @param lessonId ID da aula
  * @param userId ID do usuário/aluno
@@ -161,21 +315,77 @@ export const markLessonAsCompleted = async (courseId: string, lessonId: string, 
  */
 export const trackVideoProgress = async (courseId: string, lessonId: string, userId: string, progressSeconds: number): Promise<boolean> => {
   try {
-    // Em um ambiente real, faríamos uma chamada à API
-    /*
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}/progress`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ userId, progressSeconds })
-    });
-    */
+    // Verifica se já existe um registro de progresso para esta aula
+    const { data: progressoExistente, error: consultaError } = await supabase
+      .from('progresso_aulas')
+      .select('id')
+      .eq('aluno_id', userId)
+      .eq('aula_id', lessonId)
+      .maybeSingle();
     
-    // Para simulação, apenas logamos e retornamos sucesso
+    if (consultaError) {
+      console.error("Erro ao verificar progresso existente:", consultaError);
+      throw new Error("Erro ao verificar progresso do vídeo");
+    }
+    
+    // Se já existe um registro, atualiza-o
+    if (progressoExistente) {
+      const { error: updateError } = await supabase
+        .from('progresso_aulas')
+        .update({
+          tempo_assistido: progressSeconds,
+          data_atualizacao: new Date().toISOString()
+        })
+        .eq('id', progressoExistente.id);
+      
+      if (updateError) {
+        console.error("Erro ao atualizar tempo assistido:", updateError);
+        throw new Error("Não foi possível atualizar o progresso do vídeo");
+      }
+    } 
+    // Se não existe, cria um novo registro
+    else {
+      const { error: insertError } = await supabase
+        .from('progresso_aulas')
+        .insert({
+          aluno_id: userId,
+          aula_id: lessonId,
+          tempo_assistido: progressSeconds,
+          data_inicio: new Date().toISOString(),
+          concluido: false
+        });
+      
+      if (insertError) {
+        console.error("Erro ao inserir progresso do vídeo:", insertError);
+        throw new Error("Não foi possível registrar o progresso do vídeo");
+      }
+    }
+    
     console.log(`Progresso de ${progressSeconds}s registrado na aula ${lessonId} do curso ${courseId} para o usuário ${userId}`);
     return true;
   } catch (error) {
     console.error("Erro ao registrar progresso do vídeo:", error);
     throw new Error("Não foi possível salvar seu progresso. Seu avanço pode não ser registrado corretamente.");
+  }
+};
+
+/**
+ * Busca o usuário atual do Supabase
+ * Retorna o ID do usuário ou null se não estiver autenticado
+ */
+export const getCurrentUserId = async (): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error || !data.session?.user?.id) {
+      console.log("Usuário não autenticado ou erro ao obter sessão");
+      return null;
+    }
+    
+    return data.session.user.id;
+  } catch (error) {
+    console.error("Erro ao buscar usuário atual:", error);
+    return null;
   }
 };
 

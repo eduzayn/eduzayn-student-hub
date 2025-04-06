@@ -12,7 +12,8 @@ import LessonList from "@/components/aluno/curso/LessonList";
 import VideoPlayer from "@/components/aluno/curso/VideoPlayer";
 import { 
   getUserCourses, 
-  getCourseLessons, 
+  getCourseLessons,
+  getCurrentUserId,
   type LearnWorldsCourse, 
   type LearnWorldsLesson 
 } from "@/services/learnworlds-api";
@@ -24,16 +25,22 @@ const DetalheCurso: React.FC = () => {
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Simula o ID do usuário atual (normalmente viria do contexto de autenticação)
-  const userId = "user123";
+  // Busca o ID do usuário atual
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getCurrentUserId();
+      setUserId(id || "user123"); // Fallback para "user123" se não estiver autenticado
+    };
+    
+    fetchUserId();
+  }, []);
   
   useEffect(() => {
     const loadCourseData = async () => {
-      if (!courseId) {
-        setError("ID do curso não especificado");
-        setLoading(false);
+      if (!courseId || !userId) {
         return;
       }
 
@@ -78,7 +85,16 @@ const DetalheCurso: React.FC = () => {
   }, [courseId, userId, toast]);
   
   const handleSelectLesson = (lessonId: string) => {
-    setCurrentLessonId(lessonId);
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (lesson && !lesson.locked) {
+      setCurrentLessonId(lessonId);
+    } else if (lesson && lesson.locked) {
+      toast({
+        variant: "warning",
+        title: "Aula bloqueada",
+        description: "Esta aula ainda não está disponível para visualização.",
+      });
+    }
   };
   
   const handleLessonComplete = () => {
@@ -111,7 +127,7 @@ const DetalheCurso: React.FC = () => {
     
     // Opcionalmente, avança para a próxima aula não concluída
     const currentIndex = lessons.findIndex(l => l.id === currentLessonId);
-    const nextIncompleteLesson = lessons.slice(currentIndex + 1).find(l => !l.completed);
+    const nextIncompleteLesson = lessons.slice(currentIndex + 1).find(l => !l.completed && !l.locked);
     
     if (nextIncompleteLesson) {
       setCurrentLessonId(nextIncompleteLesson.id);
@@ -177,7 +193,7 @@ const DetalheCurso: React.FC = () => {
             <VideoPlayer 
               lesson={currentLesson} 
               courseId={courseId || ""} 
-              userId={userId} 
+              userId={userId || "user123"} 
               onComplete={handleLessonComplete} 
             />
           ) : (

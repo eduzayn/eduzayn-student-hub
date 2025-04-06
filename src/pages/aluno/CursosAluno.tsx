@@ -5,18 +5,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
-import { getUserCourses, type LearnWorldsCourse } from "@/services/learnworlds-api";
+import { getUserCourses, getCurrentUserId, type LearnWorldsCourse } from "@/services/learnworlds-api";
 
 const CursosAluno: React.FC = () => {
   const [cursos, setCursos] = useState<LearnWorldsCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   
-  // Simula o ID do usuário atual (normalmente viria do contexto de autenticação)
-  const userId = "user123";
+  // Busca o ID do usuário atual
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getCurrentUserId();
+      setUserId(id || "user123"); // Fallback para "user123" se não estiver autenticado
+    };
+    
+    fetchUserId();
+  }, []);
   
+  // Busca os cursos do usuário quando o ID estiver disponível
   useEffect(() => {
     const fetchCursos = async () => {
+      if (!userId) return;
+      
       try {
         setLoading(true);
         const data = await getUserCourses(userId);
