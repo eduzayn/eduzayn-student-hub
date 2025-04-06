@@ -33,12 +33,12 @@ const mockCourses = [
   },
   {
     id: 3,
-    title: "Engenharia Civil",
-    category: "Segunda Graduação",
-    categorySlug: "segunda-graduacao",
-    duration: "3 anos",
-    price: "R$ 697,00",
-    originalPrice: "R$ 997,00",
+    title: "Artes Visuais",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
@@ -93,405 +93,221 @@ const mockCourses = [
   },
   
   // Novos cursos de graduação tecnológica (18 meses)
-  {
-    id: 9,
-    title: "Análise e Desenvolvimento de Sistemas",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 10,
-    title: "Big Data e Inteligência Analítica",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 11,
-    title: "Cidades Inteligentes",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 12,
-    title: "Coaching e Desenvolvimento Humano",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 13,
-    title: "Comércio Exterior",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 14,
-    title: "Design de Animação",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 15,
-    title: "Designer de Interiores",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 16,
-    title: "Designer de Produto",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 17,
-    title: "Designer Gráfico",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 18,
-    title: "Despachante Documentalista",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 19,
-    title: "Educador Social",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 20,
-    title: "Empreendedorismo Educacional",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 21,
-    title: "Estética e Cosmética",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 22,
-    title: "Gestão Ambiental",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 23,
-    title: "Gestão Comercial",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 24,
-    title: "Gestão da Produção Industrial",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 25,
-    title: "Gestão da Qualidade",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 26,
-    title: "Gestão de Agronegócios",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 27,
-    title: "Gestão de Clínica e Consultório",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 28,
-    title: "Gestão de Cooperativas",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 29,
-    title: "Gestão de Investimentos",
-    category: "Graduação Tecnológica",
-    categorySlug: "graduacao",
-    duration: "18 meses",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
+  // ... keep existing code (Cursos de graduação tecnológica)
   
   // Novos cursos de licenciatura (3.5+ anos)
-  {
-    id: 30,
-    title: "Artes Visuais",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 31,
-    title: "Ciências da Religião",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 32,
-    title: "Educação Especial",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 33,
-    title: "Educação Física",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 34,
-    title: "Filosofia",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 35,
-    title: "Geografia",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 36,
-    title: "História",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 37,
-    title: "Letras - Língua Portuguesa e Libras",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 38,
-    title: "Letras - Português e Espanhol",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 39,
-    title: "Letras - Português e Inglês",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 40,
-    title: "Pedagogia",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
-  {
-    id: 41,
-    title: "Sociologia",
-    category: "Licenciatura",
-    categorySlug: "graduacao",
-    duration: "3.5 anos",
-    price: "R$ 497,00",
-    originalPrice: "R$ 697,00",
-    image: "/placeholder.svg",
-  },
+  // ... keep existing code (Cursos de licenciatura)
   
   // Novos cursos de Bacharelado (3.5+ anos)
+  // ... keep existing code (Cursos de bacharelado)
+  
+  // Adicionando novos cursos de Segunda Licenciatura
   {
-    id: 42,
-    title: "Administração",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 547,00",
-    originalPrice: "R$ 747,00",
+    id: 100,
+    title: "Sociologia",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 43,
-    title: "Biblioteconomia",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 547,00",
-    originalPrice: "R$ 747,00",
+    id: 101,
+    title: "Ciências da Religião",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 44,
-    title: "Ciências Contábeis",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 547,00",
-    originalPrice: "R$ 747,00",
+    id: 102,
+    title: "Educação Especial",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 45,
+    id: 103,
     title: "Educação Física",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 547,00",
-    originalPrice: "R$ 747,00",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 46,
-    title: "Engenharia de Aplicação",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 647,00",
-    originalPrice: "R$ 847,00",
+    id: 104,
+    title: "Filosofia",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 47,
-    title: "Engenharia de Dados",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 647,00",
-    originalPrice: "R$ 847,00",
+    id: 105,
+    title: "Geografia",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
     image: "/placeholder.svg",
   },
   {
-    id: 48,
-    title: "Engenharia de Design Digital",
-    category: "Bacharelado",
-    categorySlug: "graduacao",
-    duration: "4 anos",
-    price: "R$ 647,00",
-    originalPrice: "R$ 847,
+    id: 106,
+    title: "História",
+    category: "Segunda Licenciatura",
+    categorySlug: "segunda-licenciatura",
+    duration: "1 ano",
+    price: "R$ 397,00",
+    originalPrice: "R$ 597,00",
+    image: "/placeholder.svg",
+  }
+];
+
+const Cursos = () => {
+  const { categoria } = useParams();
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [filteredCourses, setFilteredCourses] = useState(mockCourses);
+  
+  // Filter courses based on category slug and search query
+  useEffect(() => {
+    const filtered = mockCourses.filter(course => {
+      // Filter by category if provided
+      const categoryMatch = categoria 
+        ? course.categorySlug === categoria
+        : true;
+      
+      // Filter by search query if provided
+      const searchMatch = searchQuery
+        ? course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          course.category.toLowerCase().includes(searchQuery.toLowerCase())
+        : true;
+      
+      return categoryMatch && searchMatch;
+    });
+    
+    setFilteredCourses(filtered);
+  }, [categoria, searchQuery]);
+
+  // Function to get the page title based on category
+  const getPageTitle = () => {
+    if (!categoria) return "Todos os Cursos";
+    
+    switch (categoria) {
+      case "graduacao": return "Cursos de Graduação";
+      case "segunda-licenciatura": return "Cursos de Segunda Licenciatura";
+      case "segunda-graduacao-bacharelado": return "Cursos de Segunda Graduação Bacharelado";
+      case "pos-graduacao": return "Cursos de Pós-Graduação";
+      case "formacao-livre": return "Cursos de Formação Livre";
+      case "capacitacao-profissional": return "Cursos de Capacitação Profissional";
+      case "formacao-pedagogica": return "Cursos de Formação Pedagógica";
+      default: return "Cursos";
+    }
+  };
+
+  return (
+    <MainLayout>
+      <section className="bg-gray-50 py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-2">{getPageTitle()}</h1>
+          <p className="text-gray-600 mb-8">
+            Encontre o curso ideal para sua formação acadêmica e profissional
+          </p>
+          
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Buscar por nome de curso ou categoria..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.length > 0 ? (
+              filteredCourses.map((course) => (
+                <Card key={course.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="relative">
+                    <img 
+                      src={course.image} 
+                      alt={course.title} 
+                      className="w-full h-48 object-cover" 
+                    />
+                    <Badge 
+                      className="absolute top-3 right-3"
+                      variant="secondary"
+                    >
+                      {course.category}
+                    </Badge>
+                  </div>
+                  
+                  <CardHeader>
+                    <CardTitle className="text-xl">
+                      <Link 
+                        to={`/curso/${course.id}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {course.title}
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="flex items-center text-gray-500 mb-4">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span className="text-sm">{course.duration}</span>
+                    </div>
+                    
+                    <div className="flex flex-col">
+                      <div className="text-2xl font-bold text-gray-900">{course.price}</div>
+                      <div className="text-sm text-gray-500">
+                        <span className="line-through">{course.originalPrice}</span>
+                        <span className="ml-2">em até 12x no cartão</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  
+                  <CardFooter className="border-t pt-4">
+                    <Button asChild className="w-full">
+                      <Link to={`/curso/${course.id}`}>
+                        Saiba Mais
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-16">
+                <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-xl font-medium mb-2">Nenhum curso encontrado</h3>
+                <p className="text-gray-600 mb-6">
+                  Tente ajustar seus filtros ou busca para encontrar o curso desejado.
+                </p>
+                <Button onClick={() => setSearchQuery("")}>
+                  Limpar Busca
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </MainLayout>
+  );
+};
+
+export default Cursos;

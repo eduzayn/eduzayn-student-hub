@@ -25,11 +25,11 @@ const categories = [
   },
   {
     id: 2,
-    name: "Segunda Graduação",
+    name: "Segunda Licenciatura",
     icon: BookOpen,
     courses: 31, 
     color: "bg-purple-500",
-    slug: "segunda-graduacao",
+    slug: "segunda-licenciatura",
     description: "Segunda Licenciatura para Licenciados"
   },
   {
