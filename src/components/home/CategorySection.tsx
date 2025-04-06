@@ -25,9 +25,10 @@ const categories = [
     id: 2,
     name: "Segunda Graduação",
     icon: BookOpen,
-    courses: 18,
+    courses: 31, // Atualizando para 31 (18 existentes + 13 novos cursos)
     color: "bg-purple-500",
-    slug: "segunda-graduacao"
+    slug: "segunda-graduacao",
+    description: "Segunda Licenciatura para Licenciados"
   },
   {
     id: 3,
@@ -88,4 +89,3 @@ const CategorySection = () => {
 };
 
 export default CategorySection;
-
