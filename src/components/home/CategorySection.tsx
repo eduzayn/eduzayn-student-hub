@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +45,7 @@ const categories = [
     id: 4,
     name: "Pós-Graduação",
     icon: Award,
-    courses: 108,
+    courses: 114,
     color: "bg-green-500",
     slug: "pos-graduacao",
     description: "Especialização nas áreas educacional, saúde e direito"
