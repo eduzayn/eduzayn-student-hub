@@ -59,8 +59,22 @@ export function getContextImage(context: string): string {
     "expressão artística", "comunicação visual", "educação artística"
   ];
   
+  // Termos para verificar se o contexto está relacionado a idosos
+  const elderlyTerms = [
+    "idosos", "idoso", "terceira idade", "geriatria", "gerontologia",
+    "cuidado de idosos", "elderly", "senior", "geriatria e gerontologia",
+    "envelhecimento", "atenção e cuidado com idosos"
+  ];
+  
   // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
+  
+  // Verifica se o contexto contém termos relacionados a idosos
+  for (const term of elderlyTerms) {
+    if (normalizedContext.includes(term)) {
+      return "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png";
+    }
+  }
   
   // Verifica se o contexto contém termos relacionados a artes visuais
   for (const term of visualArtsTerms) {

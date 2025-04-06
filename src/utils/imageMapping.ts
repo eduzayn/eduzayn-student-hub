@@ -1,3 +1,4 @@
+
 // Mapeamento de imagens de contexto específico para diferentes categorias/tópicos
 export const CONTEXT_IMAGES = {
   // Education categories
@@ -20,16 +21,16 @@ export const CONTEXT_IMAGES = {
   "tecnologia da informação": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "saúde": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "engenharia": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "direito": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
+  "direito": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "educação": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   
-  // Course titles (adicionando correspondências específicas para títulos de cursos populares)
+  // Course titles
   "MBA em Gestão de Projetos": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "Desenvolvimento Web Full Stack": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png",
   "Análise de Dados com Python": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "MBA em Marketing Digital": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   
-  // Adicionando chaves específicas para elementos da interface
+  // Interface elements
   "banner-principal": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "botao-matricula": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "card-curso": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
@@ -55,7 +56,6 @@ export const CONTEXT_IMAGES = {
   
   // Adicionando cursos específicos de segunda licenciatura
   "segunda licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
-  "segunda-licenciatura": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "sociologia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "filosofia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "geografia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
@@ -74,7 +74,7 @@ export const CONTEXT_IMAGES = {
   "formação de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "formacao de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   
-  // Nova imagem para cursos de educação física
+  // Imagem para cursos de educação física
   "educação física": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   "educacao fisica": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   "physical education": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
@@ -88,7 +88,7 @@ export const CONTEXT_IMAGES = {
   "academia": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   "gym": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   
-  // Novos termos para administração com a nova imagem
+  // Termos para administração
   "administração": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "administracao": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "gestão": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
@@ -110,7 +110,7 @@ export const CONTEXT_IMAGES = {
   "empreendedor": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   "empreendedorismo": "/lovable-uploads/230842bd-1461-4f56-bebf-d69b4f691e7b.png",
   
-  // Novos termos para cursos de direito - imagem 1
+  // Termos para cursos de direito - alternando entre duas imagens
   "direito administrativo": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "direito civil": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "direito constitucional": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
@@ -131,7 +131,6 @@ export const CONTEXT_IMAGES = {
   "direito notarial": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "direito aduaneiro": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "direito público": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "direito": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "compliance": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   "law": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "legal": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
@@ -142,7 +141,7 @@ export const CONTEXT_IMAGES = {
   "perícia": "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "auditoria": "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
   
-  // Novos termos para cursos de artes visuais com a nova imagem
+  // Termos para cursos de artes visuais
   "artes visuais": "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
   "arte": "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
   "visual arts": "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
@@ -162,6 +161,19 @@ export const CONTEXT_IMAGES = {
   "comunicação visual": "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
   "educação artística": "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
   
+  // Nova imagem para cursos relacionados a idosos
+  "idosos": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "idoso": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "terceira idade": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "geriatria": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "gerontologia": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "cuidado de idosos": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "elderly": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "senior": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "geriatria e gerontologia": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "envelhecimento": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  "atenção e cuidado com idosos": "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png",
+  
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 };
@@ -176,7 +188,8 @@ export const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png",
   "/lovable-uploads/5a79380b-e832-4e1e-9ac5-58072be80bc9.png",
   "/lovable-uploads/3ebbc451-5d30-40f4-b93a-602a15d70127.png",
-  "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png"
+  "/lovable-uploads/4eb7b4bd-a894-4c26-a3e0-a74bcb8150ab.png",
+  "/lovable-uploads/6060c7e6-b3f7-4e5f-91cb-b4d81d71dc77.png"
 ];
 
 // Cache para armazenar imagens já buscadas por categoria
