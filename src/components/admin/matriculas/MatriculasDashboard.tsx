@@ -18,7 +18,7 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -26,6 +26,11 @@ import {
   Legend 
 } from "recharts";
 import { useNavigate } from "react-router-dom";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart";
 
 const MatriculasDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -56,6 +61,18 @@ const MatriculasDashboard: React.FC = () => {
     { name: 'Atrasados', value: 18, color: '#EF4444' },
     { name: 'Processando', value: 10, color: '#60A5FA' }
   ];
+  
+  // Configuração das cores dos gráficos
+  const chartConfig = {
+    matriculas: { color: '#3B82F6' },
+    ativas: { color: '#10B981' },
+    pendentes: { color: '#F59E0B' },
+    trancadas: { color: '#6B7280' },
+    canceladas: { color: '#EF4444' },
+    emDia: { color: '#10B981' },
+    atrasados: { color: '#EF4444' },
+    processando: { color: '#60A5FA' }
+  };
   
   return (
     <div className="space-y-6">
@@ -147,15 +164,17 @@ const MatriculasDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig}>
                 <BarChart data={matriculasData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="mes" />
                   <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="matriculas" fill="#3B82F6" />
+                  <RechartsTooltip
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="matriculas" fill="var(--color-matriculas, #3B82F6)" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
@@ -169,7 +188,7 @@ const MatriculasDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig}>
                   <PieChart>
                     <Pie
                       data={statusData}
@@ -182,10 +201,12 @@ const MatriculasDashboard: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <RechartsTooltip
+                      content={<ChartTooltipContent />}
+                    />
                     <Legend />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
@@ -197,7 +218,7 @@ const MatriculasDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig}>
                   <PieChart>
                     <Pie
                       data={pagamentosData}
@@ -210,10 +231,12 @@ const MatriculasDashboard: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <RechartsTooltip
+                      content={<ChartTooltipContent />}
+                    />
                     <Legend />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
