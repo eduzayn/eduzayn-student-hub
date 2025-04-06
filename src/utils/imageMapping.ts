@@ -67,7 +67,6 @@ export const CONTEXT_IMAGES = {
   // Adicionando cursos específicos de segunda licenciatura
   "sociologia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "ciências da religião": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
-  "educação física": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "filosofia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "geografia": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
   "história": "/lovable-uploads/1bfc1ad9-bf1a-4193-bf15-92aab488ed41.png",
@@ -83,6 +82,20 @@ export const CONTEXT_IMAGES = {
   "teacher training": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "formação de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
   "formacao de professores": "/lovable-uploads/ce9a7952-791b-4019-8cd7-a181e8d2224d.png",
+  
+  // Nova imagem para cursos de educação física
+  "educação física": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "educacao fisica": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "physical education": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "educacao fisic": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "educação fisic": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "ed física": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "ed fisica": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "sports": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "esportes": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "fitness": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "academia": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
+  "gym": "/lovable-uploads/e3fb3c8e-e305-4ea2-bb30-120da66bf35e.png",
   
   // Generic fallback
   "default": "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
@@ -100,3 +113,4 @@ export const PLACEHOLDER_IMAGES = [
 
 // Cache para armazenar imagens já buscadas por categoria
 export const imageCache: Record<string, string> = {};
+
