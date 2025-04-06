@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileUp, FileCheck, FileX, Eye, Download, Loader2, AlertTriangle } from "lucide-react";
+import { FileUp, FileCheck, FileX, Eye, Download, Loader2, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,8 +27,13 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Tipos para os documentos
 type TipoDocumento = {
   id: string;
   nome: string;
@@ -38,6 +41,7 @@ type TipoDocumento = {
   obrigatorio: boolean;
   formatosAceitos: string[];
   tamanhoMaximo: number;
+  requisitoTipo?: string[];
 };
 
 type StatusDocumento = 'pendente' | 'em_analise' | 'aprovado' | 'rejeitado';
@@ -53,6 +57,8 @@ type Documento = {
   motivoRejeicao?: string;
 };
 
+type TipoCurso = 'graduacao' | 'posgraduacao' | 'segunda_graduacao' | 'segunda_licenciatura' | 'formacao_pedagogica' | 'formacao_livre';
+
 const DocumentosAluno: React.FC = () => {
   const { isLoggedIn, isAdminBypass } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -66,15 +72,14 @@ const DocumentosAluno: React.FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [currentDocumento, setCurrentDocumento] = useState<Documento | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tipoCurso, setTipoCurso] = useState<TipoCurso>('graduacao');
 
-  // Buscar tipos de documentos e documentos do aluno
   useEffect(() => {
     const fetchDados = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // Buscar o ID do usuário pela sessão atual
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -90,7 +95,6 @@ const DocumentosAluno: React.FC = () => {
           return;
         }
         
-        // Buscar tipos de documentos
         const { data: tiposData, error: tiposError } = await supabase
           .from('tipos_documentos')
           .select('*');
@@ -101,20 +105,42 @@ const DocumentosAluno: React.FC = () => {
           return;
         }
         
-        // Formatar os tipos de documentos
         const tiposFormatados = tiposData.map((tipo) => ({
           id: tipo.id,
           nome: tipo.nome,
           descricao: tipo.descricao,
           obrigatorio: tipo.obrigatorio,
           formatosAceitos: tipo.formatos_aceitos,
-          tamanhoMaximo: tipo.tamanho_maximo
+          tamanhoMaximo: tipo.tamanho_maximo,
+          requisitoTipo: tipo.requisito_tipo
         }));
         
         setTiposDocumentos(tiposFormatados);
         
-        // Buscar documentos do aluno
         if (userId) {
+          const { data: matriculaData, error: matriculaError } = await supabase
+            .from('matriculas')
+            .select(`
+              curso_id,
+              cursos (
+                modalidade
+              )
+            `)
+            .eq('aluno_id', userId)
+            .order('data_inicio', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (matriculaData && !matriculaError) {
+            const modalidadeCurso = matriculaData?.cursos?.modalidade;
+            
+            if (modalidadeCurso) {
+              setTipoCurso('graduacao');
+            }
+          } else if (isAdminBypass) {
+            setTipoCurso('graduacao');
+          }
+          
           const { data: docsData, error: docsError } = await supabase
             .from('documentos_alunos')
             .select(`
@@ -135,7 +161,6 @@ const DocumentosAluno: React.FC = () => {
             return;
           }
           
-          // Formatar os documentos
           const docsFormatados = docsData.map((doc) => ({
             id: doc.id,
             tipoDocumentoId: doc.tipo_documento_id,
@@ -145,7 +170,8 @@ const DocumentosAluno: React.FC = () => {
               descricao: doc.tipos_documentos.descricao,
               obrigatorio: doc.tipos_documentos.obrigatorio,
               formatosAceitos: doc.tipos_documentos.formatos_aceitos,
-              tamanhoMaximo: doc.tipos_documentos.tamanho_maximo
+              tamanhoMaximo: doc.tipos_documentos.tamanho_maximo,
+              requisitoTipo: doc.tipos_documentos.requisito_tipo
             },
             status: doc.status as StatusDocumento,
             dataEnvio: doc.data_envio ? new Date(doc.data_envio).toLocaleDateString('pt-BR') : undefined,
@@ -156,7 +182,6 @@ const DocumentosAluno: React.FC = () => {
           
           setDocumentosAluno(docsFormatados);
         } else if (isAdminBypass) {
-          // Dados mockados para modo admin bypass
           const mockDocs: Documento[] = [
             {
               id: '1',
@@ -166,7 +191,8 @@ const DocumentosAluno: React.FC = () => {
                 nome: 'RG / Documento de Identidade',
                 obrigatorio: true,
                 formatosAceitos: ['PDF', 'JPG', 'PNG'],
-                tamanhoMaximo: 5242880
+                tamanhoMaximo: 5242880,
+                requisitoTipo: ['graduacao', 'posgraduacao', 'segunda_graduacao', 'formacao_livre']
               },
               status: 'aprovado',
               dataEnvio: '10/01/2025',
@@ -181,7 +207,8 @@ const DocumentosAluno: React.FC = () => {
                 nome: 'CPF',
                 obrigatorio: true,
                 formatosAceitos: ['PDF', 'JPG', 'PNG'],
-                tamanhoMaximo: 5242880
+                tamanhoMaximo: 5242880,
+                requisitoTipo: ['graduacao', 'posgraduacao', 'segunda_graduacao', 'formacao_livre']
               },
               status: 'aprovado',
               dataEnvio: '10/01/2025',
@@ -193,16 +220,33 @@ const DocumentosAluno: React.FC = () => {
               tipoDocumentoId: tiposFormatados[2]?.id || '3',
               tipoDocumento: tiposFormatados[2] || {
                 id: '3',
-                nome: 'Comprovante de Residência',
+                nome: 'Histórico do Ensino Médio',
                 obrigatorio: true,
                 formatosAceitos: ['PDF', 'JPG', 'PNG'],
-                tamanhoMaximo: 5242880
+                tamanhoMaximo: 5242880,
+                requisitoTipo: ['graduacao', 'segunda_graduacao', 'formacao_livre']
               },
               status: 'rejeitado',
               dataEnvio: '10/01/2025',
               dataAnalise: '12/01/2025',
               arquivoUrl: '#',
               motivoRejeicao: 'Documento ilegível ou com data expirada.'
+            },
+            {
+              id: '4',
+              tipoDocumentoId: tiposFormatados[3]?.id || '4',
+              tipoDocumento: tiposFormatados[3] || {
+                id: '4',
+                nome: 'Diploma da Primeira Graduação',
+                obrigatorio: true,
+                formatosAceitos: ['PDF', 'JPG', 'PNG'],
+                tamanhoMaximo: 5242880,
+                requisitoTipo: ['posgraduacao', 'segunda_graduacao', 'segunda_licenciatura', 'formacao_pedagogica']
+              },
+              status: 'pendente',
+              dataEnvio: null,
+              dataAnalise: null,
+              arquivoUrl: null
             }
           ];
           
@@ -219,16 +263,19 @@ const DocumentosAluno: React.FC = () => {
     fetchDados();
   }, [isLoggedIn, isAdminBypass]);
   
-  // Filtrar documentos por status
-  const documentosPendentes = tiposDocumentos.filter(tipo => 
+  const tiposDocumentosApplicaveis = tiposDocumentos.filter(tipo => 
+    !tipo.requisitoTipo || tipo.requisitoTipo.includes(tipoCurso)
+  );
+  
+  const documentosPendentes = tiposDocumentosApplicaveis.filter(tipo => 
     !documentosAluno.some(doc => doc.tipoDocumentoId === tipo.id)
   );
   
   const documentosEnviados = documentosAluno.filter(doc => 
-    ['em_analise', 'aprovado', 'rejeitado'].includes(doc.status)
+    ['em_analise', 'aprovado', 'rejeitado'].includes(doc.status) &&
+    (!doc.tipoDocumento.requisitoTipo || doc.tipoDocumento.requisitoTipo.includes(tipoCurso))
   );
   
-  // Funções para upload de documentos
   const handleOpenUploadDialog = (tipoDoc: TipoDocumento) => {
     setCurrentTipoDocumento(tipoDoc);
     setFile(null);
@@ -239,7 +286,6 @@ const DocumentosAluno: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       
-      // Verificar extensão do arquivo
       const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
       const tipoDocAtual = currentTipoDocumento;
       
@@ -251,7 +297,6 @@ const DocumentosAluno: React.FC = () => {
           return;
         }
         
-        // Verificar tamanho do arquivo
         if (selectedFile.size > tipoDocAtual.tamanhoMaximo) {
           const tamanhoMaxMB = (tipoDocAtual.tamanhoMaximo / (1024 * 1024)).toFixed(2);
           toast.error(`O arquivo é muito grande. Tamanho máximo permitido: ${tamanhoMaxMB}MB`);
@@ -270,7 +315,6 @@ const DocumentosAluno: React.FC = () => {
       setUploading(true);
       setUploadProgress(10);
       
-      // Buscar o ID do usuário pela sessão atual
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
@@ -283,7 +327,6 @@ const DocumentosAluno: React.FC = () => {
         throw new Error("Usuário não identificado");
       }
       
-      // Simular progresso de upload
       const interval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -294,13 +337,10 @@ const DocumentosAluno: React.FC = () => {
         });
       }, 300);
       
-      // 1. Fazer upload do arquivo para o Storage (se estivesse configurado)
-      // Como o storage não está configurado, vamos apenas simular um URL
       const mockFileUrl = `https://storage.example.com/documents/${userId}/${Date.now()}-${file.name}`;
       
       setUploadProgress(95);
       
-      // 2. Registrar o documento no banco de dados
       const { data, error } = await supabase
         .from('documentos_alunos')
         .insert([
@@ -319,7 +359,6 @@ const DocumentosAluno: React.FC = () => {
       setUploadProgress(100);
       clearInterval(interval);
       
-      // Adicionar o novo documento à lista
       const novoDoc: Documento = {
         id: data.id,
         tipoDocumentoId: data.tipo_documento_id,
@@ -354,7 +393,6 @@ const DocumentosAluno: React.FC = () => {
     setUploadDialogOpen(true);
   };
   
-  // Função para renderizar o badge do status
   const renderStatusBadge = (status: StatusDocumento) => {
     switch (status) {
       case "pendente":
@@ -377,8 +415,38 @@ const DocumentosAluno: React.FC = () => {
         return null;
     }
   };
-  
-  // Componente para exibir durante o carregamento
+
+  const renderRequisitoInfo = (tipoDoc: TipoDocumento) => {
+    if (!tipoDoc.requisitoTipo || tipoDoc.requisitoTipo.length === 0) {
+      return null;
+    }
+    
+    const reqFormatted = tipoDoc.requisitoTipo.map(req => {
+      switch(req) {
+        case 'graduacao': return 'Graduação';
+        case 'posgraduacao': return 'Pós-Graduação';
+        case 'segunda_graduacao': return 'Segunda Graduação';
+        case 'segunda_licenciatura': return 'Segunda Licenciatura';
+        case 'formacao_pedagogica': return 'Formação Pedagógica';
+        case 'formacao_livre': return 'Formação Livre';
+        default: return req;
+      }
+    }).join(', ');
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Info size={16} className="text-muted-foreground ml-1" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Requisito para: {reqFormatted}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const LoadingSkeleton = () => (
     <div className="space-y-4">
       <Skeleton className="h-8 w-64" />
@@ -389,8 +457,7 @@ const DocumentosAluno: React.FC = () => {
       </div>
     </div>
   );
-  
-  // Componente para exibir erros
+
   const ErrorDisplay = () => (
     <Card className="border-red-200">
       <CardContent className="flex flex-col items-center justify-center py-12">
@@ -430,7 +497,6 @@ const DocumentosAluno: React.FC = () => {
             <TabsTrigger value="todos">Todos os Documentos</TabsTrigger>
           </TabsList>
           
-          {/* Tab de Documentos Pendentes */}
           <TabsContent value="pendentes" className="mt-6">
             {documentosPendentes.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -438,7 +504,10 @@ const DocumentosAluno: React.FC = () => {
                   <Card key={doc.id}>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{doc.nome}</CardTitle>
+                        <CardTitle className="text-lg flex items-center">
+                          {doc.nome}
+                          {renderRequisitoInfo(doc)}
+                        </CardTitle>
                         {doc.obrigatorio && (
                           <Badge variant="destructive">Obrigatório</Badge>
                         )}
@@ -446,6 +515,9 @@ const DocumentosAluno: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
+                        {doc.descricao && (
+                          <p className="text-sm text-muted-foreground">{doc.descricao}</p>
+                        )}
                         <div className="text-sm text-muted-foreground">
                           <p>Formatos aceitos: {doc.formatosAceitos.join(", ")}</p>
                           <p>Tamanho máximo: {(doc.tamanhoMaximo / (1024 * 1024)).toFixed(2)}MB</p>
@@ -478,7 +550,6 @@ const DocumentosAluno: React.FC = () => {
             )}
           </TabsContent>
           
-          {/* Tab de Documentos Enviados */}
           <TabsContent value="enviados" className="mt-6">
             {documentosEnviados.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -486,7 +557,10 @@ const DocumentosAluno: React.FC = () => {
                   <Card key={doc.id}>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{doc.tipoDocumento.nome}</CardTitle>
+                        <CardTitle className="text-lg flex items-center">
+                          {doc.tipoDocumento.nome}
+                          {renderRequisitoInfo(doc.tipoDocumento)}
+                        </CardTitle>
                         {renderStatusBadge(doc.status)}
                       </div>
                     </CardHeader>
@@ -537,7 +611,6 @@ const DocumentosAluno: React.FC = () => {
                               variant="outline" 
                               className="flex-1"
                               onClick={() => {
-                                // Simular download
                                 toast.success("Download iniciado");
                               }}
                             >
@@ -564,7 +637,6 @@ const DocumentosAluno: React.FC = () => {
             )}
           </TabsContent>
           
-          {/* Tab de Todos os Documentos */}
           <TabsContent value="todos" className="mt-6">
             <Card>
               <CardHeader>
@@ -583,12 +655,15 @@ const DocumentosAluno: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {tiposDocumentos.map((tipo) => {
+                      {tiposDocumentosApplicaveis.map((tipo) => {
                         const docExistente = documentosAluno.find(d => d.tipoDocumentoId === tipo.id);
                         
                         return (
                           <TableRow key={tipo.id}>
-                            <TableCell>{tipo.nome}</TableCell>
+                            <TableCell className="flex items-center">
+                              {tipo.nome}
+                              {renderRequisitoInfo(tipo)}
+                            </TableCell>
                             <TableCell>{tipo.obrigatorio ? "Sim" : "Não"}</TableCell>
                             <TableCell>
                               {docExistente ? renderStatusBadge(docExistente.status) : (
@@ -634,7 +709,6 @@ const DocumentosAluno: React.FC = () => {
         </Tabs>
       )}
       
-      {/* Modal de Upload de Documento */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -698,11 +772,13 @@ const DocumentosAluno: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Modal de Visualização de Documento */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{currentDocumento?.tipoDocumento.nome}</DialogTitle>
+            <DialogTitle className="flex items-center">
+              {currentDocumento?.tipoDocumento.nome}
+              {currentDocumento && renderRequisitoInfo(currentDocumento.tipoDocumento)}
+            </DialogTitle>
             <DialogDescription>
               Status: {currentDocumento?.status}
               {currentDocumento?.dataEnvio && ` • Enviado em: ${currentDocumento.dataEnvio}`}
@@ -748,7 +824,6 @@ const DocumentosAluno: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Simular download
                   toast.success("Download iniciado");
                 }}
               >
