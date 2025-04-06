@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -16,6 +15,7 @@ import ConfiguracaoMatricula from "./ConfiguracaoMatricula";
 import ConfiguracaoPagamento from "./ConfiguracaoPagamento";
 import { useMatricula } from "@/hooks/useMatricula";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import useGatewayPagamento from "@/hooks/useGatewayPagamento";
 import type { Matricula } from "@/types/matricula";
 
 const novaMatriculaSchema = z.object({
@@ -46,7 +46,6 @@ const NovaMatriculaForm: React.FC = () => {
   const navigate = useNavigate();
   const { criarMatricula } = useMatricula();
   const { matricularAlunoEmCurso } = useLearnWorldsApi();
-  const { useGatewayPagamento } = require("@/hooks/useGatewayPagamento");
   const { processarPagamento } = useGatewayPagamento();
   
   const [activeTab, setActiveTab] = useState("aluno");
@@ -74,7 +73,6 @@ const NovaMatriculaForm: React.FC = () => {
     setLearnworldsError(null);
     
     try {
-      // Preparar os dados da matrícula para o formato correto
       const matriculaData: Omit<Matricula, "id"> = {
         aluno_id: data.aluno_id,
         curso_id: data.curso_id,
@@ -87,7 +85,6 @@ const NovaMatriculaForm: React.FC = () => {
         progresso: 0
       };
       
-      // Se temos IDs de LearnWorlds, tentamos matricular o aluno na plataforma
       if (data.learnworlds_aluno_id && data.learnworlds_curso_id) {
         try {
           const resultadoLearnWorlds = await matricularAlunoEmCurso(
@@ -96,27 +93,22 @@ const NovaMatriculaForm: React.FC = () => {
           );
           
           if (resultadoLearnWorlds) {
-            // Se tiver ID de matrícula do LearnWorlds, adicionar aos dados da matrícula
             matriculaData.learnworlds_enrollment_id = resultadoLearnWorlds.id;
             console.log("Matrícula criada no LearnWorlds:", resultadoLearnWorlds.id);
           }
         } catch (learnWorldsError: any) {
           console.error("Erro ao matricular aluno no LearnWorlds:", learnWorldsError);
           setLearnworldsError(learnWorldsError.message || "Erro ao matricular aluno no LearnWorlds");
-          // Não interrompemos o fluxo, continuamos com a matrícula no sistema local
         }
       }
       
-      // Criar a matrícula no sistema
       const resultado = await criarMatricula(matriculaData);
       
       if (!resultado) {
         throw new Error("Falha ao criar a matrícula");
       }
       
-      // Se configurar pagamento está ativado, processar pagamento
       if (data.configurar_pagamento && data.forma_pagamento && data.valor_matricula && data.data_vencimento && alunoSelecionado) {
-        // Configurar pagamento através do gateway selecionado
         const gateway = data.forma_pagamento.startsWith("asaas") ? 'asaas' : 'lytex';
         
         const pagamentoParams = {
@@ -139,7 +131,6 @@ const NovaMatriculaForm: React.FC = () => {
         } else {
           toast.success("Matrícula e pagamento configurados com sucesso!");
           
-          // Armazenar o link de pagamento para exibição
           if (resultadoPagamento.invoiceUrl) {
             setPagamentoInfo({
               link: resultadoPagamento.invoiceUrl,
@@ -148,10 +139,7 @@ const NovaMatriculaForm: React.FC = () => {
             });
           }
 
-          // Enviar email com link de pagamento (simulação para propósito de demonstração)
-          // Em produção, isso chamaria a edge function para enviar o email real
           if (alunoSelecionado.email && resultadoPagamento.invoiceUrl) {
-            // Simular envio de e-mail
             setTimeout(() => {
               console.log(`E-mail enviado para ${alunoSelecionado.email} com link de pagamento: ${resultadoPagamento.invoiceUrl}`);
               setPagamentoInfo(prev => ({...prev, enviado: true}));
@@ -163,7 +151,6 @@ const NovaMatriculaForm: React.FC = () => {
         toast.success("Matrícula criada com sucesso!");
       }
       
-      // Não redirecionar imediatamente para permitir que o consultor utilize o link de pagamento
       if (!pagamentoInfo.link) {
         setTimeout(() => navigate("/admin/matriculas"), 2000);
       }
@@ -175,38 +162,32 @@ const NovaMatriculaForm: React.FC = () => {
     }
   };
   
-  // Função para copiar o link de pagamento para a área de transferência
   const copiarLinkPagamento = () => {
     if (pagamentoInfo.link) {
       navigator.clipboard.writeText(pagamentoInfo.link);
       setPagamentoInfo(prev => ({...prev, copiado: true}));
       toast.success("Link de pagamento copiado para a área de transferência");
       
-      // Resetar o estado 'copiado' após 3 segundos
       setTimeout(() => setPagamentoInfo(prev => ({...prev, copiado: false})), 3000);
     }
   };
   
-  // Avançar para a próxima aba do formulário
   const proximaAba = () => {
     if (activeTab === "aluno") setActiveTab("curso");
     else if (activeTab === "curso") setActiveTab("configuracao");
     else if (activeTab === "configuracao") setActiveTab("pagamento");
   };
   
-  // Voltar para a aba anterior do formulário
   const voltarAba = () => {
     if (activeTab === "pagamento") setActiveTab("configuracao");
     else if (activeTab === "configuracao") setActiveTab("curso");
     else if (activeTab === "curso") setActiveTab("aluno");
   };
   
-  // Quando um aluno é selecionado
   const handleAlunoSelecionado = (aluno: any) => {
     setAlunoSelecionado(aluno);
     form.setValue("aluno_id", aluno.id);
     
-    // Se o aluno tiver ID do LearnWorlds, armazená-lo também
     if (aluno.learnworlds_id) {
       form.setValue("learnworlds_aluno_id", aluno.learnworlds_id);
     }
@@ -214,12 +195,10 @@ const NovaMatriculaForm: React.FC = () => {
     proximaAba();
   };
   
-  // Quando um curso é selecionado
   const handleCursoSelecionado = (curso: any) => {
     setCursoSelecionado(curso);
     form.setValue("curso_id", curso.id);
     
-    // Se o curso tiver ID do LearnWorlds, armazená-lo também
     if (curso.learning_worlds_id) {
       form.setValue("learnworlds_curso_id", curso.learning_worlds_id);
     }
@@ -227,7 +206,6 @@ const NovaMatriculaForm: React.FC = () => {
     proximaAba();
   };
   
-  // Verificar se a matrícula foi concluída e há um link de pagamento
   const matriculaConcluida = !!pagamentoInfo.link;
   
   return (
