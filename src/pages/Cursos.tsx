@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -856,5 +857,175 @@ const mockCourses = [
     price: "R$ 150,00",
     originalPrice: "R$ 155,00",
     image: "/placeholder.svg",
-  },
-  {
+  }
+];
+
+const CourseList = () => {
+  const { categoria: categorySlug } = useParams<{ categoria?: string }>();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [coursesWithImages, setCoursesWithImages] = useState([...mockCourses]);
+  
+  // Filtrar cursos com base na categoria e termo de busca
+  const filteredCourses = coursesWithImages.filter((course) => {
+    const matchesCategory = categorySlug ? course.categorySlug === categorySlug : true;
+    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Grupo de categorias para mostrar os filtros
+  const categories = [
+    { name: "Todos os Cursos", slug: undefined },
+    { name: "Graduação", slug: "graduacao" },
+    { name: "Segunda Licenciatura", slug: "segunda-licenciatura" },
+    { name: "Pós-Graduação", slug: "pos-graduacao" },
+    { name: "MBA", slug: "mba" },
+    { name: "Formação Livre", slug: "formacao-livre" },
+    { name: "Capacitação Profissional", slug: "capacitacao-profissional" },
+  ];
+
+  // Carrega imagens para os cursos
+  useEffect(() => {
+    const loadCourseImages = async () => {
+      try {
+        setLoadingImages(true);
+        const updatedCourses = await Promise.all(
+          mockCourses.map(async (course) => {
+            try {
+              // Tenta encontrar uma imagem relacionada ao título do curso
+              const searchTerm = course.title.split(" ")[0]; // Usa a primeira palavra do título
+              const imageUrl = await getCachedFreepikImage(
+                `${searchTerm} education course`,
+                500
+              );
+              
+              return { ...course, image: imageUrl || "/placeholder.svg" };
+            } catch (error) {
+              console.error(`Erro ao carregar imagem para ${course.title}:`, error);
+              return course;
+            }
+          })
+        );
+        
+        setCoursesWithImages(updatedCourses);
+        setLoadingImages(false);
+      } catch (error) {
+        console.error("Erro ao carregar imagens para cursos:", error);
+        toast.error("Não foi possível carregar algumas imagens de cursos.");
+        setLoadingImages(false);
+      }
+    };
+    
+    loadCourseImages();
+  }, []);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Cabeçalho e Barra de Busca */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-4">
+          {categorySlug
+            ? `Cursos de ${categories.find(cat => cat.slug === categorySlug)?.name || categorySlug}`
+            : "Todos os Cursos"}
+        </h1>
+        
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Input
+            type="text"
+            placeholder="Buscar cursos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4"
+          />
+        </div>
+        
+        {/* Filtros de Categoria */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {categories.map((category) => (
+            <Link
+              key={category.slug || "all"}
+              to={category.slug ? `/cursos/${category.slug}` : "/cursos"}
+              className={`px-4 py-2 rounded-full text-sm ${
+                (category.slug === categorySlug) || (!category.slug && !categorySlug)
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              {category.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+      
+      {/* Indicador de Carregamento */}
+      {loadingImages && (
+        <div className="flex justify-center mb-6">
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
+          <span className="ml-2">Carregando imagens dos cursos...</span>
+        </div>
+      )}
+      
+      {/* Lista de Cursos */}
+      {filteredCourses.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredCourses.map((course) => (
+            <Link to={`/curso/${course.id}`} key={course.id}>
+              <Card className="h-full flex flex-col transition-transform hover:shadow-lg hover:-translate-y-1">
+                <CardHeader className="p-0">
+                  <AspectRatio ratio={16/9} className="bg-muted">
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="object-cover w-full h-full rounded-t-lg"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                  </AspectRatio>
+                </CardHeader>
+                <CardContent className="flex-grow p-4">
+                  <Badge className="mb-2" variant="outline">
+                    {course.category}
+                  </Badge>
+                  <CardTitle className="text-xl mb-2 line-clamp-2">{course.title}</CardTitle>
+                  <div className="flex items-center text-sm text-muted-foreground mt-2">
+                    <Clock className="mr-1 h-4 w-4" />
+                    <span>{course.duration}</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t p-4">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-sm line-through text-muted-foreground">
+                          {course.originalPrice}
+                        </div>
+                        <div className="text-lg font-bold text-primary">
+                          {course.price}
+                        </div>
+                      </div>
+                      <Button size="sm">
+                        <BookOpen className="mr-1 h-4 w-4" /> Ver Curso
+                      </Button>
+                    </div>
+                  </div>
+                </CardFooter>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Award className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+          <h3 className="text-xl font-semibold mb-2">Nenhum curso encontrado</h3>
+          <p className="text-muted-foreground">
+            Tente ajustar seus filtros ou termos de busca.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CourseList;
