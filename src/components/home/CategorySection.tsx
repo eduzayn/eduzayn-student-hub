@@ -12,7 +12,7 @@ import {
   BookmarkCheck
 } from "lucide-react";
 
-// Categorias atualizadas incluindo Segunda Graduação Bacharelado
+// Categorias atualizadas incluindo número de cursos de pós-graduação
 const categories = [
   {
     id: 1,
@@ -45,9 +45,10 @@ const categories = [
     id: 4,
     name: "Pós-Graduação",
     icon: Award,
-    courses: 32,
+    courses: 75,
     color: "bg-green-500",
-    slug: "pos-graduacao"
+    slug: "pos-graduacao",
+    description: "Especialização na área educacional"
   },
   {
     id: 5,
