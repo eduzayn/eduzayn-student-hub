@@ -1,21 +1,24 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Save, Loader2, AlertCircle, Mail, Copy, Check } from "lucide-react";
+import { Save, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import SelectAluno from "./SelectAluno";
 import SelectCurso from "./SelectCurso";
 import ConfiguracaoMatricula from "./ConfiguracaoMatricula";
 import ConfiguracaoPagamento from "./ConfiguracaoPagamento";
+import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
+import LinkPagamentoCard from "./LinkPagamentoCard";
 import { useMatricula } from "@/hooks/useMatricula";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
-import useGatewayPagamento from "@/hooks/useGatewayPagamento";
+import { useMatriculaPagamento } from "@/hooks/useMatriculaPagamento";
+import { useMatriculaFormSteps } from "@/hooks/useMatriculaFormSteps";
 import type { Matricula } from "@/types/matricula";
 
 const novaMatriculaSchema = z.object({
@@ -43,21 +46,21 @@ const novaMatriculaSchema = z.object({
 type NovaMatriculaForm = z.infer<typeof novaMatriculaSchema>;
 
 const NovaMatriculaForm: React.FC = () => {
-  const navigate = useNavigate();
   const { criarMatricula } = useMatricula();
   const { matricularAlunoEmCurso } = useLearnWorldsApi();
-  const { processarPagamento } = useGatewayPagamento();
+  const { activeTab, setActiveTab, proximaAba, voltarAba } = useMatriculaFormSteps();
+  const { 
+    pagamentoInfo, 
+    gerarLinkPagamento,
+    copiarLinkPagamento,
+    redirecionarParaMatriculas,
+    criarNovaMatricula
+  } = useMatriculaPagamento();
   
-  const [activeTab, setActiveTab] = useState("aluno");
   const [submitting, setSubmitting] = useState(false);
   const [alunoSelecionado, setAlunoSelecionado] = useState<any>(null);
   const [cursoSelecionado, setCursoSelecionado] = useState<any>(null);
   const [learnworldsError, setLearnworldsError] = useState<string | null>(null);
-  const [pagamentoInfo, setPagamentoInfo] = useState<{
-    link?: string;
-    copiado: boolean;
-    enviado: boolean;
-  }>({ copiado: false, enviado: false });
   
   const form = useForm<NovaMatriculaForm>({
     resolver: zodResolver(novaMatriculaSchema),
@@ -112,7 +115,6 @@ const NovaMatriculaForm: React.FC = () => {
         const gateway = data.forma_pagamento.startsWith("asaas") ? 'asaas' : 'lytex';
         
         const pagamentoParams = {
-          matricula_id: resultado.id,
           valor: data.valor_matricula,
           data_vencimento: data.data_vencimento.toISOString().split('T')[0],
           forma_pagamento: data.forma_pagamento,
@@ -124,35 +126,13 @@ const NovaMatriculaForm: React.FC = () => {
           description: `Matrícula - ${cursoSelecionado?.titulo || 'Curso'}`
         };
         
-        const resultadoPagamento = await processarPagamento(gateway, pagamentoParams);
-        
-        if (!resultadoPagamento.success) {
-          toast.warning("Matrícula criada, mas houve um problema ao configurar o pagamento");
-        } else {
-          toast.success("Matrícula e pagamento configurados com sucesso!");
-          
-          if (resultadoPagamento.invoiceUrl) {
-            setPagamentoInfo({
-              link: resultadoPagamento.invoiceUrl,
-              copiado: false,
-              enviado: false
-            });
-          }
-
-          if (alunoSelecionado.email && resultadoPagamento.invoiceUrl) {
-            setTimeout(() => {
-              console.log(`E-mail enviado para ${alunoSelecionado.email} com link de pagamento: ${resultadoPagamento.invoiceUrl}`);
-              setPagamentoInfo(prev => ({...prev, enviado: true}));
-              toast.success(`E-mail com link de pagamento enviado para ${alunoSelecionado.email}`);
-            }, 1500);
-          }
-        }
+        await gerarLinkPagamento(resultado.id, gateway, pagamentoParams);
       } else {
         toast.success("Matrícula criada com sucesso!");
       }
       
       if (!pagamentoInfo.link) {
-        setTimeout(() => navigate("/admin/matriculas"), 2000);
+        setTimeout(() => redirecionarParaMatriculas(), 2000);
       }
     } catch (error: any) {
       console.error("Erro ao criar matrícula:", error);
@@ -160,28 +140,6 @@ const NovaMatriculaForm: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-  
-  const copiarLinkPagamento = () => {
-    if (pagamentoInfo.link) {
-      navigator.clipboard.writeText(pagamentoInfo.link);
-      setPagamentoInfo(prev => ({...prev, copiado: true}));
-      toast.success("Link de pagamento copiado para a área de transferência");
-      
-      setTimeout(() => setPagamentoInfo(prev => ({...prev, copiado: false})), 3000);
-    }
-  };
-  
-  const proximaAba = () => {
-    if (activeTab === "aluno") setActiveTab("curso");
-    else if (activeTab === "curso") setActiveTab("configuracao");
-    else if (activeTab === "configuracao") setActiveTab("pagamento");
-  };
-  
-  const voltarAba = () => {
-    if (activeTab === "pagamento") setActiveTab("configuracao");
-    else if (activeTab === "configuracao") setActiveTab("curso");
-    else if (activeTab === "curso") setActiveTab("aluno");
   };
   
   const handleAlunoSelecionado = (aluno: any) => {
@@ -257,70 +215,18 @@ const NovaMatriculaForm: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="pagamento">
-              {learnworldsError && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {learnworldsError}
-                    <p className="text-xs mt-1">A matrícula será criada apenas no sistema local.</p>
-                  </AlertDescription>
-                </Alert>
-              )}
+              {learnworldsError && <LearnWorldsErrorAlert errorMessage={learnworldsError} />}
               
               {matriculaConcluida ? (
-                <div className="space-y-4">
-                  <Alert className="bg-green-50 border-green-200">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <AlertDescription>
-                      Matrícula criada com sucesso! O link de pagamento está disponível abaixo.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="p-4 border rounded-md bg-gray-50">
-                    <h3 className="font-medium mb-2">Link de Pagamento</h3>
-                    <div className="flex items-center gap-2 mb-4">
-                      <input 
-                        type="text" 
-                        value={pagamentoInfo.link} 
-                        readOnly 
-                        className="flex-1 p-2 rounded border text-sm bg-white"
-                      />
-                      <Button 
-                        type="button" 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={copiarLinkPagamento}
-                        className="gap-1"
-                      >
-                        {pagamentoInfo.copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {pagamentoInfo.copiado ? 'Copiado' : 'Copiar'}
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Mail className="h-4 w-4" />
-                      {pagamentoInfo.enviado 
-                        ? <span className="text-green-600 flex items-center gap-1"><Check className="h-3 w-3" /> E-mail enviado para {alunoSelecionado?.email}</span> 
-                        : <span>Enviando e-mail para {alunoSelecionado?.email}...</span>}
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between mt-6">
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      onClick={() => navigate("/admin/matriculas")}
-                    >
-                      Voltar para Matrículas
-                    </Button>
-                    <Button 
-                      type="button"
-                      onClick={() => navigate("/admin/matriculas/nova")}
-                    >
-                      Nova Matrícula
-                    </Button>
-                  </div>
-                </div>
+                <LinkPagamentoCard 
+                  link={pagamentoInfo.link || ""}
+                  copiado={pagamentoInfo.copiado}
+                  enviado={pagamentoInfo.enviado}
+                  email={alunoSelecionado?.email}
+                  onCopiar={copiarLinkPagamento}
+                  onVoltar={redirecionarParaMatriculas}
+                  onNova={criarNovaMatricula}
+                />
               ) : (
                 <>
                   <ConfiguracaoPagamento 
