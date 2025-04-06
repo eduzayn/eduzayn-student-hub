@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, BookOpen, Star } from "lucide-react";
-import { getCachedFreepikImage } from "@/utils/freepikAPI";
+import { Users, Clock, BookOpen, Star, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Mock featured courses data
 const featuredCourses = [
@@ -72,36 +73,78 @@ const FeaturedCourses = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Set initial placeholder images
-    const initialImages = featuredCourses.reduce((acc, course) => {
-      // Use the existing image if it's already a custom upload
-      if (course.image.startsWith("/lovable-uploads/")) {
-        acc[course.id] = course.image;
-      } else {
-        acc[course.id] = '';
-      }
-      return acc;
-    }, {} as Record<number, string>);
-    
-    setCourseImages(initialImages);
-    
-    // Fetch images for each featured course
     const loadImages = async () => {
       try {
         setLoading(true);
         
+        // Configurar imagens iniciais (usar o placeholder ou imagens existentes)
+        const initialImages = featuredCourses.reduce((acc, course) => {
+          // Use a imagem existente se for um upload personalizado
+          if (course.image.startsWith("/lovable-uploads/")) {
+            acc[course.id] = course.image;
+          } else {
+            acc[course.id] = '/placeholder.svg'; // Placeholder inicial
+          }
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCourseImages(initialImages);
+        
+        // Tentar carregar imagens do bucket do Supabase para cada curso
         const imagePromises = featuredCourses.map(async (course) => {
-          // Skip courses that already have a custom image
+          // Pular cursos que já têm imagem personalizada
           if (course.image.startsWith("/lovable-uploads/")) {
             return { id: course.id, imageUrl: course.image };
           }
           
           try {
-            const imageUrl = await getCachedFreepikImage(course.imageQuery);
-            return { id: course.id, imageUrl };
+            // Tentar buscar por categoria primeiro
+            const categoryName = course.category.toLowerCase().replace(/\s+/g, '-');
+            
+            // Listar arquivos no bucket com um prefixo correspondente à categoria
+            const { data: files, error } = await supabase
+              .storage
+              .from('category_images')
+              .list(categoryName);
+              
+            if (error || !files?.length) {
+              // Tentar usar a imageQuery como fallback
+              const querySlug = course.imageQuery.toLowerCase().replace(/\s+/g, '-');
+              const { data: queryFiles } = await supabase
+                .storage
+                .from('course_images')
+                .list(querySlug);
+                
+              if (queryFiles?.length) {
+                const randomIndex = Math.floor(Math.random() * queryFiles.length);
+                const selectedFile = queryFiles[randomIndex];
+                
+                const { data: publicURL } = supabase
+                  .storage
+                  .from('course_images')
+                  .getPublicUrl(`${querySlug}/${selectedFile.name}`);
+                  
+                return { id: course.id, imageUrl: publicURL.publicUrl };
+              }
+              
+              // Usar placeholder se não encontrar
+              return { id: course.id, imageUrl: '/placeholder.svg' };
+            }
+            
+            // Escolher uma imagem aleatória se várias estiverem disponíveis
+            const randomIndex = Math.floor(Math.random() * files.length);
+            const selectedFile = files[randomIndex];
+            
+            // Obter a URL pública para o arquivo
+            const { data: publicURL } = supabase
+              .storage
+              .from('category_images')
+              .getPublicUrl(`${categoryName}/${selectedFile.name}`);
+              
+            return { id: course.id, imageUrl: publicURL.publicUrl };
           } catch (error) {
             console.warn(`Failed to load image for course ${course.title}:`, error);
-            return { id: course.id, imageUrl: course.image };
+            return { id: course.id, imageUrl: '/placeholder.svg' };
           }
         });
         
@@ -115,6 +158,7 @@ const FeaturedCourses = () => {
         setCourseImages(imagesMap);
       } catch (err) {
         console.error("Failed to load course images:", err);
+        toast.error("Não foi possível carregar algumas imagens");
       } finally {
         setLoading(false);
       }
@@ -146,14 +190,26 @@ const FeaturedCourses = () => {
           </Button>
         </div>
         
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Carregando cursos em destaque...</span>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredCourses.map((course) => (
+          {!loading && featuredCourses.map((course) => (
             <Card key={course.id} className="eduzayn-card animate-fade-in group">
               <div className="relative overflow-hidden">
                 <img 
-                  src={courseImages[course.id] || course.image} 
+                  src={courseImages[course.id] || '/placeholder.svg'} 
                   alt={course.title}
                   className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    // Fallback para placeholder se a imagem falhar
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
                 />
                 <div className="absolute top-3 left-3 flex gap-2">
                   {course.isFeatured && (
@@ -216,7 +272,7 @@ const FeaturedCourses = () => {
               
               <CardFooter className="border-t pt-4">
                 <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:opacity-90">
-                  <Link to={`/matricula/checkout/${course.id}`}>
+                  <Link to={checkCourseExists(course.id) ? `/matricula/checkout/${course.id}` : `/curso/${course.id}`}>
                     Matricule-se
                   </Link>
                 </Button>

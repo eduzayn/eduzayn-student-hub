@@ -1,9 +1,6 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// API key from Freepik (mantido como backup)
-const FREEPIK_API_KEY = "FPSXb884c633f1134d11bdf8ee0f98bedfa0";
-
 // Array of placeholder images to use when API fails
 const PLACEHOLDER_IMAGES = [
   "/placeholder.svg",
@@ -12,28 +9,6 @@ const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png"
 ];
-
-interface FreepikImage {
-  id: string;
-  url: string;
-  width: number;
-  height: number;
-  type: string;
-  preview: string;
-}
-
-interface FreepikResponse {
-  data: {
-    mosaic: {
-      results: FreepikImage[];
-    };
-  };
-}
-
-interface SupabaseImage {
-  name: string;
-  url: string;
-}
 
 /**
  * Returns a random placeholder image from the available options
@@ -83,14 +58,14 @@ async function getSupabaseImage(category: string, bucket: 'category_images' | 'c
 }
 
 /**
- * Searches for images on Freepik based on a query (fallback option)
+ * Searches for images on Supabase based on a query
  * @param query The search term
  * @param limit Maximum number of images to return (default: 1)
  * @returns An array of image URLs or placeholders if failed
  */
 export async function searchFreepikImages(query: string, limit: number = 1): Promise<string[]> {
   try {
-    // First try to get from Supabase if it's a course or category related query
+    // Try to get from Supabase if it's a course or category related query
     const bucket = query.includes('course') ? 'course_images' : 'category_images';
     const supabaseImage = await getSupabaseImage(query, bucket);
     
@@ -98,43 +73,10 @@ export async function searchFreepikImages(query: string, limit: number = 1): Pro
       return [supabaseImage];
     }
     
-    // If no Supabase image, try Freepik API as fallback
-    // Create an AbortController to handle timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-    
-    const response = await fetch(
-      `https://api.freepik.com/v1/resources/search?locale=en-US&page=1&limit=${limit}&order=priority&term=${encodeURIComponent(query)}&type=photo`,
-      {
-        headers: {
-          'Accept-Language': 'en-US',
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-Freepik-API-Key': FREEPIK_API_KEY
-        },
-        signal: controller.signal,
-        // Add mode 'cors' explicitly
-        mode: 'cors'
-      }
-    ).finally(() => clearTimeout(timeoutId));
-
-    if (!response.ok) {
-      console.warn(`Freepik API response not OK: ${response.status} ${response.statusText}`);
-      return Array(limit).fill('').map(() => getRandomPlaceholder());
-    }
-
-    const data = await response.json() as FreepikResponse;
-    
-    if (!data?.data?.mosaic?.results || !data.data.mosaic.results.length) {
-      console.warn('No images found in Freepik response');
-      return Array(limit).fill('').map(() => getRandomPlaceholder());
-    }
-    
-    return data.data.mosaic.results.map(image => image.preview || image.url);
+    // If no image found, return placeholder(s)
+    return Array(limit).fill('').map(() => getRandomPlaceholder());
   } catch (error) {
     console.error("Error fetching images:", error);
-    // Don't show toast to avoid spamming the user when many images fail
-    // toast.error("Não foi possível carregar imagens externas");
     return Array(limit).fill('').map(() => getRandomPlaceholder());
   }
 }

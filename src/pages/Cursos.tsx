@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -5,8 +6,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Clock, Award, Search } from "lucide-react";
+import { Clock, Award, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getCachedFreepikImage } from "@/utils/freepikAPI";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Dados simulados para os cursos
 const mockCourses = [
@@ -1080,8 +1084,105 @@ const mockCourses = [
 const Cursos = () => {
   const { categoria } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [courseImages, setCourseImages] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(true);
   
   const [filteredCourses, setFilteredCourses] = useState(mockCourses);
+  
+  // Carregar imagens para os cursos
+  useEffect(() => {
+    const loadCourseImages = async () => {
+      try {
+        setLoading(true);
+        
+        // Preparar objeto inicial
+        const initialImages = filteredCourses.reduce((acc, course) => {
+          // Use a imagem existente se for um upload personalizado
+          if (course.image.startsWith("/lovable-uploads/")) {
+            acc[course.id] = course.image;
+          } else {
+            acc[course.id] = '/placeholder.svg'; // Placeholder inicial
+          }
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCourseImages(initialImages);
+        
+        // Tentar carregar imagens do bucket do Supabase para cada categoria
+        const imagePromises = filteredCourses.map(async (course) => {
+          // Pular cursos que já têm imagem personalizada
+          if (course.image.startsWith("/lovable-uploads/")) {
+            return { id: course.id, imageUrl: course.image };
+          }
+          
+          const categoryName = course.category.toLowerCase().replace(/\s+/g, '-');
+          
+          try {
+            // Listar arquivos no bucket com um prefixo correspondente à categoria
+            const { data: files, error } = await supabase
+              .storage
+              .from('category_images')
+              .list(categoryName);
+              
+            if (error || !files?.length) {
+              // Tentar usar a imagem específica do curso se disponível
+              const courseSlug = course.title.toLowerCase().replace(/\s+/g, '-');
+              const { data: courseFiles } = await supabase
+                .storage
+                .from('course_images')
+                .list(courseSlug);
+                
+              if (courseFiles?.length) {
+                const randomIndex = Math.floor(Math.random() * courseFiles.length);
+                const selectedFile = courseFiles[randomIndex];
+                
+                const { data: publicURL } = supabase
+                  .storage
+                  .from('course_images')
+                  .getPublicUrl(`${courseSlug}/${selectedFile.name}`);
+                  
+                return { id: course.id, imageUrl: publicURL.publicUrl };
+              }
+              
+              // Usar placeholder se não encontrar
+              return { id: course.id, imageUrl: '/placeholder.svg' };
+            }
+            
+            // Escolher uma imagem aleatória se várias estiverem disponíveis
+            const randomIndex = Math.floor(Math.random() * files.length);
+            const selectedFile = files[randomIndex];
+            
+            // Obter a URL pública para o arquivo
+            const { data: publicURL } = supabase
+              .storage
+              .from('category_images')
+              .getPublicUrl(`${categoryName}/${selectedFile.name}`);
+              
+            return { id: course.id, imageUrl: publicURL.publicUrl };
+          } catch (err) {
+            console.error(`Erro ao carregar imagem para o curso ${course.title}:`, err);
+            return { id: course.id, imageUrl: '/placeholder.svg' };
+          }
+        });
+        
+        const results = await Promise.all(imagePromises);
+        
+        const imagesMap = results.reduce((acc, { id, imageUrl }) => {
+          acc[id] = imageUrl;
+          return acc;
+        }, {} as Record<number, string>);
+        
+        setCourseImages(imagesMap);
+      } catch (err) {
+        console.error("Falha ao carregar imagens dos cursos:", err);
+        toast.error("Não foi possível carregar algumas imagens");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCourseImages();
+  }, [filteredCourses]);
   
   // Filter courses based on category slug and search query
   useEffect(() => {
@@ -1142,15 +1243,27 @@ const Cursos = () => {
             </div>
           </div>
           
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Carregando cursos...</span>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.length > 0 ? (
+            {!loading && filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <Card key={course.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <div className="relative">
                     <img 
-                      src={course.image} 
+                      src={courseImages[course.id] || '/placeholder.svg'} 
                       alt={course.title} 
                       className="w-full h-48 object-cover" 
+                      onError={(e) => {
+                        // Fallback para placeholder se a imagem falhar
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.svg';
+                      }}
                     />
                     <Badge 
                       className="absolute top-3 right-3"
@@ -1196,16 +1309,18 @@ const Cursos = () => {
                 </Card>
               ))
             ) : (
-              <div className="col-span-full text-center py-16">
-                <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-medium mb-2">Nenhum curso encontrado</h3>
-                <p className="text-gray-600 mb-6">
-                  Tente ajustar seus filtros ou busca para encontrar o curso desejado.
-                </p>
-                <Button onClick={() => setSearchQuery("")}>
-                  Limpar Busca
-                </Button>
-              </div>
+              !loading && (
+                <div className="col-span-full text-center py-16">
+                  <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-xl font-medium mb-2">Nenhum curso encontrado</h3>
+                  <p className="text-gray-600 mb-6">
+                    Tente ajustar seus filtros ou busca para encontrar o curso desejado.
+                  </p>
+                  <Button onClick={() => setSearchQuery("")}>
+                    Limpar Busca
+                  </Button>
+                </div>
+              )
             )}
           </div>
         </div>
