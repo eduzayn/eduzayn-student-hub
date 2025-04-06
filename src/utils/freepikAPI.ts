@@ -7,7 +7,7 @@ const CONTEXT_IMAGES = {
   "graduacao": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "segunda-licenciatura": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "segunda-graduacao-bacharelado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "pos-graduacao": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "pos-graduacao": null,
   "mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "formacao-livre": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "capacitacao-profissional": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
@@ -17,7 +17,7 @@ const CONTEXT_IMAGES = {
   "education graduation university": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "teaching license education": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "bachelor degree education": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "postgraduate education specialization": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "postgraduate education specialization": null,
   "business management mba": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "free education training": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "professional training course": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
@@ -26,20 +26,20 @@ const CONTEXT_IMAGES = {
   // Subject areas
   "project management business": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "web development coding": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "neuropsychology clinical": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "neuropsychology clinical": null,
   "data analysis python": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   
   // Course titles (adicionando correspondências específicas para títulos de cursos populares)
   "administração de empresas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "pedagogia": "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "artes visuais": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "gestão de recursos humanos": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
-  "marketing digital": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png", 
+  "gestão de recursos humanos": null,
+  "marketing digital": null,
   "excel avançado": "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
   "técnicas de vendas": "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "data science": "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
-  "neuropsicopedagogia": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
-  "psicanálise": "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  "neuropsicopedagogia": null,
+  "psicanálise": null,
   
   // Adicionando chaves específicas para elementos da interface
   "hero-banner": "/lovable-uploads/638ad6c9-a3be-4cca-85e0-145d4f8f4974.png",
@@ -75,7 +75,7 @@ const PLACEHOLDER_IMAGES = [
   "/lovable-uploads/4fb9144a-86ed-4030-8d66-cdb558e4703b.png",
   "/lovable-uploads/6a6678fb-105a-4b78-aa5b-db08e95c7323.png",
   "/lovable-uploads/6ae79f95-219e-41e6-97d0-24b2f3dfe9c6.png",
-  "/lovable-uploads/d64b34e7-d705-4ad3-9935-1f5b3e0c2142.png",
+  null,
   "/lovable-uploads/ccac1e61-2311-44b6-b9a5-1aedbfb2a20b.png",
   "/lovable-uploads/359b596a-c889-4fda-9b37-6c5c76ea2f53.png"
 ];
@@ -90,7 +90,7 @@ function getContextImage(context: string): string {
     "aee", "special education", "special needs", "autism", "adhd"
   ];
   
-  // Normaliza o contexto para melhorar a correspondência
+  // Verificar se é um curso de pós-graduação, exceto educação especial
   const normalizedContext = context.toLowerCase().trim();
   
   // Verifica se o contexto contém termos relacionados à educação especial
@@ -100,8 +100,23 @@ function getContextImage(context: string): string {
     }
   }
   
+  // Se for de pós-graduação e não for de educação especial, não retorna imagem
+  if (
+    normalizedContext.includes("pós-graduação") || 
+    normalizedContext.includes("pos-graduacao") || 
+    normalizedContext.includes("postgraduate") ||
+    normalizedContext === "pos-graduacao"
+  ) {
+    // Retorna placeholder genérico para cursos de pós sem imagem
+    return "/placeholder.svg";
+  }
+  
   // Tenta encontrar uma correspondência direta
   if (CONTEXT_IMAGES[normalizedContext]) {
+    // Se for null, significa que removemos a imagem (é um curso de pós-graduação)
+    if (CONTEXT_IMAGES[normalizedContext] === null) {
+      return "/placeholder.svg";
+    }
     return CONTEXT_IMAGES[normalizedContext];
   }
   
@@ -134,12 +149,20 @@ function getContextImage(context: string): string {
   
   // Se encontrou uma correspondência parcial boa
   if (bestScore > 0) {
+    // Se for null, significa que removemos a imagem (é um curso de pós-graduação)
+    if (CONTEXT_IMAGES[bestMatch] === null) {
+      return "/placeholder.svg";
+    }
     return CONTEXT_IMAGES[bestMatch];
   }
   
   // Retorna uma imagem aleatória se não encontrar nada
-  const index = Math.floor(Math.random() * PLACEHOLDER_IMAGES.length);
-  return PLACEHOLDER_IMAGES[index];
+  let index;
+  do {
+    index = Math.floor(Math.random() * PLACEHOLDER_IMAGES.length);
+  } while (PLACEHOLDER_IMAGES[index] === null);
+  
+  return PLACEHOLDER_IMAGES[index] || "/placeholder.svg";
 }
 
 /**
