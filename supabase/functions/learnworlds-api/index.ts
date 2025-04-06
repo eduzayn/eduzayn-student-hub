@@ -16,9 +16,23 @@ serve(async (req) => {
 
   try {
     // Configuração da API LearnWorlds
-    const LEARNWORLDS_SCHOOL_ID = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || '66abb5fdf8655b4b800c7278'
-    const LEARNWORLDS_API_KEY = Deno.env.get('LEARNWORLDS_API_KEY') || '5lT9XbVrXwv9ulYNufC3OdU4ewon4wUocMENvWEa3pBc8hIOix'
-    const LEARNWORLDS_API_URL = Deno.env.get('LEARNWORLDS_API_URL') || 'https://grupozayneducacional.com.br/admin/api'
+    const LEARNWORLDS_SCHOOL_ID = Deno.env.get('LEARNWORLDS_SCHOOL_ID')
+    const LEARNWORLDS_API_KEY = Deno.env.get('LEARNWORLDS_API_KEY')
+    const LEARNWORLDS_API_URL = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com'
+    const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get('LEARNWORLDS_PUBLIC_TOKEN')
+
+    if (!LEARNWORLDS_SCHOOL_ID || !LEARNWORLDS_API_KEY) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Configuração da API LearnWorlds incompleta',
+          details: 'LEARNWORLDS_SCHOOL_ID ou LEARNWORLDS_API_KEY não configurados'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
 
     const url = new URL(req.url)
     const path = url.pathname.split('/learnworlds-api/')[1]
@@ -46,8 +60,22 @@ serve(async (req) => {
     }
 
     // Criar cliente do Supabase para verificar autenticação
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://bioarzkfmcobctblzztm.supabase.co'
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Configuração do Supabase incompleta',
+          details: 'Variáveis de ambiente do Supabase não configuradas'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Verificar token JWT do Supabase
@@ -65,40 +93,113 @@ serve(async (req) => {
     }
 
     // Construir a URL para a API LearnWorlds
-    const apiUrl = `${LEARNWORLDS_API_URL}/${path}`
+    // Determinar se deve usar a API URL base ou a URL específica da escola
+    let apiUrl
+    
+    if (path.startsWith('public/')) {
+      // API pública - requer token público
+      apiUrl = `${LEARNWORLDS_API_URL}/${path}`
+      if (!LEARNWORLDS_PUBLIC_TOKEN) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Token público da LearnWorlds não configurado',
+            details: 'LEARNWORLDS_PUBLIC_TOKEN não encontrado'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          }
+        )
+      }
+    } else {
+      // API administrativa - usa URL da escola e API KEY
+      apiUrl = `${LEARNWORLDS_API_URL}/${path}`
+    }
+    
+    // Adicionar parâmetros de query se existirem
+    const queryParams = url.search
+    if (queryParams) {
+      apiUrl = `${apiUrl}${queryParams}`
+    }
     
     // Preparar headers para a requisição à API LearnWorlds
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    
+    // Usar o token apropriado baseado no tipo de endpoint
+    if (path.startsWith('public/')) {
+      headers['Authorization'] = `Bearer ${LEARNWORLDS_PUBLIC_TOKEN}`
+    } else {
+      headers['Authorization'] = `Bearer ${LEARNWORLDS_API_KEY}`
     }
 
-    // Preparar o corpo da requisição se for um método POST, PUT
+    // Preparar o corpo da requisição se for um método POST, PUT, PATCH
     let options: RequestInit = {
       method: req.method,
       headers
     }
 
-    // Se for POST ou PUT, adiciona o corpo da requisição
+    // Se for POST, PUT ou PATCH, adiciona o corpo da requisição
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      const body = await req.json()
-      options.body = JSON.stringify(body)
+      try {
+        const body = await req.json()
+        options.body = JSON.stringify(body)
+      } catch (e) {
+        console.warn('Corpo da requisição vazio ou inválido:', e)
+      }
     }
 
     // Fazer a requisição para a API LearnWorlds
     console.log(`Fazendo requisição para: ${apiUrl}`)
-    const response = await fetch(apiUrl, options)
+    console.log(`Método: ${req.method}`)
+    console.log(`Headers:`, JSON.stringify(headers, null, 2))
     
-    const responseData = await response.json()
-    
-    // Retornar a resposta da API LearnWorlds
-    return new Response(
-      JSON.stringify(responseData),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: response.status,
+    try {
+      const response = await fetch(apiUrl, options)
+      
+      // Obter corpo da resposta
+      let responseData
+      const contentType = response.headers.get('content-type')
+      
+      if (contentType?.includes('application/json')) {
+        responseData = await response.json()
+      } else {
+        // Para outros tipos de conteúdo, retorna como texto
+        const text = await response.text()
+        responseData = { data: text }
       }
-    )
+      
+      // Log do status da resposta
+      console.log(`Status da resposta: ${response.status}`)
+      
+      // Implementar limite de retentativas para erros 429 (Rate Limiting)
+      if (response.status === 429) {
+        console.warn('Rate limit atingido na API LearnWorlds')
+      }
+      
+      // Retornar a resposta da API LearnWorlds
+      return new Response(
+        JSON.stringify(responseData),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: response.status,
+        }
+      )
+    } catch (fetchError) {
+      console.error('Erro ao chamar API LearnWorlds:', fetchError)
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erro ao chamar a API da LearnWorlds', 
+          details: fetchError.message 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
   } catch (error) {
     console.error('Erro na Edge Function:', error)
     return new Response(
