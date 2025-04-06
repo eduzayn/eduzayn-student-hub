@@ -418,105 +418,10 @@ export const getCurrentUserId = async (): Promise<string | null> => {
  */
 export const getRotaAprendizagem = async (userId: string): Promise<RotaAprendizagemType> => {
   try {
-    // Tenta buscar a rota de aprendizagem do aluno pelo Supabase
-    const { data: rotaData, error: rotaError } = await supabase
-      .from('rotas_aprendizagem')
-      .select(`
-        id,
-        titulo,
-        descricao,
-        progresso
-      `)
-      .eq('aluno_id', userId)
-      .maybeSingle();
-    
-    if (rotaError) {
-      console.error("Erro ao buscar rota de aprendizagem:", rotaError);
-      throw new Error("Erro ao buscar rota de aprendizagem");
-    }
-    
-    // Se não houver dados no Supabase, retorna os dados mockados
-    if (!rotaData) {
-      console.log("Nenhuma rota de aprendizagem encontrada, usando dados mockados");
-      return getMockRotaAprendizagem();
-    }
-    
-    // Busca os módulos da rota
-    const { data: modulosData, error: modulosError } = await supabase
-      .from('modulos_rota_aprendizagem')
-      .select(`
-        id,
-        titulo,
-        descricao,
-        concluido,
-        bloqueado,
-        em_andamento,
-        ordem,
-        curso_id
-      `)
-      .eq('rota_id', rotaData.id)
-      .order('ordem', { ascending: true });
-    
-    if (modulosError) {
-      console.error("Erro ao buscar módulos da rota:", modulosError);
-      throw new Error("Erro ao buscar módulos da rota de aprendizagem");
-    }
-    
-    // Mapeamento dos módulos para o formato esperado
-    const modulos = await Promise.all(
-      (modulosData || []).map(async (modulo) => {
-        // Se tiver curso associado, busca detalhes do curso
-        let curso;
-        if (modulo.curso_id) {
-          const cursoData = await getUserCourses(userId);
-          curso = cursoData.find(c => c.id === modulo.curso_id);
-          
-          if (curso) {
-            curso = {
-              id: curso.id,
-              title: curso.title,
-              thumbnail: curso.thumbnail,
-              progress: curso.progress,
-              lessions: 0 // Valor padrão
-            };
-            
-            // Obter número de aulas
-            try {
-              const aulas = await getCourseLessons(modulo.curso_id, userId);
-              if (curso) {
-                curso.lessions = aulas.length;
-              }
-            } catch (err) {
-              console.warn("Não foi possível obter número de aulas:", err);
-            }
-          }
-        }
-        
-        return {
-          id: modulo.id,
-          titulo: modulo.titulo,
-          descricao: modulo.descricao || "",
-          concluido: modulo.concluido || false,
-          bloqueado: modulo.bloqueado || false,
-          emAndamento: modulo.em_andamento || false,
-          curso
-        };
-      })
-    );
-    
-    // Busca o módulo recomendado
-    let moduloRecomendado = modulos.find(m => m.emAndamento) || 
-                           modulos.find(m => !m.concluido && !m.bloqueado);
-    
-    // Retorna a rota de aprendizagem completa
-    return {
-      id: rotaData.id,
-      titulo: rotaData.titulo,
-      descricao: rotaData.descricao || "",
-      progresso: rotaData.progresso || 0,
-      modulos,
-      moduloRecomendado
-    };
+    // Como as tabelas rotas_aprendizagem e modulos_rota_aprendizagem não existem no banco de dados,
+    // vamos usar diretamente os dados mockados para evitar erros
+    console.log("Usando dados mockados para rota de aprendizagem");
+    return getMockRotaAprendizagem();
   } catch (error) {
     console.error("Erro ao buscar rota de aprendizagem:", error);
     
@@ -557,17 +462,20 @@ const getMockRotaAprendizagem = (): RotaAprendizagemType => {
           {
             id: "submodulo-1-1",
             titulo: "HTML5 Semântico",
-            concluido: true
+            concluido: true,
+            descricao: "Aprendendo a estruturar páginas HTML de forma semântica"
           },
           {
             id: "submodulo-1-2",
             titulo: "CSS3 e Design Responsivo",
-            concluido: true
+            concluido: true,
+            descricao: "Estilizando páginas web para diversos dispositivos"
           },
           {
             id: "submodulo-1-3",
             titulo: "JavaScript Básico",
-            concluido: true
+            concluido: true,
+            descricao: "Fundamentos da programação com JavaScript"
           }
         ]
       },
@@ -589,22 +497,26 @@ const getMockRotaAprendizagem = (): RotaAprendizagemType => {
           {
             id: "submodulo-2-1",
             titulo: "Introdução ao React",
-            concluido: true
+            concluido: true,
+            descricao: "Conhecendo a biblioteca React"
           },
           {
             id: "submodulo-2-2",
             titulo: "Componentes e Props",
-            concluido: true
+            concluido: true,
+            descricao: "Criando componentes reutilizáveis"
           },
           {
             id: "submodulo-2-3",
             titulo: "Estado e Ciclo de Vida",
-            concluido: false
+            concluido: false,
+            descricao: "Gerenciando estados e ciclos de vida de componentes"
           },
           {
             id: "submodulo-2-4",
             titulo: "Hooks e Context API",
-            concluido: false
+            concluido: false,
+            descricao: "Usando hooks e contextos para compartilhar estados"
           }
         ]
       },

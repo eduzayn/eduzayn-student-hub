@@ -16,8 +16,8 @@ export interface CursoAprendizagemType {
 export interface SubmoduloAprendizagemType {
   id: string;
   titulo: string;
+  descricao: string; // Alteramos de opcional para obrigatório para compatibilidade
   concluido: boolean;
-  descricao?: string;
   bloqueado?: boolean;
   emAndamento?: boolean;
 }

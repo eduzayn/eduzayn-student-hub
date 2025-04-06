@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CheckCircle, Clock, Lock, BookOpen, ChevronRight } from "lucide-react";
-import type { RotaAprendizagemType, ModuloAprendizagemType } from "@/types/aprendizagem";
+import { CheckCircle, Clock, Lock, BookOpen, ChevronRight, Circle as CircleIcon } from "lucide-react";
+import type { RotaAprendizagemType, ModuloAprendizagemType, SubmoduloAprendizagemType } from "@/types/aprendizagem";
 
 interface RotaMapaProps {
   rotaAprendizagem: RotaAprendizagemType;
@@ -14,11 +14,11 @@ interface RotaMapaProps {
 
 const RotaMapa: React.FC<RotaMapaProps> = ({ rotaAprendizagem, userId }) => {
   // Função para renderizar o status do módulo
-  const renderModuloStatus = (modulo: ModuloAprendizagemType) => {
+  const renderModuloStatus = (modulo: ModuloAprendizagemType | SubmoduloAprendizagemType) => {
     if (modulo.concluido) {
-      return <Badge variant="success" className="bg-green-500">Concluído</Badge>;
+      return <Badge variant="outline" className="bg-green-500 text-white border-green-500">Concluído</Badge>;
     } else if (modulo.emAndamento) {
-      return <Badge variant="default" className="bg-blue-500">Em Andamento</Badge>;
+      return <Badge variant="outline" className="bg-blue-500 text-white border-blue-500">Em Andamento</Badge>;
     } else if (modulo.bloqueado) {
       return <Badge variant="secondary" className="bg-gray-400">Bloqueado</Badge>;
     } else {
@@ -120,7 +120,7 @@ const RotaMapa: React.FC<RotaMapaProps> = ({ rotaAprendizagem, userId }) => {
                                 <div className="flex items-center">
                                   {submodulo.concluido ? 
                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" /> : 
-                                    <Circle className="h-4 w-4 text-gray-300 mr-2" />
+                                    <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
                                   }
                                   <span className="text-sm">{submodulo.titulo}</span>
                                 </div>
