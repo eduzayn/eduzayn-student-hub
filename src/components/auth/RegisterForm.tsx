@@ -84,12 +84,32 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
           onSwitchTab("login");
         } else if (data?.user && !data.user.confirmed_at) {
           // Email precisa ser confirmado
-          setNeedsEmailConfirmation(true);
-          toast.info("Verifique seu email!", {
-            description: "Enviamos um link de confirmação para seu email."
-          });
-          setAuthError("Verifique seu email para confirmar seu cadastro!");
-          form.reset();
+          try {
+            const { origin } = window.location;
+            const confirmationUrl = `${origin}/login?email=${encodeURIComponent(values.email)}&confirmation=true`;
+            
+            // Chamar nossa função personalizada de envio de e-mail
+            const response = await supabase.functions.invoke('send-confirmation-email', {
+              body: {
+                email: values.email,
+                confirmationUrl: confirmationUrl
+              }
+            });
+            
+            if (response.error) {
+              throw new Error(response.error.message);
+            }
+            
+            setNeedsEmailConfirmation(true);
+            toast.info("Verifique seu email!", {
+              description: "Enviamos um link de confirmação para seu email."
+            });
+            setAuthError("Verifique seu email para confirmar seu cadastro!");
+            form.reset();
+          } catch (emailError) {
+            console.error("Erro ao enviar email de confirmação:", emailError);
+            setAuthError("Erro ao enviar email de confirmação. Por favor, tente novamente.");
+          }
         } else {
           toast.success("Cadastro realizado com sucesso!", {
             description: "Você já pode fazer login."
@@ -112,22 +132,25 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
     
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: confirmationEmail,
+      const { origin } = window.location;
+      const confirmationUrl = `${origin}/login?email=${encodeURIComponent(confirmationEmail)}&confirmation=true`;
+      
+      // Chamar nossa função personalizada de envio de e-mail
+      const response = await supabase.functions.invoke('send-confirmation-email', {
+        body: {
+          email: confirmationEmail,
+          confirmationUrl: confirmationUrl
+        }
       });
       
-      if (error) {
-        setAuthError(`Erro ao reenviar email: ${error.message}`);
-        toast.error("Erro ao reenviar email", {
-          description: error.message
-        });
-      } else {
-        setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
-        toast.success("Email reenviado com sucesso!", {
-          description: "Verifique sua caixa de entrada e pasta de spam."
-        });
+      if (response.error) {
+        throw new Error(response.error.message);
       }
+      
+      setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
+      toast.success("Email reenviado com sucesso!", {
+        description: "Verifique sua caixa de entrada e pasta de spam."
+      });
     } catch (error) {
       setAuthError("Ocorreu um erro ao reenviar o email de confirmação.");
       console.error("Erro ao reenviar email:", error);
