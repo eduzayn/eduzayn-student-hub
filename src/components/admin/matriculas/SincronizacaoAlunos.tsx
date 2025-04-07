@@ -56,11 +56,19 @@ const SincronizacaoAlunos: React.FC = () => {
         throw new Error(`Erro ao verificar status: ${response.status}`);
       }
       
-      const data = await response.json();
-      
-      if (data.status === "online") {
-        setApiStatus("online");
+      // Verificar se a resposta é JSON antes de tentar analisar
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        
+        if (data.status === "online") {
+          setApiStatus("online");
+        } else {
+          setApiStatus("offline");
+        }
       } else {
+        // Se não for JSON, considere como erro
+        console.error("Resposta não é JSON:", await response.text());
         setApiStatus("offline");
       }
     } catch (error) {
@@ -100,21 +108,33 @@ const SincronizacaoAlunos: React.FC = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
+        } else {
+          throw new Error(`Erro na sincronização: ${response.status}`);
+        }
       }
       
-      const results = await response.json();
-      
-      // Atualizar os resultados e logs
-      setSyncResults(results);
-      setSyncLogs(results.logs || []);
-      
-      // Mostrar notificação de sucesso
-      toast.success(
-        `Sincronização concluída`, 
-        { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
-      );
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const results = await response.json();
+        
+        // Atualizar os resultados e logs
+        setSyncResults(results);
+        setSyncLogs(results.logs || []);
+        
+        // Mostrar notificação de sucesso
+        toast.success(
+          `Sincronização concluída`, 
+          { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
+        );
+      } else {
+        throw new Error("Resposta da API não é JSON");
+      }
     } catch (error) {
       console.error("Erro na sincronização:", error);
       toast.error("Falha na sincronização", { description: error instanceof Error ? error.message : "Erro desconhecido" });

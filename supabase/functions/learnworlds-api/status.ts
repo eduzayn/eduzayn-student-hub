@@ -50,7 +50,7 @@ serve(async (req) => {
   
   // Verificar status da API LearnWorlds
   try {
-    // Retornar informação de status
+    // Garantir que a resposta seja sempre JSON
     return new Response(
       JSON.stringify({ status: "online" }),
       {
@@ -59,11 +59,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    // Retornar informação de erro
+    // Retornar informação de erro também como JSON
     return new Response(
       JSON.stringify({ 
         status: "offline",
-        error: error.message || "Erro desconhecido ao verificar status da API" 
+        error: error instanceof Error ? error.message : "Erro desconhecido ao verificar status da API" 
       }),
       {
         status: 200,
