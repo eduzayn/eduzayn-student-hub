@@ -126,13 +126,15 @@ const SincronizacaoAlunos: React.FC = () => {
   // Função para criar ou atualizar um perfil manualmente
   const criarPerfilManualmente = async (email: string, nome: string, sobrenome: string, learnworldsId: string) => {
     try {
-      // Chamar a função RPC create_profile_without_auth no Supabase
-      const { data, error } = await supabase.rpc("create_profile_without_auth", {
-        user_email: email,
-        user_first_name: nome,
-        user_last_name: sobrenome,
-        user_phone: null,
-        user_learnworlds_id: learnworldsId
+      // Chamar a função criar perfil sem auth direto via SQL
+      const { data, error } = await supabase.functions.invoke("create-profile", {
+        body: {
+          email,
+          firstName: nome, 
+          lastName: sobrenome,
+          phone: null,
+          learnworldsId
+        }
       });
       
       if (error) throw error;

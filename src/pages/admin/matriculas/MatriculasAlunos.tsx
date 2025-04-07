@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { UserPlus, Search, RefreshCw, UserCircle2, Users, Filter } from "lucide-react";
+import { UserPlus, Search, RefreshCw, UserCircle2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
@@ -137,6 +137,22 @@ const MatriculasAlunos: React.FC = () => {
     setAlunoSelecionado(aluno);
   };
 
+  // Função de utilidade para determinar a variante do badge com base no status
+  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
+    switch (status) {
+      case 'ativo':
+        return 'default';
+      case 'trancado':
+        return 'secondary';
+      case 'concluido':
+        return 'outline'; // Alterado de 'success' para 'outline'
+      case 'cancelado':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <MatriculasLayout>
       <div className="container mx-auto p-6">
@@ -237,12 +253,7 @@ const MatriculasAlunos: React.FC = () => {
                             <TableCell className="hidden md:table-cell">{aluno.numero_matricula || '-'}</TableCell>
                             <TableCell className="hidden md:table-cell">
                               <Badge 
-                                variant={
-                                  aluno.status === 'ativo' ? 'default' : 
-                                  aluno.status === 'trancado' ? 'secondary' : 
-                                  aluno.status === 'concluido' ? 'success' :
-                                  aluno.status === 'cancelado' ? 'destructive' : 'outline'
-                                }
+                                variant={getStatusVariant(aluno.status || 'ativo')}
                               >
                                 {aluno.status || 'Não definido'}
                               </Badge>
@@ -277,15 +288,23 @@ const MatriculasAlunos: React.FC = () => {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious 
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(prev => Math.max(prev - 1, 1));
+                          }}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
                       
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                         <PaginationItem key={page}>
-                          <PaginationLink 
-                            onClick={() => setCurrentPage(page)}
+                          <PaginationLink
+                            href="#" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
                             isActive={page === currentPage}
                           >
                             {page}
@@ -295,8 +314,12 @@ const MatriculasAlunos: React.FC = () => {
                       
                       <PaginationItem>
                         <PaginationNext 
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                          }}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
                     </PaginationContent>

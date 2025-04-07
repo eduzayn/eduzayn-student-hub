@@ -2,61 +2,48 @@
 project_id = "bioarzkfmcobctblzztm"
 
 [api]
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
+enabled = true
+port = 8000
+schemas = ["public", "storage"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
-shadow_port = 54320
+port = 5432
+shadow_port = 5433
 major_version = 15
 
 [studio]
-port = 54323
+enabled = true
+port = 3000
+api_url = "http://localhost"
 
 [inbucket]
-port = 54324
-smtp_port = 54325
-pop3_port = 54326
+enabled = true
+port = 4000
 
 [storage]
+enabled = true
 file_size_limit = "50MiB"
 
 [auth]
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://localhost:3000"]
-jwt_expiry = 3600
-enable_signup = true
-
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false
-
-[auth.external.apple]
-enabled = false
-client_id = ""
-secret = ""
-redirect_uri = ""
-
-[functions]
-[functions.learnworlds-api]
-verify_jwt = false
-[functions.learnworlds-sync]
-verify_jwt = false
-[functions.learnworlds-courses-sync]
-verify_jwt = false
-
-[[extensions]]
-name = "pg_cron"
-version = "1.6.0"
 enabled = true
+site_url = "http://localhost:3000"
 
-[extensions.pg_cron]
-database = "postgres"
-schema = "cron"
+[analytics]
+enabled = false
+port = 9000
+vector_port = 8000
 
-[postgres_metadata]
-database = "postgres"
-schema = "metadata"
+# FUNCTIONS
+[functions.learnworlds-api]
+verify_jwt = true
+
+[functions.learnworlds-sync]
+verify_jwt = true
+
+[functions.create-profile]
+verify_jwt = true
+
+[functions.learnworlds-courses-sync]
+verify_jwt = true

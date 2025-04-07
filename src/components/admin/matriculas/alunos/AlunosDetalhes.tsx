@@ -115,6 +115,22 @@ const AlunosDetalhes: React.FC<AlunosDetalhesProps> = ({ aluno, onBack, onReload
     return data.toLocaleDateString('pt-BR');
   };
 
+  // Função de utilidade para determinar a variante do badge com base no status
+  const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
+    switch (status) {
+      case 'ativo':
+        return 'default';
+      case 'trancado':
+        return 'secondary';
+      case 'concluido':
+        return 'outline'; // Alterado de 'success' para 'outline'
+      case 'cancelado':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -256,12 +272,7 @@ const AlunosDetalhes: React.FC<AlunosDetalhesProps> = ({ aluno, onBack, onReload
                   ) : (
                     <div className="border rounded-md px-3 py-2">
                       <Badge 
-                        variant={
-                          alunoData.status === 'ativo' ? 'default' : 
-                          alunoData.status === 'trancado' ? 'secondary' : 
-                          alunoData.status === 'concluido' ? 'success' :
-                          alunoData.status === 'cancelado' ? 'destructive' : 'outline'
-                        }
+                        variant={getStatusVariant(alunoData.status)}
                       >
                         {alunoData.status || 'Não definido'}
                       </Badge>
@@ -314,12 +325,7 @@ const AlunosDetalhes: React.FC<AlunosDetalhesProps> = ({ aluno, onBack, onReload
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline">{matricula.cursos?.modalidade}</Badge>
                               <Badge 
-                                variant={
-                                  matricula.status === 'ativo' ? 'default' : 
-                                  matricula.status === 'trancado' ? 'secondary' : 
-                                  matricula.status === 'concluido' ? 'success' :
-                                  matricula.status === 'cancelado' ? 'destructive' : 'outline'
-                                }
+                                variant={getStatusVariant(matricula.status)}
                               >
                                 {matricula.status}
                               </Badge>
