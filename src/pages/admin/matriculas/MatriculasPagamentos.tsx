@@ -50,7 +50,7 @@ const MatriculasPagamentos: React.FC = () => {
   const [filtro, setFiltro] = useState("todos");
   const [busca, setBusca] = useState("");
   
-  // Consulta para buscar os pagamentos
+  // Consulta modificada para buscar os pagamentos
   const { data: pagamentos, isLoading, error } = useQuery({
     queryKey: ["pagamentos", filtro],
     queryFn: async () => {
@@ -58,26 +58,48 @@ const MatriculasPagamentos: React.FC = () => {
         *,
         matriculas(
           id,
-          alunos:aluno_id(nome, email),
-          cursos:curso_id(titulo)
+          aluno_id,
+          curso_id,
+          aluno:aluno_id(email),
+          curso:curso_id(titulo)
         )
       `);
       
       if (filtro !== "todos") {
-        query = query.eq("status", filtro as "pendente" | "processando" | "pago" | "cancelado" | "atrasado" | "estornado");
+        query = query.eq("status", filtro);
       }
       
       const { data, error } = await query;
       
       if (error) {
+        console.error("Erro na consulta de pagamentos:", error);
         throw new Error(error.message);
       }
       
-      return data as PagamentoCompleto[] || [];
+      // Transformando os dados para corresponder à interface PagamentoCompleto
+      const pagamentosProcessados = data?.map(pagamento => {
+        return {
+          ...pagamento,
+          matriculas: {
+            id: pagamento.matriculas?.id,
+            alunos: {
+              nome: pagamento.matriculas?.aluno?.email?.split('@')[0] || 'Sem nome',
+              email: pagamento.matriculas?.aluno?.email
+            },
+            cursos: {
+              titulo: pagamento.matriculas?.curso?.titulo || 'Curso não especificado'
+            }
+          }
+        };
+      }) as PagamentoCompleto[] || [];
+      
+      return pagamentosProcessados;
     },
     meta: {
-      onError: (error: Error) => {
-        toast.error("Erro ao carregar pagamentos: " + error.message);
+      onSettled: (data, error: Error | null) => {
+        if (error) {
+          toast.error("Erro ao carregar pagamentos: " + error.message);
+        }
       }
     }
   });
