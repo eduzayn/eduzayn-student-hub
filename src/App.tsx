@@ -11,6 +11,7 @@ import EsqueciSenha from "./pages/EsqueciSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import MainLayout from './components/layout/MainLayout';
 import AlunoDashboard from './pages/aluno/Dashboard';
+import Cursos from './pages/Cursos'; // Importando a página de cursos
 
 // Importação dos componentes do Módulo de Matrículas
 import ModuloMatriculas from './pages/admin/ModuloMatriculas';
@@ -33,6 +34,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Index />} />
+            {/* Adicionar a rota para cursos */}
+            <Route path="/cursos" element={<Cursos />} />
+            <Route path="/cursos/:categoria" element={<Cursos />} />
           </Route>
           <Route path="/login" element={<Login />} />
           <Route path="/esqueci-senha" element={<EsqueciSenha />} />

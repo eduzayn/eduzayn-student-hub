@@ -5,7 +5,6 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
@@ -42,7 +41,7 @@ ListItem.displayName = "ListItem";
 
 const MenuNavigation = () => {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
     <NavigationMenu>
@@ -52,7 +51,7 @@ const MenuNavigation = () => {
             <NavigationMenuLink 
               className={cn(
                 navigationMenuTriggerStyle(),
-                isActive("/") && "bg-accent text-accent-foreground"
+                isActive("/") && !isActive("/cursos") && "bg-accent text-accent-foreground"
               )}
             >
               Home
@@ -61,7 +60,9 @@ const MenuNavigation = () => {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Cursos</NavigationMenuTrigger>
+          <NavigationMenuTrigger className={cn(
+            isActive("/cursos") && "bg-accent text-accent-foreground"
+          )}>Cursos</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
               <ListItem
