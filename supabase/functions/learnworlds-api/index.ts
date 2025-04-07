@@ -10,8 +10,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("🚀 Função learnworlds-api chamada");
+  console.log(`📝 Método: ${req.method}, URL: ${req.url}`);
+  
   // Lidar com solicitações OPTIONS (preflight CORS)
   if (req.method === 'OPTIONS') {
+    console.log("✅ Respondendo solicitação OPTIONS com CORS headers");
     return new Response(null, {
       status: 204,
       headers: corsHeaders,
@@ -21,7 +25,10 @@ serve(async (req) => {
   try {
     // Verificar autenticação
     const authHeader = req.headers.get('Authorization');
+    console.log(`🔑 Header Authorization presente: ${!!authHeader}`);
+    
     if (!authHeader) {
+      console.log("❌ Sem token de autenticação");
       return new Response(
         JSON.stringify({ error: 'Sem token de autenticação' }),
         {
@@ -36,6 +43,7 @@ serve(async (req) => {
 
     // Bypass para o token admin-bypass
     const isAdminBypass = token === 'admin-bypass-token';
+    console.log(`🔐 Usando token admin-bypass: ${isAdminBypass}`);
     
     // Se não for admin bypass, verificar autenticação com Supabase
     if (!isAdminBypass) {
@@ -45,9 +53,11 @@ serve(async (req) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Verificar se o token é válido
+      console.log("🔍 Verificando token com Supabase");
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
       if (authError || !user) {
-        console.error('Erro de autenticação:', authError);
+        console.error('❌ Erro de autenticação:', authError);
         return new Response(
           JSON.stringify({ error: 'Token de autenticação inválido' }),
           {
@@ -56,22 +66,37 @@ serve(async (req) => {
           }
         );
       }
+      console.log(`✅ Token autenticado para usuário: ${user.email}`);
     }
 
     // Obter os parâmetros da solicitação
     const url = new URL(req.url);
-    const path = url.pathname.split('/learnworlds-api/')[1];
+    console.log(`🌐 URL completa: ${url.toString()}`);
+    
+    // Extrair o path após learnworlds-api/
+    const pathSegments = url.pathname.split('/');
+    const learnworldsApiIndex = pathSegments.findIndex(segment => segment === 'learnworlds-api');
+    const path = pathSegments.slice(learnworldsApiIndex + 1).join('/');
+    
+    console.log(`🔍 Path extraído: "${path}"`);
 
     // Tratar requisição de status
-    if (path === 'status') {
-      // Redirecionar para o endpoint de status dedicado
-      return await fetch(new URL('/learnworlds-api/status', req.url).href, {
+    if (path === 'status' || path === '/status') {
+      console.log("🔄 Redirecionando para endpoint de status");
+      
+      // Obter a URL base para construir a URL de status
+      const baseUrl = url.origin;
+      const statusUrl = `${baseUrl}/functions/v1/learnworlds-api/status`;
+      console.log(`🔄 Redirecionando para: ${statusUrl}`);
+      
+      return await fetch(statusUrl, {
         method: 'GET',
         headers: req.headers
       });
     }
 
     if (!path) {
+      console.log("❌ Endpoint não especificado");
       return new Response(
         JSON.stringify({ error: 'Endpoint não especificado' }),
         {
@@ -85,9 +110,11 @@ serve(async (req) => {
     const apiKey = Deno.env.get('LEARNWORLDS_API_KEY') || 'YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg';
     const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || 'grupozayneducacional';
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
+    
+    console.log(`📚 Usando API LearnWorlds com escola: ${schoolId}`);
 
     if (!apiKey || !schoolId) {
-      console.error('Configurações da API LearnWorlds ausentes');
+      console.error('❌ Configurações da API LearnWorlds ausentes');
       return new Response(
         JSON.stringify({ error: 'Configurações da API ausentes' }),
         {
@@ -98,10 +125,8 @@ serve(async (req) => {
     }
 
     // Configurar a solicitação para a API LearnWorlds
-    // Usar o formato correto da API: https://api.learnworlds.com/api/v2/schools/SCHOOL_NAME/endpoint
     const apiUrl = `${apiBaseUrl}/api/v2/schools/${schoolId}/${path}`;
-    
-    console.log(`Fazendo solicitação para LearnWorlds: ${req.method} ${apiUrl}`);
+    console.log(`🔄 Chamando API LearnWorlds: ${req.method} ${apiUrl}`);
     
     const headers = {
       'Content-Type': 'application/json',
@@ -112,16 +137,17 @@ serve(async (req) => {
     let body;
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
       body = await req.json();
+      console.log(`📦 Corpo da requisição: ${JSON.stringify(body)}`);
       
       // Log especial para criação de usuário ou matrícula
       if (path === 'users' && req.method === 'POST') {
-        console.log('Criando novo usuário no LearnWorlds:', {
+        console.log('✨ Criando novo usuário no LearnWorlds:', {
           email: body.email,
           firstName: body.firstName,
           lastName: body.lastName,
         });
       } else if (path === 'enrollments' && req.method === 'POST') {
-        console.log('Criando nova matrícula no LearnWorlds:', {
+        console.log('✨ Criando nova matrícula no LearnWorlds:', {
           userId: body.userId,
           courseId: body.courseId,
         });
@@ -131,6 +157,7 @@ serve(async (req) => {
     // Adicionar parâmetros de consulta da URL original
     const queryParams = url.search;
     const fullApiUrl = queryParams ? `${apiUrl}${queryParams}` : apiUrl;
+    console.log(`🌐 URL completa para API LearnWorlds: ${fullApiUrl}`);
 
     // Fazer a solicitação à API LearnWorlds
     const response = await fetch(fullApiUrl, {
@@ -139,20 +166,38 @@ serve(async (req) => {
       body: body ? JSON.stringify(body) : undefined,
     });
 
+    console.log(`📊 Status da resposta: ${response.status}`);
+    
     // Verificar o tipo de conteúdo para determinar como processar a resposta
     const contentType = response.headers.get('content-type') || '';
+    console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
+    
     let responseData;
 
     if (contentType.includes('application/json')) {
       // Se for JSON, analisamos como JSON
-      responseData = await response.json();
+      const jsonText = await response.text();
+      console.log(`📄 Resposta JSON recebida: ${jsonText.substring(0, 200)}...`);
+      
+      try {
+        responseData = JSON.parse(jsonText);
+      } catch (jsonError) {
+        console.error("❌ Erro ao parsear resposta como JSON:", jsonError);
+        responseData = {
+          error: "Erro ao processar resposta JSON",
+          textPreview: jsonText.substring(0, 500)
+        };
+      }
     } else {
       try {
         // Tentar obter o texto e converter para JSON mesmo assim
         const responseText = await response.text();
+        console.log(`📄 Resposta texto recebida: ${responseText.substring(0, 200)}...`);
+        
         try {
           responseData = JSON.parse(responseText);
         } catch (jsonError) {
+          console.error("❌ Erro ao parsear resposta como JSON:", jsonError);
           // Se não for JSON, tratamos como texto e informamos o tipo de conteúdo
           responseData = {
             text: responseText.substring(0, 500), // Limitamos para não sobrecarregar os logs
@@ -161,7 +206,7 @@ serve(async (req) => {
             message: 'Resposta não-JSON recebida da API'
           };
           
-          console.error(`Resposta não-JSON recebida: ${contentType}, status: ${response.status}`);
+          console.error(`❌ Resposta não-JSON recebida: ${contentType}, status: ${response.status}`);
           
           // Se não estiver OK, tratamos como erro
           if (!response.ok) {
@@ -180,7 +225,7 @@ serve(async (req) => {
           }
         }
       } catch (textError) {
-        console.error("Erro ao obter texto da resposta:", textError);
+        console.error("❌ Erro ao obter texto da resposta:", textError);
         responseData = {
           error: "Erro ao processar resposta da API",
           statusCode: response.status,
@@ -191,7 +236,7 @@ serve(async (req) => {
 
     // Registrar sucesso ou erro
     if (!response.ok) {
-      console.error(`Erro na API LearnWorlds: ${response.status} - ${JSON.stringify(responseData)}`);
+      console.error(`❌ Erro na API LearnWorlds: ${response.status} - ${JSON.stringify(responseData)}`);
       return new Response(
         JSON.stringify({
           status: response.status,
@@ -205,7 +250,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Resposta bem-sucedida da LearnWorlds: ${response.status}`);
+    console.log(`✅ Resposta bem-sucedida da LearnWorlds: ${response.status}`);
 
     // Retornar os dados para o cliente
     return new Response(
@@ -218,7 +263,7 @@ serve(async (req) => {
 
   } catch (error) {
     // Lidar com erros gerais
-    console.error('Erro ao processar solicitação:', error);
+    console.error('❌ Erro ao processar solicitação:', error);
     return new Response(
       JSON.stringify({ error: 'Erro ao processar a solicitação', details: error instanceof Error ? error.message : "Erro desconhecido" }),
       {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +42,11 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       
       console.log("Iniciando verificação de status da API LearnWorlds");
       
-      const response = await fetch("/functions/v1/learnworlds-api/status", {
+      // Usar a URL completa da função
+      const functionUrl = `${window.location.origin}/functions/v1/learnworlds-api/status`;
+      console.log("Chamando função em:", functionUrl);
+      
+      const response = await fetch(functionUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +54,9 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         }
       });
 
+      console.log("Resposta status code:", response.status);
       const contentType = response.headers.get("content-type") || "";
+      console.log("Content-Type da resposta:", contentType);
       
       try {
         const rawText = await response.text();
@@ -69,7 +76,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
           }
         } catch (jsonError) {
           console.error("Falha ao interpretar resposta como JSON:", jsonError);
-          setApiResponse(`Resposta não é no formato JSON esperado. Verifique o console para mais detalhes.`);
+          setApiResponse(`Resposta não é no formato JSON esperado: ${rawText.substring(0, 500)}`);
           setApiStatus("error");
           toast.error("Resposta inválida da API LearnWorlds");
         }
@@ -99,7 +106,11 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
-      const apiStatusResponse = await fetch("/functions/v1/learnworlds-api/status", {
+      // Usar a URL completa da função
+      const apiStatusUrl = `${window.location.origin}/functions/v1/learnworlds-api/status`;
+      console.log("Verificando status da API em:", apiStatusUrl);
+      
+      const apiStatusResponse = await fetch(apiStatusUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +123,11 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("API LearnWorlds não está online. Verifique a configuração primeiro.");
       }
       
-      const lwStudentsResponse = await fetch("/functions/v1/learnworlds-api/users?limit=1", {
+      // Usar a URL completa da função para buscar usuários
+      const lwStudentsUrl = `${window.location.origin}/functions/v1/learnworlds-api/users?limit=1`;
+      console.log("Buscando alunos em:", lwStudentsUrl);
+      
+      const lwStudentsResponse = await fetch(lwStudentsUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +138,11 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       const lwStudentsData = await lwStudentsResponse.json();
       const lwStudentsCount = lwStudentsData.total || 0;
       
-      const lwCoursesResponse = await fetch("/functions/v1/learnworlds-api/courses?limit=1", {
+      // Usar a URL completa da função para buscar cursos
+      const lwCoursesUrl = `${window.location.origin}/functions/v1/learnworlds-api/courses?limit=1`;
+      console.log("Buscando cursos em:", lwCoursesUrl);
+      
+      const lwCoursesResponse = await fetch(lwCoursesUrl, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

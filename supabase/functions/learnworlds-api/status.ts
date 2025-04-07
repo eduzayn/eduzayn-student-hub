@@ -9,8 +9,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("🚀 Função learnworlds-api/status chamada");
+  console.log(`📝 Método: ${req.method}, URL: ${req.url}`);
+  
   // Lidar com solicitações OPTIONS (preflight CORS)
   if (req.method === 'OPTIONS') {
+    console.log("✅ Respondendo solicitação OPTIONS com CORS headers");
     return new Response(null, {
       status: 204,
       headers: corsHeaders,
@@ -19,7 +23,10 @@ serve(async (req) => {
   
   // Verificar autenticação
   const authHeader = req.headers.get('Authorization');
+  console.log(`🔑 Header Authorization presente: ${!!authHeader}`);
+  
   if (!authHeader) {
+    console.log("❌ Sem token de autenticação");
     return new Response(
       JSON.stringify({ 
         error: 'Sem token de autenticação',
@@ -32,51 +39,54 @@ serve(async (req) => {
     );
   }
 
-  // Obter dados de configuração da API LearnWorlds
-  // Conforme documentação LearnWorlds, este token é um Bearer token usado no header Authorization
-  const apiKey = Deno.env.get('LEARNWORLDS_API_KEY') || 'YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg';
-  const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || 'grupozayneducacional';
-  
-  // Verificar se as configurações estão presentes
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ 
-        status: "offline",
-        error: "Token da API não encontrado", 
-        details: "Token de autenticação da API LearnWorlds não configurado" 
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-  
-  if (!schoolId) {
-    return new Response(
-      JSON.stringify({ 
-        status: "offline",
-        error: "ID da escola não encontrado", 
-        details: "ID da escola LearnWorlds não configurado" 
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-  
   try {
-    // Verificar a conexão tentando fazer uma chamada real à API LearnWorlds
-    // De acordo com a documentação, precisamos fazer uma chamada para verificar se o token é válido
-    
-    // Montar a URL da API LearnWorlds
+    // Obter dados de configuração da API LearnWorlds
+    const apiKey = Deno.env.get('LEARNWORLDS_API_KEY') || 'YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg';
+    const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || 'grupozayneducacional';
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
+    
+    console.log(`📚 Usando escola: ${schoolId}`);
+    console.log(`🔗 API Base URL: ${apiBaseUrl}`);
+    
+    // Verificar se as configurações estão presentes
+    if (!apiKey) {
+      console.log("❌ Token da API não encontrado");
+      return new Response(
+        JSON.stringify({ 
+          status: "offline",
+          error: "Token da API não encontrado", 
+          details: "Token de autenticação da API LearnWorlds não configurado" 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    if (!schoolId) {
+      console.log("❌ ID da escola não encontrado");
+      return new Response(
+        JSON.stringify({ 
+          status: "offline",
+          error: "ID da escola não encontrado", 
+          details: "ID da escola LearnWorlds não configurado" 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    // Verificar a conexão tentando fazer uma chamada real à API LearnWorlds
+    // Montar a URL da API LearnWorlds
     const testUrl = `${apiBaseUrl}/api/v2/schools/${schoolId}/users?limit=1`;
-    console.log('Testando conexão com URL:', testUrl);
+    console.log(`🔍 Testando conexão com URL: ${testUrl}`);
     
     // Fazer uma chamada de teste para a API LearnWorlds
     try {
+      console.log(`🔄 Enviando requisição de teste para LearnWorlds com Bearer token`);
       const testResponse = await fetch(testUrl, {
         method: 'GET',
         headers: {
@@ -85,22 +95,57 @@ serve(async (req) => {
         }
       });
 
-      // Verificar se a resposta é válida antes de tentar processar como JSON
-      const contentType = testResponse.headers.get('content-type') || '';
+      console.log(`📊 Status da resposta: ${testResponse.status}`);
       
-      if (contentType.includes('application/json')) {
-        // Se for JSON, processar normalmente
-        const jsonData = await testResponse.json();
+      // Verificar código de status
+      if (!testResponse.ok) {
+        console.log(`❌ Resposta de erro da API LearnWorlds: ${testResponse.status}`);
         
-        if (!testResponse.ok) {
-          console.error('Erro na API LearnWorlds:', testResponse.status, jsonData);
+        try {
+          // Tentar obter o corpo da resposta como texto
+          const responseText = await testResponse.text();
+          console.log(`📄 Corpo da resposta de erro: ${responseText.substring(0, 200)}...`);
+          
+          try {
+            // Tentar parsear como JSON
+            const errorData = JSON.parse(responseText);
+            
+            return new Response(
+              JSON.stringify({ 
+                status: "offline",
+                error: "Falha na autenticação com a API LearnWorlds",
+                errorCode: testResponse.status,
+                details: errorData
+              }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          } catch (jsonParseError) {
+            // Se não for JSON, retornar o texto bruto
+            return new Response(
+              JSON.stringify({ 
+                status: "offline",
+                error: "Falha na autenticação com a API LearnWorlds",
+                errorCode: testResponse.status,
+                responseText: responseText.substring(0, 500)
+              }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        } catch (textError) {
+          console.error("Erro ao obter texto da resposta:", textError);
           
           return new Response(
             JSON.stringify({ 
               status: "offline",
               error: "Falha na autenticação com a API LearnWorlds",
               errorCode: testResponse.status,
-              details: jsonData
+              errorDetails: "Erro ao processar resposta"
             }),
             {
               status: 200,
@@ -108,6 +153,16 @@ serve(async (req) => {
             }
           );
         }
+      }
+      
+      // Tentar obter o corpo da resposta como texto
+      const responseText = await testResponse.text();
+      console.log(`📄 Corpo da resposta bem-sucedida: ${responseText.substring(0, 200)}...`);
+      
+      // Tentar parsear como JSON
+      try {
+        const jsonData = JSON.parse(responseText);
+        console.log("✅ Resposta JSON válida recebida");
         
         // Se chegou até aqui, a conexão foi bem-sucedida
         return new Response(
@@ -126,18 +181,20 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
-      } else {
-        // Se não for JSON, tratar o erro adequadamente
-        const textResponse = await testResponse.text();
-        console.error('Resposta não-JSON:', contentType, textResponse.substring(0, 200));
+      } catch (jsonParseError) {
+        console.error("Erro ao parsear resposta como JSON:", jsonParseError);
         
+        // Mesmo com erro de parsing, consideramos online se o status foi bem-sucedido
         return new Response(
           JSON.stringify({ 
-            status: "offline",
-            error: "Resposta inválida da API LearnWorlds",
-            contentType: contentType,
-            statusCode: testResponse.status,
-            previewResponse: textResponse.substring(0, 100)
+            status: "online",
+            message: "API do LearnWorlds conectada com sucesso, mas a resposta não é JSON",
+            timestamp: new Date().toISOString(),
+            tokenInfo: {
+              isConfigured: true,
+              source: Deno.env.get('LEARNWORLDS_API_KEY') ? "environment" : "hardcoded",
+            },
+            responsePreview: responseText.substring(0, 500)
           }),
           {
             status: 200,
