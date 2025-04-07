@@ -8,7 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
-serve(async (req) => {
+// Exportar a função handler diretamente para que ela possa ser chamada pelo index.ts
+export default async function statusHandler(req: Request) {
   console.log("🚀 Função learnworlds-api/status chamada");
   console.log(`📝 Método: ${req.method}, URL: ${req.url}`);
   
@@ -251,4 +252,8 @@ serve(async (req) => {
       }
     );
   }
-});
+}
+
+// Também exportamos um handler serve() para quando o arquivo é chamado diretamente
+// Isso é útil para quando status.ts é chamado como um endpoint independente
+serve(statusHandler);

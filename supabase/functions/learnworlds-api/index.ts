@@ -1,6 +1,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import statusHandler from './status.ts';
 
 // Configuração dos cabeçalhos CORS
 const corsHeaders = {
@@ -85,12 +86,8 @@ serve(async (req) => {
       console.log("🔄 Redirecionando para endpoint de status");
       
       try {
-        // Importar e executar o código do módulo status diretamente
-        const { default: statusModule } = await import('./status.ts');
-        console.log("✅ Módulo de status importado com sucesso");
-        
-        // Criar uma nova requisição para o módulo de status
-        return await statusModule(req);
+        // Chamar a função statusHandler diretamente
+        return await statusHandler(req);
         
       } catch (statusError) {
         console.error("❌ Erro ao executar módulo de status:", statusError);
