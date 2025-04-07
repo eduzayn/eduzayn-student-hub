@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,8 +40,10 @@ const SincronizacaoAlunos: React.FC = () => {
       if (!token) {
         throw new Error("Usuário não autenticado");
       }
+
+      const functionUrl = '/functions/v1/learnworlds-api/status';
       
-      const response = await fetch('/functions/v1/learnworlds-api/status', {
+      const response = await fetch(functionUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -52,15 +55,20 @@ const SincronizacaoAlunos: React.FC = () => {
         throw new Error(`Erro ao verificar status: ${response.status}`);
       }
       
+      // Tentar extrair texto primeiro para logar se houver um problema
+      const responseText = await response.text();
+      
       try {
-        const data = await response.json();
+        // Tentar parsear o texto como JSON
+        const data = JSON.parse(responseText);
         if (data && data.status === "online") {
           setApiStatus("online");
         } else {
+          console.error("API retornou status diferente de online:", data);
           setApiStatus("offline");
         }
       } catch (jsonError) {
-        console.error("Resposta não é JSON:", await response.text());
+        console.error("Resposta não é JSON:", responseText);
         setApiStatus("offline");
       }
     } catch (error) {
@@ -98,17 +106,25 @@ const SincronizacaoAlunos: React.FC = () => {
       });
       
       if (!response.ok) {
+        // Tentar extrair texto primeiro para diagnóstico
+        const errorText = await response.text();
+        
         try {
-          const errorData = await response.json();
+          // Tentar parsear como JSON se possível
+          const errorData = JSON.parse(errorText);
           throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
         } catch (parseError) {
-          const errorText = await response.text();
+          // Se não for JSON, usar o texto bruto
           throw new Error(`Erro na sincronização: ${response.status} - ${errorText.substring(0, 100)}...`);
         }
       }
       
+      // Obter o texto primeiro
+      const responseText = await response.text();
+      
       try {
-        const results = await response.json();
+        // Tentar parsear como JSON
+        const results = JSON.parse(responseText);
         
         setSyncResults(results);
         setSyncLogs(results.logs || []);
@@ -118,7 +134,7 @@ const SincronizacaoAlunos: React.FC = () => {
           { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
         );
       } catch (jsonError) {
-        console.error("Erro ao processar resposta JSON:", jsonError);
+        console.error("Erro ao processar resposta JSON:", jsonError, "Texto da resposta:", responseText);
         throw new Error("Resposta da API não é JSON válido");
       }
     } catch (error) {

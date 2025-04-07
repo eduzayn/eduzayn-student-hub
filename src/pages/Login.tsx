@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,6 +57,8 @@ const ADMIN_BYPASS = {
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState<string>("");
   const navigate = useNavigate();
 
   const loginForm = useForm<LoginFormValues>({
@@ -79,6 +82,7 @@ const Login = () => {
   const onLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     setAuthError(null);
+    setNeedsEmailConfirmation(false);
     
     if (values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password) {
       localStorage.setItem('adminBypassAuthenticated', 'true');
@@ -99,7 +103,15 @@ const Login = () => {
       });
 
       if (error) {
-        setAuthError(error.message);
+        // Verificar se o erro é de email não confirmado
+        if (error.message.includes("Email not confirmed") || 
+            error.message.toLowerCase().includes("email não confirmado")) {
+          setNeedsEmailConfirmation(true);
+          setConfirmationEmail(values.email);
+          setAuthError("Seu email ainda não foi confirmado. Por favor, verifique sua caixa de entrada ou solicite um novo link de confirmação.");
+        } else {
+          setAuthError(error.message);
+        }
       } else {
         navigate("/dashboard");
       }
@@ -114,9 +126,10 @@ const Login = () => {
   const onRegister = async (values: RegistroFormValues) => {
     setIsLoading(true);
     setAuthError(null);
+    setNeedsEmailConfirmation(false);
     
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email: values.email,
         password: values.senha,
         options: {
@@ -129,12 +142,47 @@ const Login = () => {
       if (error) {
         setAuthError(error.message);
       } else {
-        setAuthError("Verifique seu email para confirmar seu cadastro!");
-        registroForm.reset();
+        setConfirmationEmail(values.email);
+        
+        if (data?.user?.identities?.length === 0) {
+          // Usuário já existe
+          setAuthError("Este email já está cadastrado. Por favor, tente fazer login.");
+        } else if (data?.user && !data.user.confirmed_at) {
+          // Email precisa ser confirmado
+          setNeedsEmailConfirmation(true);
+          setAuthError("Verifique seu email para confirmar seu cadastro!");
+          registroForm.reset();
+        } else {
+          setAuthError("Usuário cadastrado com sucesso! Você já pode fazer login.");
+          registroForm.reset();
+        }
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o registro. Tente novamente.");
       console.error("Erro de registro:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendConfirmationEmail = async () => {
+    if (!confirmationEmail) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: confirmationEmail,
+      });
+      
+      if (error) {
+        setAuthError(`Erro ao reenviar email: ${error.message}`);
+      } else {
+        setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
+      }
+    } catch (error) {
+      setAuthError("Ocorreu um erro ao reenviar o email de confirmação.");
+      console.error("Erro ao reenviar email:", error);
     } finally {
       setIsLoading(false);
     }
@@ -158,9 +206,20 @@ const Login = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {authError && (
-                <Alert variant="destructive">
+                <Alert variant={needsEmailConfirmation ? "default" : "destructive"}>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{authError}</AlertDescription>
+                  
+                  {needsEmailConfirmation && (
+                    <Button 
+                      variant="link" 
+                      onClick={resendConfirmationEmail} 
+                      disabled={isLoading} 
+                      className="mt-2 p-0"
+                    >
+                      Reenviar email de confirmação
+                    </Button>
+                  )}
                 </Alert>
               )}
               
@@ -216,9 +275,20 @@ const Login = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {authError && (
-                <Alert variant={authError.includes("Verifique seu email") ? "default" : "destructive"}>
+                <Alert variant={needsEmailConfirmation ? "default" : "destructive"}>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{authError}</AlertDescription>
+                  
+                  {needsEmailConfirmation && (
+                    <Button 
+                      variant="link" 
+                      onClick={resendConfirmationEmail} 
+                      disabled={isLoading} 
+                      className="mt-2 p-0"
+                    >
+                      Reenviar email de confirmação
+                    </Button>
+                  )}
                 </Alert>
               )}
               
