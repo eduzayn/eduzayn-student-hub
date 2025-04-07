@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Token JWT para bypass administrativo (gerado previamente e com validade longa)
+// Token JWT para bypass administrativo (substituído pelo token criado no Supabase)
 // Este token será usado apenas para chamadas de API quando estiver em modo bypass
-export const ADMIN_BYPASS_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2FyemtmbWNvYmN0Ymx6enRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4OTYwMTksImV4cCI6MjA1OTQ3MjAxOX0.VJTJA5hKhVWFA4x-pM7jXetJsCz8-aMuJDOoVAlPeQc";
+export const ADMIN_BYPASS_JWT = "Zayn@2025";
 
 // Verificar se o usuário com bypass está logado
 export const isAdminBypassAuthenticated = () => {

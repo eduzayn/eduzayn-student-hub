@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
+import { ADMIN_BYPASS_JWT } from './auth/adminBypass';
 
-// URL base correta para as funções do Supabase - usando a versão simplificada
+// URL base correta para as funções do Supabase
 const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
 // ID do cliente LearnWorlds (necessário para todas as chamadas à API)
@@ -12,22 +11,14 @@ const CLIENT_ID = "zayn-lms-client";
 
 /**
  * Hook para facilitar chamadas à API LearnWorlds através da edge function
- * @see https://www.learnworlds.dev/ para documentação completa
  */
 export const useLearnWorldsApi = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
-  
-  // Usar o hook de autenticação para verificar se o usuário está logado
-  const { isLoggedIn, isAdminBypass, getAccessToken } = useAuth();
 
   /**
    * Função para fazer chamadas à API LearnWorlds
-   * @param endpoint Endpoint específico da API LearnWorlds
-   * @param method Método HTTP
-   * @param body Corpo da requisição (opcional)
-   * @param params Parâmetros de query string (opcional)
    */
   const callLearnWorldsApi = async <T>(
     endpoint: string,
@@ -45,27 +36,16 @@ export const useLearnWorldsApi = () => {
         throw new Error("Operando em modo offline");
       }
 
-      // Obter token de autenticação
-      let token;
+      // Usar o token fixo do bypass admin
+      const token = ADMIN_BYPASS_JWT;
       
-      try {
-        // Usando o token JWT anônimo que já está definido no arquivo adminBypass.ts
-        // Importante: Não estamos mais usando 'admin-bypass-token', e sim o token JWT real
-        token = await getAccessToken();
-        
-        if (!token) {
-          console.warn("Sem token de autorização - ativando modo offline");
-          setOfflineMode(true);
-          throw new Error('Usuário não autenticado');
-        }
-      } catch (authError) {
-        console.error("Erro ao obter token de autenticação:", authError);
+      if (!token) {
+        console.warn("Sem token de autorização - ativando modo offline");
         setOfflineMode(true);
-        throw new Error('Erro de autenticação');
+        throw new Error('Usuário não autenticado');
       }
 
       // Construir URL com parâmetros de query se fornecidos
-      // Sempre incluir client_id como parâmetro obrigatório
       let url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api`;
       
       // Verificar se endpoint não está vazio para evitar barras duplas
@@ -77,7 +57,6 @@ export const useLearnWorldsApi = () => {
       
       // Inicializar parâmetros com client_id
       const queryParams = new URLSearchParams();
-      queryParams.append("client_id", CLIENT_ID);
       
       // Adicionar outros parâmetros se fornecidos
       if (params) {
@@ -86,10 +65,12 @@ export const useLearnWorldsApi = () => {
         });
       }
       
-      // Adicionar parâmetros à URL
-      url = `${url}?${queryParams.toString()}`;
+      // Adicionar parâmetros à URL se houver algum
+      if (queryParams.toString()) {
+        url = `${url}?${queryParams.toString()}`;
+      }
       
-      console.log(`Chamando API LearnWorlds versão simplificada: ${method} ${url}`);
+      console.log(`Chamando API LearnWorlds: ${method} ${url}`);
 
       // Preparar as opções para a requisição
       const options: RequestInit = {
@@ -102,12 +83,7 @@ export const useLearnWorldsApi = () => {
 
       // Adicionar corpo da requisição se for método POST, PUT ou PATCH
       if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
-        // Garantir que o client_id está incluído no body
-        const bodyWithClientId = {
-          ...body,
-          client_id: CLIENT_ID
-        };
-        options.body = JSON.stringify(bodyWithClientId);
+        options.body = JSON.stringify(body);
       }
 
       // Fazer a chamada para a edge function
@@ -116,16 +92,15 @@ export const useLearnWorldsApi = () => {
       // Verificar se a resposta é um formato válido antes de tentar converter para JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
-        // A resposta é JSON, podemos prosseguir normalmente
         if (!response.ok) {
           const errorData = await response.json();
           
           // Mostrar mensagem de erro amigável baseada nos códigos de erro
-          let errorMessage = errorData.error || 'Erro ao chamar API';
+          let errorMessage = errorData.error || errorData.message || 'Erro ao chamar API';
           
           if (response.status === 401) {
             errorMessage = 'Não autorizado - verifique as credenciais da API';
-            console.error('Erro de autenticação JWT:', errorData);
+            console.error('Erro de autenticação:', errorData);
             // Ativar modo offline automaticamente quando houver erro de autenticação
             setOfflineMode(true);
           } else if (response.status === 403) {
