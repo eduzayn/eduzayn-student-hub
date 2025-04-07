@@ -22,17 +22,21 @@ const TestAPIConnectionButton = () => {
   const testConnection = async () => {
     setIsLoading(true);
     try {
-      // Registrar o token e seu tamanho para debug
-      console.log("Testando conexão com token (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
-      console.log("Comprimento do token:", ADMIN_BYPASS_JWT.length);
+      // Depuração inicial
+      const token = ADMIN_BYPASS_JWT;
+      console.log("Testando conexão com token:", token);
+      console.log("Comprimento do token:", token.length);
       
       // Preparar headers para a requisição
-      const headers = {
+      const headers = new Headers({
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
-      };
+        "Authorization": `Bearer ${token}`
+      });
       
-      console.log("Headers enviados:", headers);
+      console.log("Headers enviados:", {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      });
       
       // Fazer a requisição para a API
       const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
@@ -49,8 +53,8 @@ const TestAPIConnectionButton = () => {
 
       // Armazenar informações para debug
       setDebugInfo({
-        tokenLength: ADMIN_BYPASS_JWT.length,
-        tokenStart: ADMIN_BYPASS_JWT.substring(0, 5) + "...",
+        tokenLength: token.length,
+        tokenValue: token,
         status: response.status,
         responseData: data
       });
@@ -83,7 +87,7 @@ const TestAPIConnectionButton = () => {
       setDebugInfo({
         error: error instanceof Error ? error.message : "Erro desconhecido",
         tokenLength: ADMIN_BYPASS_JWT.length,
-        tokenStart: ADMIN_BYPASS_JWT.substring(0, 5) + "..."
+        tokenValue: ADMIN_BYPASS_JWT
       });
       toast.error("Erro ao conectar com a API: " + (error instanceof Error ? error.message : "Erro desconhecido"));
       setDebugOpen(true);
@@ -132,7 +136,7 @@ const TestAPIConnectionButton = () => {
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>O token no frontend pode não corresponder ao token esperado no backend</li>
                 <li>A função edge pode precisar ser reimplantada para carregar o secret atualizado</li>
-                <li>Recomendação: Use o comando <code>supabase functions deploy learnworlds-api</code> para reimplantar a função</li>
+                <li>Recomendação: Verifique se o token <code>ADMIN_BYPASS_TOKEN</code> no Supabase corresponde exatamente ao <code>ADMIN_BYPASS_JWT</code> no frontend</li>
               </ul>
             </div>
           </div>
