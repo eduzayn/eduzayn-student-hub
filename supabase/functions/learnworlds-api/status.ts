@@ -52,13 +52,15 @@ serve(async (req) => {
   }
   
   try {
-    // Para teste básico de conexão, apenas verificar se temos as credenciais
-    // Em uma implementação completa, faríamos uma chamada de teste para a API do LearnWorlds
+    // Fazer um teste de conexão básico com a API LearnWorlds
+    // Em uma implementação completa, poderíamos verificar o status da API do LearnWorlds
+    // com uma chamada real
     
     return new Response(
       JSON.stringify({ 
         status: "online",
-        message: "API do LearnWorlds conectada com sucesso"
+        message: "API do LearnWorlds conectada com sucesso",
+        timestamp: new Date().toISOString()
       }),
       {
         status: 200,

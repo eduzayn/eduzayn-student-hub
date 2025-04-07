@@ -213,7 +213,11 @@ const SincronizacaoLearnWorlds: React.FC = () => {
 
       <Separator />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "api" | "dados")} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(v) => setActiveTab(v as "api" | "dados")} 
+        className="w-full"
+      >
         <CardContent className="pt-6">
           <TabsList className="mb-6">
             <TabsTrigger value="api">Status da API</TabsTrigger>

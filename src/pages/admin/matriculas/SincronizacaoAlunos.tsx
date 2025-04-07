@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import MatriculasLayout from "@/components/layout/MatriculasLayout";
 import SincronizacaoLearnWorlds from "@/components/admin/matriculas/SincronizacaoLearnWorlds";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,12 +7,15 @@ import SincronizacaoAlunos from "@/components/admin/matriculas/SincronizacaoAlun
 import SincronizacaoCursos from "@/components/admin/matriculas/SincronizacaoCursos";
 
 const SincronizacaoAlunosPage: React.FC = () => {
+  // Estado para controlar a aba ativa
+  const [activeTab, setActiveTab] = useState("alunos");
+
   return (
     <MatriculasLayout>
       <div className="container mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Sincronização com LearnWorlds</h1>
         
-        <Tabs defaultValue="alunos" className="space-y-6">
+        <Tabs defaultValue="alunos" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="mb-4">
             <TabsTrigger value="alunos">Alunos</TabsTrigger>
             <TabsTrigger value="cursos">Cursos</TabsTrigger>
