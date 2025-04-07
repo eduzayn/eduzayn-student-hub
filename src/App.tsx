@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -53,6 +52,9 @@ import MatriculasCursos from "./pages/admin/matriculas/MatriculasCursos";
 import MatriculasContratos from "./pages/admin/matriculas/MatriculasContratos";
 import MatriculasPagamentos from "./pages/admin/matriculas/MatriculasPagamentos";
 import MatriculasConfiguracoes from "./pages/admin/matriculas/MatriculasConfiguracoes";
+
+// Adicionar a importação da nova página
+import SincronizacaoAlunos from "./pages/admin/matriculas/SincronizacaoAlunos";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +126,7 @@ const App = () => (
               <Route path="polo" element={<ModuloPolo />} />
               <Route path="rh" element={<ModuloRH />} />
               <Route path="aplicacoes" element={<ModuloAplicacoes />} />
+              <Route path="/admin/matriculas/sincronizacao" element={<SincronizacaoAlunos />} />
             </Route>
             
             {/* Rota de Fallback */}

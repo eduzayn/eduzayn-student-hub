@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase, isAuthenticated, isAdminBypassAuthenticated } from "@/integrations/supabase/client";
 
@@ -8,9 +7,17 @@ type AuthContextType = {
   isAdminBypass: boolean;
   userEmail: string | null;
   checkAuth: () => Promise<boolean>;
+  getAuthToken: () => Promise<string | null>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  isLoggedIn: false,
+  isLoading: true,
+  isAdminBypass: false,
+  userEmail: null,
+  checkAuth: async () => false,
+  getAuthToken: async () => null,
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -53,6 +60,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getAuthToken = async (): Promise<string | null> => {
+    if (isAdminBypass) {
+      // Para bypass admin, retornar um token especial
+      return 'admin-bypass-token';
+    }
+
+    // Para autenticação normal, obter o token da sessão do Supabase
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || null;
+  };
+
   useEffect(() => {
     checkAuth();
     
@@ -74,14 +92,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const value = {
+    isLoggedIn, 
+    isLoading, 
+    isAdminBypass, 
+    userEmail,
+    checkAuth,
+    getAuthToken,
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      isLoggedIn, 
-      isLoading, 
-      isAdminBypass, 
-      userEmail,
-      checkAuth
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

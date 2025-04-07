@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,13 +9,29 @@ import {
   ClipboardList,
   Settings,
   Plus,
-  BarChart2
+  BarChart2,
+  Home,
+  List,
+  FilePlus,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 const MatriculasSidebar: React.FC = () => {
+  const menuItems = [
+    { label: "Dashboard", href: "/admin/matriculas", icon: Home },
+    { label: "Lista de Matrículas", href: "/admin/matriculas/lista", icon: List },
+    { label: "Nova Matrícula", href: "/admin/matriculas/nova", icon: FilePlus },
+    { label: "Alunos", href: "/admin/matriculas/alunos", icon: Users },
+    { label: "Cursos", href: "/admin/matriculas/cursos", icon: BookOpen },
+    { label: "Pagamentos", href: "/admin/matriculas/pagamentos", icon: CreditCard },
+    { label: "Contratos", href: "/admin/matriculas/contratos", icon: FileText },
+    { label: "Sincronização", href: "/admin/matriculas/sincronizacao", icon: RefreshCw },
+    { label: "Configurações", href: "/admin/matriculas/configuracoes", icon: Settings },
+  ];
+
   return (
     <div className="hidden md:flex flex-col h-screen w-64 bg-white border-r">
       <div className="p-4">
@@ -37,30 +52,11 @@ const MatriculasSidebar: React.FC = () => {
       
       <ScrollArea className="flex-1">
         <nav className="space-y-1 p-2">
-          <NavItem href="/admin/matriculas" icon={BarChart2}>
-            Dashboard
-          </NavItem>
-          <NavItem href="/admin/matriculas/lista" icon={ClipboardList}>
-            Matrículas
-          </NavItem>
-          <NavItem href="/admin/matriculas/alunos" icon={Users}>
-            Alunos
-          </NavItem>
-          <NavItem href="/admin/matriculas/cursos" icon={BookOpen}>
-            Cursos
-          </NavItem>
-          <NavItem href="/admin/matriculas/contratos" icon={FileText}>
-            Contratos
-          </NavItem>
-          <NavItem href="/admin/matriculas/pagamentos" icon={CreditCard}>
-            Pagamentos
-          </NavItem>
-          
-          <Separator className="my-4" />
-          
-          <NavItem href="/admin/matriculas/configuracoes" icon={Settings}>
-            Configurações
-          </NavItem>
+          {menuItems.map((item) => (
+            <NavItem key={item.href} href={item.href} icon={item.icon}>
+              {item.label}
+            </NavItem>
+          ))}
         </nav>
       </ScrollArea>
       
