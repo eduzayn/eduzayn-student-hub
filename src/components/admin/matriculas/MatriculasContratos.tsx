@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,37 +14,12 @@ import { Search, FileText, Download, Eye, Clock, CheckCircle } from "lucide-reac
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-
-interface Contrato {
-  id: string;
-  aluno: {
-    nome: string;
-    email: string;
-  };
-  matricula: {
-    id: string;
-    curso: string;
-  };
-  titulo: string;
-  codigo: string;
-  data_geracao: string;
-  assinado: boolean;
-  data_aceite?: string;
-  versao: string;
-}
-
-interface Aditivo {
-  id: string;
-  contrato_id: string;
-  aluno: {
-    nome: string;
-  };
-  titulo: string;
-  motivo: string;
-  data_geracao: string;
-  assinado: boolean;
-  versao: string;
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import ModelosContrato from "./contratos/ModelosContrato";
+import ContratoEditor from "./contratos/ContratoEditor";
+import { Contrato, Aditivo } from "@/types/matricula";
 
 const MatriculasContratos: React.FC = () => {
   const [busca, setBusca] = useState("");
@@ -52,8 +27,10 @@ const MatriculasContratos: React.FC = () => {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [aditivos, setAditivos] = useState<Aditivo[]>([]);
   const [tipoTab, setTipoTab] = useState<string>("contratos");
+  const [modalEditor, setModalEditor] = useState(false);
+  const [contratoParaEditar, setContratoParaEditar] = useState<string | undefined>();
   
-  useEffect(() => {
+  React.useEffect(() => {
     fetchData();
   }, []);
   
@@ -66,6 +43,8 @@ const MatriculasContratos: React.FC = () => {
       const contratosSimulados: Contrato[] = [
         {
           id: "c1",
+          aluno_id: "a1",
+          matricula_id: "m1",
           aluno: {
             nome: "João Silva",
             email: "joao@exemplo.com"
@@ -79,10 +58,13 @@ const MatriculasContratos: React.FC = () => {
           data_geracao: "2023-07-15T14:30:00Z",
           assinado: true,
           data_aceite: "2023-07-15T16:45:00Z",
-          versao: "1.0"
+          versao: "1.0",
+          conteudo: "Conteúdo do contrato..."
         },
         {
           id: "c2",
+          aluno_id: "a2",
+          matricula_id: "m2",
           aluno: {
             nome: "Maria Oliveira",
             email: "maria@exemplo.com"
@@ -95,10 +77,13 @@ const MatriculasContratos: React.FC = () => {
           codigo: "CONT-20230002",
           data_geracao: "2023-07-20T10:15:00Z",
           assinado: false,
-          versao: "1.0"
+          versao: "1.0",
+          conteudo: "Conteúdo do contrato..."
         },
         {
           id: "c3",
+          aluno_id: "a3",
+          matricula_id: "m3",
           aluno: {
             nome: "Pedro Santos",
             email: "pedro@exemplo.com"
@@ -112,7 +97,8 @@ const MatriculasContratos: React.FC = () => {
           data_geracao: "2023-08-05T09:45:00Z",
           assinado: true,
           data_aceite: "2023-08-05T14:30:00Z",
-          versao: "1.0"
+          versao: "1.0",
+          conteudo: "Conteúdo do contrato..."
         }
       ];
       
@@ -128,7 +114,8 @@ const MatriculasContratos: React.FC = () => {
           motivo: "Prorrogação do prazo de conclusão do curso",
           data_geracao: "2023-09-10T11:30:00Z",
           assinado: true,
-          versao: "1.1"
+          versao: "1.1",
+          conteudo: "Conteúdo do aditivo..."
         },
         {
           id: "a2",
@@ -140,7 +127,8 @@ const MatriculasContratos: React.FC = () => {
           motivo: "Mudança de modalidade presencial para online",
           data_geracao: "2023-10-05T08:45:00Z",
           assinado: false,
-          versao: "1.1"
+          versao: "1.1",
+          conteudo: "Conteúdo do aditivo..."
         }
       ];
       
@@ -156,6 +144,16 @@ const MatriculasContratos: React.FC = () => {
   
   const handleDownloadContrato = (id: string) => {
     toast.success(`Contrato ${id} baixado com sucesso`);
+  };
+  
+  const handleNovoContrato = () => {
+    setContratoParaEditar(undefined);
+    setModalEditor(true);
+  };
+  
+  const handleEditarModelo = (id: string) => {
+    setContratoParaEditar(id);
+    setModalEditor(true);
   };
   
   const formatarData = (data: string) => {
@@ -199,7 +197,7 @@ const MatriculasContratos: React.FC = () => {
             />
           </div>
           
-          <Button>
+          <Button onClick={handleNovoContrato}>
             <FileText className="h-4 w-4 mr-2" /> Novo Contrato
           </Button>
         </div>
@@ -209,6 +207,7 @@ const MatriculasContratos: React.FC = () => {
         <TabsList>
           <TabsTrigger value="contratos">Contratos</TabsTrigger>
           <TabsTrigger value="aditivos">Aditivos</TabsTrigger>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
         </TabsList>
         
         <TabsContent value="contratos" className="space-y-4">
@@ -367,7 +366,24 @@ const MatriculasContratos: React.FC = () => {
             </div>
           )}
         </TabsContent>
+        
+        <TabsContent value="modelos" className="space-y-4">
+          <ModelosContrato />
+        </TabsContent>
       </Tabs>
+      
+      <Dialog open={modalEditor} onOpenChange={setModalEditor}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle>Editor de Modelo de Contrato</DialogTitle>
+          </DialogHeader>
+          <ContratoEditor 
+            contratoId={contratoParaEditar}
+            onSave={() => setModalEditor(false)}
+            onCancel={() => setModalEditor(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
