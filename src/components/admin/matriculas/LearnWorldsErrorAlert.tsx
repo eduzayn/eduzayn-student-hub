@@ -14,7 +14,7 @@ const LearnWorldsErrorAlert: React.FC<LearnWorldsErrorAlertProps> = ({ errorMess
                           errorMessage.includes("mockados");
   
   return (
-    <Alert variant={isOfflineError ? "warning" : "destructive"} className="mb-4">
+    <Alert variant={isOfflineError ? "default" : "destructive"} className="mb-4">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>
         {isOfflineError ? "Modo Offline Ativo" : "Erro na API LearnWorlds"}
