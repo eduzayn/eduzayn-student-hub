@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +8,13 @@ import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
+import { useNavigate } from "react-router-dom";
 
-const SincronizacaoCursos: React.FC = () => {
+interface SincronizacaoCursosProps {
+  showBackButton?: boolean;
+}
+
+const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = ({ showBackButton = false }) => {
   const [cursos, setCursos] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [busca, setBusca] = useState<string>("");
@@ -18,6 +22,7 @@ const SincronizacaoCursos: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [apiError, setApiError] = useState<string | null>(null);
   const { getCourses, offlineMode } = useLearnWorldsApi();
+  const navigate = useNavigate();
   
   useEffect(() => {
     carregarCursos();
@@ -79,10 +84,22 @@ const SincronizacaoCursos: React.FC = () => {
             <Book className="mr-2 h-5 w-5" />
             Cursos LearnWorlds
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={refreshCursos}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
+          <div className="flex space-x-2">
+            {showBackButton && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/admin/matriculas/cursos")}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={refreshCursos}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {apiError && (

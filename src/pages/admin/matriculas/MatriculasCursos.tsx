@@ -2,38 +2,25 @@
 import React from "react";
 import MatriculasLayout from "@/components/layout/MatriculasLayout";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Search, 
-  RefreshCw,
   ExternalLink, 
-  ChevronLeft, 
-  ChevronRight,
-  FileEdit,
+  ChevronLeft,
   BookOpen
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import CursosList from "@/components/admin/matriculas/cursos/CursosList";
 import CursosDetalhes from "@/components/admin/matriculas/cursos/CursosDetalhes";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { useLearnWorldsApi } from "@/hooks/useLearnWorldsApi";
 
 const MatriculasCursos: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("lista");
   const [selectedCursoId, setSelectedCursoId] = useState<string | null>(null);
   const { loading, offlineMode } = useLearnWorldsApi();
+  const navigate = useNavigate();
 
   const handleCursoSelect = (cursoId: string) => {
     setSelectedCursoId(cursoId);
@@ -99,17 +86,16 @@ const MatriculasCursos: React.FC = () => {
                 </p>
                 <div className="flex items-center space-x-4">
                   <Button onClick={() => {
-                    toast.info("Iniciando sincronização de cursos...");
-                    window.location.href = "/admin/matriculas/sincronizacao";
+                    navigate("/admin/matriculas/sincronizacao/cursos");
                   }}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
+                    <BookOpen className="h-4 w-4 mr-2" />
                     Sincronizar Cursos
                   </Button>
-                  <Button variant="outline" asChild>
-                    <a href="/admin/matriculas/sincronizacao" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Abrir Sincronização
-                    </a>
+                  <Button variant="outline" onClick={() => {
+                    navigate("/admin/matriculas/sincronizacao");
+                  }}>
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Painel de Sincronização
                   </Button>
                 </div>
               </CardContent>

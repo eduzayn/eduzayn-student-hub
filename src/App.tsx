@@ -23,6 +23,7 @@ import MatriculasPagamentos from './pages/admin/matriculas/MatriculasPagamentos'
 import MatriculasConfiguracoes from './pages/admin/matriculas/MatriculasConfiguracoes';
 import SincronizacaoLearnWorlds from './pages/admin/matriculas/SincronizacaoLearnWorlds';
 import SincronizacaoAlunos from './pages/admin/matriculas/SincronizacaoAlunos';
+import SincronizacaoCursosPage from './pages/admin/matriculas/SincronizacaoCursos';
 
 const App = () => {
   return (
@@ -59,6 +60,7 @@ const App = () => {
           <Route path="/admin/matriculas/configuracoes" element={<MatriculasConfiguracoes />} />
           <Route path="/admin/matriculas/sincronizacao" element={<SincronizacaoLearnWorlds />} />
           <Route path="/admin/matriculas/sincronizacao/alunos" element={<SincronizacaoAlunos />} />
+          <Route path="/admin/matriculas/sincronizacao/cursos" element={<SincronizacaoCursosPage />} />
         </Routes>
       </Router>
     </AuthProvider>
