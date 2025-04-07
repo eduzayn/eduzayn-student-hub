@@ -41,9 +41,14 @@ serve(async (req) => {
     });
   }
 
+  // Vamos fazer um log detalhado para debug
+  console.log("Auth header completo:", authHeader);
   const token = authHeader.replace("Bearer ", "").trim();
-  console.log("Token extraído:", token);
+  console.log("Token extraído sem 'Bearer ':", token);
   console.log("Token esperado:", ADMIN_BYPASS_TOKEN);
+  console.log("Comparação direta:", token === ADMIN_BYPASS_TOKEN);
+  console.log("Comprimento token extraído:", token.length);
+  console.log("Comprimento token esperado:", ADMIN_BYPASS_TOKEN.length);
   
   if (token !== ADMIN_BYPASS_TOKEN) {
     console.log("Token inválido recebido");

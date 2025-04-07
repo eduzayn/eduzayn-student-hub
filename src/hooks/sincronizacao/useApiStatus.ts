@@ -12,14 +12,20 @@ export const useApiStatus = () => {
   const checkAPIConnection = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Verificando conexão com API usando token:", ADMIN_BYPASS_JWT);
+      const token = ADMIN_BYPASS_JWT;
+      console.log("Verificando conexão com API usando token:", token);
+      
+      // Adicionar logs para verificar os headers que estão sendo enviados
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      };
+      
+      console.log("Headers enviados:", headers);
       
       const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
-        }
+        headers: headers
       });
 
       console.log("Resposta da API:", response.status);
