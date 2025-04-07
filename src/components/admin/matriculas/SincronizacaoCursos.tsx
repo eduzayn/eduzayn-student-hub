@@ -7,8 +7,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, AlertTriangleIcon, RefreshCw, UserCircle2, Database, UsersIcon, Loader2, InfoIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { CheckIcon, AlertTriangleIcon, RefreshCw, BookOpen, Database, Loader2, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -21,7 +20,7 @@ interface SyncResults {
   logs: string[];
 }
 
-const SincronizacaoAlunos: React.FC = () => {
+const SincronizacaoCursos: React.FC = () => {
   const [apiStatus, setApiStatus] = useState<"online" | "offline" | "checking">("checking");
   const [isSynchronizing, setIsSynchronizing] = useState(false);
   const [syncResults, setSyncResults] = useState<SyncResults | null>(null);
@@ -69,8 +68,8 @@ const SincronizacaoAlunos: React.FC = () => {
     }
   };
 
-  // Função para iniciar a sincronização de alunos
-  const sincronizarAlunos = async (syncAll: boolean = false) => {
+  // Função para iniciar a sincronização de cursos
+  const sincronizarCursos = async (syncAll: boolean = false) => {
     try {
       setIsSynchronizing(true);
       setSyncResults(null);
@@ -89,7 +88,7 @@ const SincronizacaoAlunos: React.FC = () => {
       }
       params.append('pageSize', '20'); // Tamanho da página reduzido para teste
       
-      const url = `/functions/v1/learnworlds-sync?${params.toString()}`;
+      const url = `/functions/v1/learnworlds-courses-sync?${params.toString()}`;
       
       const response = await fetch(url, {
         method: 'GET',
@@ -123,40 +122,13 @@ const SincronizacaoAlunos: React.FC = () => {
     }
   };
 
-  // Função para criar ou atualizar um perfil manualmente
-  const criarPerfilManualmente = async (email: string, nome: string, sobrenome: string, learnworldsId: string) => {
-    try {
-      // Chamar a função RPC create_profile_without_auth no Supabase
-      const { data, error } = await supabase.rpc("create_profile_without_auth", {
-        user_email: email,
-        user_first_name: nome,
-        user_last_name: sobrenome,
-        user_phone: null,
-        user_learnworlds_id: learnworldsId
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Perfil criado/atualizado com sucesso", {
-        description: `ID: ${data}`
-      });
-      
-      return data;
-    } catch (error) {
-      console.error("Erro ao criar perfil:", error);
-      toast.error("Falha ao criar perfil", { 
-        description: error instanceof Error ? error.message : "Erro desconhecido" 
-      });
-    }
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <UsersIcon className="h-5 w-5" />
-            <span>Sincronização de Alunos</span>
+            <BookOpen className="h-5 w-5" />
+            <span>Sincronização de Cursos</span>
           </div>
           <div className="flex items-center gap-2">
             <Badge 
@@ -192,7 +164,7 @@ const SincronizacaoAlunos: React.FC = () => {
           </div>
         </CardTitle>
         <CardDescription>
-          Sincronize dados de alunos entre LearnWorlds e o sistema de matrículas
+          Sincronize dados de cursos entre LearnWorlds e o sistema de matrículas
         </CardDescription>
       </CardHeader>
 
@@ -209,28 +181,28 @@ const SincronizacaoAlunos: React.FC = () => {
           <TabsContent value="sincronizar" className="space-y-4">
             <Alert>
               <InfoIcon className="h-4 w-4" />
-              <AlertTitle>Sincronização de Alunos</AlertTitle>
+              <AlertTitle>Sincronização de Cursos</AlertTitle>
               <AlertDescription>
-                Esta funcionalidade importa dados de alunos da plataforma LearnWorlds para o sistema de matrículas.
-                Você pode sincronizar todos os alunos ou apenas a página atual.
+                Esta funcionalidade importa dados de cursos da plataforma LearnWorlds para o sistema de matrículas.
+                Você pode sincronizar todos os cursos ou apenas a página atual.
               </AlertDescription>
             </Alert>
             
             <div className="flex gap-4 py-4">
               <Button 
-                onClick={() => sincronizarAlunos(false)} 
+                onClick={() => sincronizarCursos(false)} 
                 disabled={isSynchronizing || apiStatus !== "online"}
               >
-                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCircle2 className="mr-2 h-4 w-4" />}
+                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BookOpen className="mr-2 h-4 w-4" />}
                 Sincronizar Página Atual
               </Button>
               
               <Button 
-                onClick={() => sincronizarAlunos(true)} 
+                onClick={() => sincronizarCursos(true)} 
                 variant="secondary" 
                 disabled={isSynchronizing || apiStatus !== "online"}
               >
-                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UsersIcon className="mr-2 h-4 w-4" />}
+                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BookOpen className="mr-2 h-4 w-4" />}
                 Sincronizar Todos
               </Button>
             </div>
@@ -242,7 +214,7 @@ const SincronizacaoAlunos: React.FC = () => {
                   <Card>
                     <CardContent className="pt-6">
                       <div className="text-2xl font-bold">{syncResults.total}</div>
-                      <p className="text-xs text-muted-foreground">Total de alunos</p>
+                      <p className="text-xs text-muted-foreground">Total de cursos</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -301,10 +273,10 @@ const SincronizacaoAlunos: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 <h3 className="font-medium">Como funciona a sincronização?</h3>
-                <p>O processo de sincronização conecta à API da LearnWorlds e importa dados de alunos para nosso sistema.</p>
+                <p>O processo de sincronização conecta à API da LearnWorlds e importa dados de cursos para nosso sistema.</p>
                 
                 <h3 className="font-medium mt-4">Por que sincronizar?</h3>
-                <p>A sincronização permite que alunos cadastrados na plataforma LearnWorlds sejam automaticamente importados para o sistema de matrículas, facilitando a gestão integrada.</p>
+                <p>A sincronização permite que cursos cadastrados na plataforma LearnWorlds sejam automaticamente importados para o sistema de matrículas, facilitando a gestão integrada.</p>
                 
                 <h3 className="font-medium mt-4">Resolução de problemas</h3>
                 <ul className="list-disc pl-5 space-y-1">
@@ -329,4 +301,4 @@ const SincronizacaoAlunos: React.FC = () => {
   );
 };
 
-export default SincronizacaoAlunos;
+export default SincronizacaoCursos;
