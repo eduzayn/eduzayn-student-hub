@@ -1,9 +1,9 @@
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import LearnWorldsErrorAlert from "@/components/admin/matriculas/LearnWorldsErrorAlert";
@@ -14,7 +14,6 @@ interface SincronizacaoAlunosProps {
 }
 
 const SincronizacaoAlunos: React.FC<SincronizacaoAlunosProps> = () => {
-  const navigate = useNavigate();
   const { sincronizarAlunos, loading, error, offlineMode } = useLearnWorldsApi();
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
