@@ -13,13 +13,18 @@ const TestAPIConnectionButton = () => {
     setIsLoading(true);
     try {
       console.log("Testando conexão com token:", ADMIN_BYPASS_JWT);
+      console.log("Comprimento do token:", ADMIN_BYPASS_JWT.length);
+      
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
+      };
+      
+      console.log("Headers enviados:", headers);
       
       const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
-        }
+        headers: headers
       });
       
       console.log("Status da resposta:", response.status);
@@ -31,11 +36,15 @@ const TestAPIConnectionButton = () => {
       if (response.ok) {
         toast.success("Conexão com a API estabelecida com sucesso!");
       } else {
-        toast.error(`Erro de conexão: ${response.status} - ${data.message || "Erro desconhecido"}`);
+        const errorMsg = data.debug 
+          ? `Erro ${response.status}: ${data.message} - ${data.debug}`
+          : `Erro ${response.status}: ${data.message || "Erro desconhecido"}`;
+        
+        toast.error(errorMsg);
       }
     } catch (error) {
       console.error("Erro ao testar conexão:", error);
-      toast.error("Erro ao conectar com a API");
+      toast.error("Erro ao conectar com a API: " + (error instanceof Error ? error.message : "Erro desconhecido"));
     } finally {
       setIsLoading(false);
     }

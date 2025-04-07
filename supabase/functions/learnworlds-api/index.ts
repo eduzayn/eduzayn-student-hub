@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS
@@ -9,8 +8,10 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Token fixo para autenticação admin bypass (deve ser exatamente igual ao ADMIN_BYPASS_JWT no front-end)
-const ADMIN_BYPASS_TOKEN = "byZ4yn-#v0lt-2025!SEC";
+// Obter o token do ambiente (configurado como secret no Supabase)
+// Se não existir, usa o valor hardcoded como fallback
+const ADMIN_BYPASS_TOKEN = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
+console.log("Token configurado no ambiente:", ADMIN_BYPASS_TOKEN ? "Sim (mascarado)" : "Não");
 
 serve(async (req) => {
   const { method } = req;
@@ -45,28 +46,20 @@ serve(async (req) => {
   console.log("Auth header completo:", authHeader);
   const token = authHeader.replace("Bearer ", "").trim();
   console.log("Token extraído sem 'Bearer ':", token);
-  console.log("Token esperado:", ADMIN_BYPASS_TOKEN);
-  console.log("Comparação direta:", token === ADMIN_BYPASS_TOKEN);
   console.log("Comprimento token extraído:", token.length);
   console.log("Comprimento token esperado:", ADMIN_BYPASS_TOKEN.length);
   
-  // Adicionando uma verificação mais permissiva para fins de teste
+  // Comparar tokens - usando uma comparação direta
   if (token !== ADMIN_BYPASS_TOKEN) {
     console.log("Token inválido recebido");
-    
-    // Para fins de depuração, vamos verificar se o token está registrado como secret no Deno.env
-    if (Deno.env.get("ADMIN_BYPASS_TOKEN") === token) {
-      console.log("Token corresponde ao secret ADMIN_BYPASS_TOKEN");
-      // Continua a execução mesmo com token diferente do hardcoded
-    } else {
-      return new Response(JSON.stringify({
-        code: 401,
-        message: "Invalid JWT"
-      }), {
-        headers: corsHeaders,
-        status: 401
-      });
-    }
+    return new Response(JSON.stringify({
+      code: 401,
+      message: "Invalid JWT",
+      debug: "Os tokens não são idênticos. Verifique caracteres especiais e espaços."
+    }), {
+      headers: corsHeaders,
+      status: 401
+    });
   }
 
   console.log("Autenticação bem-sucedida com token de bypass");
