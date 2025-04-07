@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +24,6 @@ const SincronizacaoLearnWorlds: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"api" | "dados">("api");
   const { getAccessToken } = useAuth();
 
-  // Executar verificação automática ao montar o componente
   useEffect(() => {
     checkApiStatus();
   }, []);
@@ -41,6 +39,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
+      console.log("Iniciando verificação de status da API LearnWorlds");
+      
       const response = await fetch("/functions/v1/learnworlds-api/status", {
         method: "GET",
         headers: {
@@ -49,26 +49,35 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         }
       });
 
-      // Verificar se a resposta é realmente JSON
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        setApiResponse(JSON.stringify(data, null, 2));
+      const contentType = response.headers.get("content-type") || "";
+      
+      try {
+        const rawText = await response.text();
+        console.log("Resposta bruta recebida:", rawText.substring(0, 200));
         
-        if (response.ok && data.status === "online") {
-          setApiStatus("success");
-          toast.success("API LearnWorlds está online e funcionando corretamente");
-        } else {
+        let data;
+        try {
+          data = JSON.parse(rawText);
+          setApiResponse(JSON.stringify(data, null, 2));
+          
+          if (response.ok && data.status === "online") {
+            setApiStatus("success");
+            toast.success("API LearnWorlds está online e funcionando corretamente");
+          } else {
+            setApiStatus("error");
+            toast.error(`API LearnWorlds não está configurada corretamente: ${data.error || 'Erro desconhecido'}`);
+          }
+        } catch (jsonError) {
+          console.error("Falha ao interpretar resposta como JSON:", jsonError);
+          setApiResponse(`Resposta não é no formato JSON esperado. Verifique o console para mais detalhes.`);
           setApiStatus("error");
-          toast.error("API LearnWorlds não está configurada corretamente");
+          toast.error("Resposta inválida da API LearnWorlds");
         }
-      } else {
-        // Se não for JSON, obter o texto bruto
-        const textResponse = await response.text();
-        console.error("Resposta não é JSON: ", textResponse);
-        setApiResponse("Resposta não é no formato JSON esperado. Verifique o console para mais detalhes.");
+      } catch (textError) {
+        console.error("Erro ao ler resposta como texto:", textError);
+        setApiResponse("Erro ao processar resposta da API");
         setApiStatus("error");
-        toast.error("Resposta inválida da API");
+        toast.error("Erro ao processar resposta da API LearnWorlds");
       }
     } catch (error) {
       console.error("Erro ao testar API:", error);
@@ -90,7 +99,6 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
-      // Verificar API status primeiro
       const apiStatusResponse = await fetch("/functions/v1/learnworlds-api/status", {
         method: "GET",
         headers: {
@@ -104,7 +112,6 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("API LearnWorlds não está online. Verifique a configuração primeiro.");
       }
       
-      // Buscar contagem de alunos do LearnWorlds
       const lwStudentsResponse = await fetch("/functions/v1/learnworlds-api/users?limit=1", {
         method: "GET",
         headers: {
@@ -116,7 +123,6 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       const lwStudentsData = await lwStudentsResponse.json();
       const lwStudentsCount = lwStudentsData.total || 0;
       
-      // Buscar contagem de cursos do LearnWorlds
       const lwCoursesResponse = await fetch("/functions/v1/learnworlds-api/courses?limit=1", {
         method: "GET",
         headers: {
@@ -128,19 +134,16 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       const lwCoursesData = await lwCoursesResponse.json();
       const lwCoursesCount = lwCoursesData.total || 0;
       
-      // Buscar contagem de alunos do Supabase com learnworlds_id não nulo
       const { count: sbStudentsCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .not('learnworlds_id', 'is', null);
       
-      // Buscar contagem de cursos do Supabase com learning_worlds_id não nulo
       const { count: sbCoursesCount } = await supabase
         .from('cursos')
         .select('*', { count: 'exact', head: true })
         .not('learning_worlds_id', 'is', null);
       
-      // Calcular correspondência
       const studentsMatching = Math.min(lwStudentsCount, sbStudentsCount || 0);
       const coursesMatching = Math.min(lwCoursesCount, sbCoursesCount || 0);
       
@@ -179,20 +182,17 @@ const SincronizacaoLearnWorlds: React.FC = () => {
     }
   };
 
-  // Função helper para determinar o variant correto do Alert
   const getAlertVariant = () => {
     if (apiStatus === "error") return "destructive";
     if (apiStatus === "success") return "default";
     return "default"; // Para idle e testing, usar default
   };
 
-  // Função para calcular a porcentagem de correspondência
   const calculateMatchPercentage = (matching: number, total: number) => {
     if (total === 0) return 0;
     return Math.round((matching / total) * 100);
   };
 
-  // Função para obter a cor baseada na porcentagem de correspondência
   const getMatchColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600 font-bold";
     if (percentage >= 70) return "text-yellow-600 font-bold";
@@ -388,21 +388,21 @@ const SincronizacaoLearnWorlds: React.FC = () => {
               <h3 className="font-medium mb-2">Credenciais da API LearnWorlds</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-semibold mb-1">CLIENT ID</p>
+                  <p className="text-sm font-semibold mb-1">TOKEN DE ACESSO</p>
                   <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    66abb5fdf8655b4b800c7278
+                    YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold mb-1">CLIENT SECRET</p>
+                  <p className="text-sm font-semibold mb-1">ESCOLA</p>
                   <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    5lT9XbVrXwv9ulYNufC3OdU4ewon4wUocMENvWEa3pBc8hIOix
+                    grupozayneducacional
                   </p>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-sm font-semibold mb-1">API URL</p>
                   <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    https://grupozayneducacional.com.br/admin/api/
+                    https://api.learnworlds.com
                   </p>
                 </div>
               </div>
