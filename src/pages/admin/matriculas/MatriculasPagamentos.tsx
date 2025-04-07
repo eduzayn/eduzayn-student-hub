@@ -44,6 +44,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Pagamento } from "@/types/matricula";
+
+// Definindo tipo para os pagamentos com informações relacionadas
+interface PagamentoCompleto extends Pagamento {
+  matriculas: {
+    id: string;
+    alunos?: {
+      nome?: string;
+      email?: string;
+    };
+    cursos?: {
+      titulo?: string;
+    };
+  };
+}
 
 const MatriculasPagamentos: React.FC = () => {
   const [filtro, setFiltro] = useState("todos");
@@ -74,9 +89,11 @@ const MatriculasPagamentos: React.FC = () => {
       
       return data || [];
     },
-    onError: (error) => {
-      toast.error("Erro ao carregar pagamentos: " + error);
-    },
+    meta: {
+      onError: (error: Error) => {
+        toast.error("Erro ao carregar pagamentos: " + error.message);
+      }
+    }
   });
   
   // Estado para a aba ativa
@@ -102,7 +119,7 @@ const MatriculasPagamentos: React.FC = () => {
   };
   
   // Filtrar pagamentos com base na busca
-  const pagamentosFiltrados = pagamentos?.filter((pagamento) => {
+  const pagamentosFiltrados = pagamentos?.filter((pagamento: PagamentoCompleto) => {
     if (!busca) return true;
     
     const termoLower = busca.toLowerCase();
@@ -147,8 +164,8 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatarMoeda(pagamentos?.filter(p => p.status === 'pago')
-                      .reduce((acc, p) => acc + Number(p.valor), 0) || 0)}
+                    {formatarMoeda(pagamentos?.filter((p: PagamentoCompleto) => p.status === 'pago')
+                      .reduce((acc: number, p: PagamentoCompleto) => acc + Number(p.valor), 0) || 0)}
                   </div>
                 </CardContent>
               </Card>
@@ -162,7 +179,7 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {pagamentos?.filter(p => p.status === 'pendente').length || 0}
+                    {pagamentos?.filter((p: PagamentoCompleto) => p.status === 'pendente').length || 0}
                   </div>
                 </CardContent>
               </Card>
@@ -176,7 +193,7 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {pagamentos?.filter(p => p.status === 'atrasado').length || 0}
+                    {pagamentos?.filter((p: PagamentoCompleto) => p.status === 'atrasado').length || 0}
                   </div>
                 </CardContent>
               </Card>
@@ -244,7 +261,7 @@ const MatriculasPagamentos: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pagamentosFiltrados?.map((pagamento) => (
+                      {pagamentosFiltrados?.map((pagamento: PagamentoCompleto) => (
                         <TableRow key={pagamento.id}>
                           <TableCell className="font-medium">
                             {pagamento.matriculas?.alunos?.nome || "N/A"}
