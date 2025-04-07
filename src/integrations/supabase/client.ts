@@ -16,12 +16,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     detectSessionInUrl: true,
     flowType: 'pkce'
-  },
-  global: {
-    headers: {
-      'x-application-name': 'eduzayn'
-    }
   }
+  // Removendo o cabeçalho global x-application-name para evitar problemas de CORS
 });
 
 // Verificar se o usuário com bypass está logado
