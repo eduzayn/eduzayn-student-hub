@@ -9,13 +9,16 @@ import Admin from './pages/Admin';
 import AlunoLayout from './components/layout/AlunoLayout';
 import EsqueciSenha from "./pages/EsqueciSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
+import MainLayout from './components/layout/MainLayout';
 
 const App = () => {
   return (
     <Router>
       <Toaster position="top-center" />
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Index />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha" element={<RedefinirSenha />} />

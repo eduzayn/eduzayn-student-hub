@@ -8,17 +8,18 @@ import BreadcrumbNav from "../navigation/Breadcrumbs";
 const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   
-  // Verifica se estamos em uma página de detalhes de curso para evitar duplicação
+  // Removendo a lógica que esconde o cabeçalho na página inicial
+  // A página inicial deve sempre mostrar o cabeçalho
   const isDetailPage = location.pathname.includes('/curso/');
   
   return (
     <div className="flex flex-col min-h-screen">
-      {!isDetailPage && <NavBar />}
+      <NavBar />
       {!isDetailPage && <BreadcrumbNav />}
       <main className="flex-grow">
         {children || <Outlet />}
       </main>
-      {!isDetailPage && <Footer />}
+      <Footer />
     </div>
   );
 };
