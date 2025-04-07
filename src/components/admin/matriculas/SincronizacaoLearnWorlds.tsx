@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Settings, RefreshCw, Check, X, AlarmClock, Database, Compare } from "lucide-react";
+import { AlertCircle, Settings, RefreshCw, Check, X, AlarmClock, Database, BarChart2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -302,7 +302,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Compare className="mr-2 h-4 w-4" />
+                  <BarChart2 className="mr-2 h-4 w-4" />
                   Verificar Sincronização de Dados
                 </>
               )}

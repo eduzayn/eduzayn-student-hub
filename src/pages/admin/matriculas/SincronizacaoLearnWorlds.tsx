@@ -7,7 +7,7 @@ const SincronizacaoLearnWorldsPage: React.FC = () => {
   return (
     <MatriculasLayout>
       <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Teste da API LearnWorlds</h1>
+        <h1 className="text-2xl font-bold mb-6">Sincronização com LearnWorlds</h1>
         <SincronizacaoLearnWorlds />
       </div>
     </MatriculasLayout>
