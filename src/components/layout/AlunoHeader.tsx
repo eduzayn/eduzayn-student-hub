@@ -43,7 +43,7 @@ const AlunoHeader: React.FC = () => {
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
       <SidebarTrigger />
       
-      <Link to="/dashboard" className="hidden md:block">
+      <Link to="/aluno" className="hidden md:block">
         <div className="flex items-center space-x-2">
           <div className="bg-primary rounded-lg p-1">
             <span className="h-5 w-5 text-white font-bold">EA</span>
@@ -86,7 +86,7 @@ const AlunoHeader: React.FC = () => {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/dashboard/comunicacao" className="w-full text-center cursor-pointer">
+              <Link to="/aluno/comunicacao" className="w-full text-center cursor-pointer">
                 Ver todas as mensagens
               </Link>
             </DropdownMenuItem>
@@ -115,7 +115,7 @@ const AlunoHeader: React.FC = () => {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/dashboard/notificacoes" className="w-full text-center cursor-pointer">
+              <Link to="/aluno/notificacoes" className="w-full text-center cursor-pointer">
                 Ver todas as notificações
               </Link>
             </DropdownMenuItem>
@@ -134,10 +134,10 @@ const AlunoHeader: React.FC = () => {
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/dashboard/perfil">Meu Perfil</Link>
+              <Link to="/aluno/perfil">Meu Perfil</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/dashboard/configuracoes">Configurações</Link>
+              <Link to="/aluno/configuracoes">Configurações</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 

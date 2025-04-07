@@ -186,7 +186,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
       // Forçar refresh da sessão antes de redirecionar
       supabase.auth.refreshSession().then(() => {
         // Redirecionar com base no tipo de email
-        const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
+        const redirectPath = isAdminEmail ? "/admin" : "/aluno";
         console.log(`Redirecionando para ${redirectPath} após login normal`);
         navigate(redirectPath, { replace: true });
       });

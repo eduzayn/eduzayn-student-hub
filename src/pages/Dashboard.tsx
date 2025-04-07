@@ -1,102 +1,44 @@
 
 import React, { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { supabase, isAuthenticated } from "@/integrations/supabase/client";
-import { ADMIN_EMAILS } from "@/components/auth/LoginForm";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { isAdminUser, checkAuth } = useAuth();
   
-  // Verificar autenticação ao carregar o componente e redirecionar para o portal correto
   useEffect(() => {
-    const checkAuth = async () => {
-      // Verificar bypass de admin
-      const isAdminBypass = localStorage.getItem('adminBypassAuthenticated') === 'true';
+    const verificarAuth = async () => {
+      const autenticado = await checkAuth();
       
-      if (isAdminBypass) {
-        // Redirecionar sempre para o portal administrativo quando for bypass
-        console.log("Admin bypass detectado, redirecionando para o portal administrativo");
-        navigate("/admin");
-        return;
-      }
-      
-      // Verificar autenticação normal para usuários comuns
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      if (autenticado) {
+        // Verificar se é usuário admin ou normal
+        if (isAdminUser) {
+          console.log("Redirecionando usuário admin para o portal administrativo");
+          navigate("/admin", { replace: true });
+        } else {
+          console.log("Redirecionando usuário regular para o portal do aluno");
+          navigate("/aluno", { replace: true });
+        }
+      } else {
         console.log("Usuário não autenticado, redirecionando para login");
-        navigate("/login");
-        return;
-      }
-      
-      // Verificar se o email do usuário está na lista de emails administrativos
-      const userEmail = data.session?.user?.email;
-      if (userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
-        console.log("Email administrativo detectado, redirecionando para o portal administrativo");
-        navigate("/admin");
-        return;
+        navigate("/login", { replace: true });
       }
     };
     
-    checkAuth();
-  }, [navigate]);
+    verificarAuth();
+  }, [navigate, isAdminUser, checkAuth]);
 
-  const adminEmail = localStorage.getItem('adminBypassEmail');
-  const isAdminBypass = localStorage.getItem('adminBypassAuthenticated') === 'true';
-  
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container py-12">
-        <h1 className="text-3xl font-bold mb-6">Portal do Aluno</h1>
-        
-        {isAdminBypass && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-blue-800 text-lg">Modo Administrador</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-blue-700">
-                Você está conectado como administrador ({adminEmail}) com acesso bypass.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Meus Cursos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Acesse seus cursos e continue seus estudos.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Gerencie seus documentos acadêmicos.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Financeiro</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Verifique mensalidades e pagamentos.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-[300px] p-6">
+        <CardContent className="flex flex-col items-center py-8">
+          <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+          <p className="text-center text-muted-foreground">Verificando autenticação...</p>
+        </CardContent>
+      </Card>
     </div>
   );
 };
