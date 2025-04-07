@@ -50,15 +50,23 @@ serve(async (req) => {
   console.log("Comprimento token extraído:", token.length);
   console.log("Comprimento token esperado:", ADMIN_BYPASS_TOKEN.length);
   
+  // Adicionando uma verificação mais permissiva para fins de teste
   if (token !== ADMIN_BYPASS_TOKEN) {
     console.log("Token inválido recebido");
-    return new Response(JSON.stringify({
-      code: 401,
-      message: "Invalid JWT"
-    }), {
-      headers: corsHeaders,
-      status: 401
-    });
+    
+    // Para fins de depuração, vamos verificar se o token está registrado como secret no Deno.env
+    if (Deno.env.get("ADMIN_BYPASS_TOKEN") === token) {
+      console.log("Token corresponde ao secret ADMIN_BYPASS_TOKEN");
+      // Continua a execução mesmo com token diferente do hardcoded
+    } else {
+      return new Response(JSON.stringify({
+        code: 401,
+        message: "Invalid JWT"
+      }), {
+        headers: corsHeaders,
+        status: 401
+      });
+    }
   }
 
   console.log("Autenticação bem-sucedida com token de bypass");
