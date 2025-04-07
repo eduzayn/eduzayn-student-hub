@@ -17,7 +17,8 @@ const MatriculasBreadcrumb: React.FC = () => {
     'cursos': 'Cursos',
     'contratos': 'Contratos',
     'pagamentos': 'Pagamentos',
-    'configuracoes': 'Configurações'
+    'configuracoes': 'Configurações',
+    'sincronizacao': 'Sincronização'
   };
   
   return (
