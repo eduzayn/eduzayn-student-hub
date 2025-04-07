@@ -129,7 +129,7 @@ const SincronizacaoAlunos: React.FC = () => {
                   </div>
 
                   {resultado.failed > 0 && (
-                    <Alert variant="warning" className="mt-4">
+                    <Alert variant="destructive" className="mt-4">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>Atenção</AlertTitle>
                       <AlertDescription>

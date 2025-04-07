@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CursosList from "@/components/admin/matriculas/cursos/CursosList";
 import CursosDetalhes from "@/components/admin/matriculas/cursos/CursosDetalhes";
 import { useNavigate } from "react-router-dom";
-import { useLearnWorldsApi } from "@/hooks/useLearnWorldsApi";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 
 const MatriculasCursos: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("lista");
