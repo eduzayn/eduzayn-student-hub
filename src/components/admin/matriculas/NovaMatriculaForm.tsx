@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -170,11 +171,11 @@ const NovaMatriculaForm: React.FC = () => {
   
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
-      {/* Banner de modo offline */}
+      {/* Banner de modo offline - AQUI ESTÁ A CORREÇÃO */}
       {offlineMode && (
-        <Alert variant="warning" className="mb-6">
-          <WifiOff className="h-4 w-4" />
-          <AlertDescription>
+        <Alert variant="default" className="mb-6 border-yellow-300 bg-yellow-50">
+          <WifiOff className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
             <span className="font-medium">Modo offline ativado.</span> A matrícula será criada localmente e sincronizada com o LearnWorlds quando a conexão for restabelecida.
           </AlertDescription>
         </Alert>
