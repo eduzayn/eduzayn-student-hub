@@ -1,6 +1,6 @@
 
-import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import React, { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { BookOpen, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "@/integrations/supabase/client";
 
-const AdminLayout: React.FC = () => {
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   
   const handleLogout = async () => {
@@ -74,7 +78,7 @@ const AdminLayout: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-grow bg-muted/30">
-        <Outlet />
+        {children}
       </main>
 
       {/* Footer */}

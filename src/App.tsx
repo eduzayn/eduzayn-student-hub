@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -19,11 +20,10 @@ const App = () => {
         <Route path="/esqueci-senha" element={<EsqueciSenha />} />
         <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         
-        <Route path="/dashboard" element={
-          <AlunoLayout>
-            <Dashboard />
-          </AlunoLayout>
-        } />
+        <Route path="/dashboard" element={<AlunoLayout />}>
+          <Route index element={<Dashboard />} />
+        </Route>
+        
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
