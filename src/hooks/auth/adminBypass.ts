@@ -17,7 +17,7 @@ export const isAdminBypassAuthenticated = () => {
 // Obter o email do administrador bypass
 export const getAdminBypassEmail = () => {
   try {
-    return localStorage.getItem("adminBypassEmail");
+    return localStorage.getItem("adminBypassEmail") || "ana.diretoria@eduzayn.com.br";
   } catch (e) {
     console.error("[adminBypass] Erro ao obter email de bypass admin:", e);
     return null;

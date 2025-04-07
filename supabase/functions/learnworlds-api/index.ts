@@ -9,7 +9,7 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Token fixo para autenticação admin bypass (deve ser igual ao ADMIN_BYPASS_JWT no front-end)
+// Token fixo para autenticação admin bypass (deve ser exatamente igual ao ADMIN_BYPASS_JWT no front-end)
 const ADMIN_BYPASS_TOKEN = "byZ4yn-#v0lt-2025!SEC";
 
 serve(async (req) => {
