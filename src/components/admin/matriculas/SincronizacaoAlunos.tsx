@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, RefreshCw, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Search, RefreshCw, ChevronLeft, ChevronRight, Users, Download, Loader2 } from "lucide-react";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
+import { supabase } from "@/integrations/supabase/client";
 
 const SincronizacaoAlunos: React.FC = () => {
   const [alunos, setAlunos] = useState<any[]>([]);
@@ -17,6 +18,7 @@ const SincronizacaoAlunos: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [sincronizando, setSincronizando] = useState<boolean>(false);
   const { getUsers, offlineMode } = useLearnWorldsApi();
   
   useEffect(() => {
@@ -70,6 +72,85 @@ const SincronizacaoAlunos: React.FC = () => {
     carregarAlunos();
     toast.success("Lista de alunos atualizada");
   };
+
+  const sincronizarAlunos = async () => {
+    setSincronizando(true);
+    try {
+      // Primeiro obtém os alunos atuais
+      const resultado = await getUsers(1, 100); // Pegamos um número maior para sincronizar mais alunos
+      
+      if (!resultado || !resultado.data) {
+        throw new Error("Falha ao obter alunos para sincronização");
+      }
+      
+      let atualizados = 0;
+      let criados = 0;
+      
+      // Para cada aluno da LearnWorlds
+      for (const aluno of resultado.data) {
+        // Verificar se já existe no Supabase
+        const { data: existingUser, error: queryError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', aluno.email)
+          .maybeSingle();
+        
+        if (queryError) {
+          console.error(`Erro ao buscar aluno ${aluno.email}:`, queryError);
+          continue;
+        }
+        
+        // Se já existe, atualizar
+        if (existingUser) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              first_name: aluno.firstName,
+              last_name: aluno.lastName,
+              phone: aluno.phoneNumber || '',
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', aluno.email);
+          
+          if (updateError) {
+            console.error(`Erro ao atualizar aluno ${aluno.email}:`, updateError);
+          } else {
+            atualizados++;
+          }
+        } else {
+          // Se não existe, inserir novo registro
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: crypto.randomUUID(), // Gerar UUID
+              first_name: aluno.firstName,
+              last_name: aluno.lastName,
+              email: aluno.email,
+              phone: aluno.phoneNumber || '',
+              role: 'student',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error(`Erro ao inserir aluno ${aluno.email}:`, insertError);
+          } else {
+            criados++;
+          }
+        }
+      }
+      
+      toast.success(`Sincronização concluída: ${criados} alunos importados, ${atualizados} atualizados.`);
+      // Recarregar a lista após sincronização
+      carregarAlunos();
+    } catch (error) {
+      console.error("Erro na sincronização:", error);
+      toast.error("Erro ao sincronizar alunos. Verifique o console para detalhes.");
+      setApiError(error instanceof Error ? error.message : "Erro na sincronização");
+    } finally {
+      setSincronizando(false);
+    }
+  };
   
   return (
     <div>
@@ -79,10 +160,25 @@ const SincronizacaoAlunos: React.FC = () => {
             <Users className="mr-2 h-5 w-5" />
             Alunos LearnWorlds
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={refreshAlunos}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={refreshAlunos} disabled={loading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
+            <Button variant="default" size="sm" onClick={sincronizarAlunos} disabled={sincronizando || loading}>
+              {sincronizando ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sincronizando...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Sincronizar Todos
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {apiError && (
@@ -183,7 +279,7 @@ const SincronizacaoAlunos: React.FC = () => {
           )}
           
           <div className="mt-6 text-sm text-muted-foreground bg-muted p-3 rounded-md">
-            <p>Estes alunos estão sincronizados com a plataforma LearnWorlds. Qualquer alteração feita na plataforma será refletida aqui após a sincronização.</p>
+            <p>Estes alunos estão sincronizados com a plataforma LearnWorlds. Clique em "Sincronizar Todos" para importá-los para o banco de dados.</p>
             <p className="mt-1">Total de alunos encontrados: {alunos.length}</p>
           </div>
         </CardContent>

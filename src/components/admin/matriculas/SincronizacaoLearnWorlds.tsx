@@ -1,430 +1,481 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Settings, RefreshCw, Check, X, AlarmClock, Database, BarChart2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle, AlertCircle, Loader2, RefreshCw, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 import { ADMIN_BYPASS_JWT } from "@/hooks/auth/adminBypass";
+import { supabase } from "@/integrations/supabase/client";
 
-const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
+interface APIStatusProps {
+  isConnected: boolean;
+  lastChecked: string | null;
+  isLoading: boolean;
+  responseData: any;
+  onRefresh: () => void;
+}
+
+const APIStatus: React.FC<APIStatusProps> = ({ 
+  isConnected, 
+  lastChecked, 
+  isLoading, 
+  responseData,
+  onRefresh 
+}) => {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Status da API</h3>
+        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
+          {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          Verificar Conexão
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="flex items-center space-x-2 text-muted-foreground">
+          <Loader2 className="animate-spin h-4 w-4" />
+          <p>Verificando conexão com a API...</p>
+        </div>
+      ) : (
+        <Alert variant={isConnected ? "default" : "destructive"}>
+          <div className="flex items-center">
+            {isConnected ? (
+              <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+            ) : (
+              <AlertCircle className="h-4 w-4 mr-2" />
+            )}
+            <AlertTitle>
+              {isConnected ? "API Conectada" : "Falha na conexão com a API LearnWorlds"}
+            </AlertTitle>
+          </div>
+          <AlertDescription className="pt-2">
+            {isConnected 
+              ? "A conexão com a API LearnWorlds está funcionando corretamente."
+              : "Não foi possível estabelecer conexão com a API LearnWorlds. Verifique as credenciais ou tente novamente mais tarde."}
+            {lastChecked && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Última verificação: {lastChecked}
+              </p>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {responseData && (
+        <div className="bg-slate-50 p-4 rounded-md border mt-4">
+          <h4 className="text-sm font-medium mb-2">Resposta da API:</h4>
+          <pre className="text-xs bg-slate-100 p-3 rounded overflow-auto max-h-48">
+            {JSON.stringify(responseData, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface SincronizacaoCardProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  count?: number;
+  lastSync?: string;
+  onSync: () => void;
+  isSyncing: boolean;
+  icon: React.ReactNode;
+}
+
+const SincronizacaoCard: React.FC<SincronizacaoCardProps> = ({
+  title,
+  description,
+  buttonText,
+  count,
+  lastSync,
+  onSync,
+  isSyncing,
+  icon,
+}) => {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg flex items-center">
+            {icon}
+            <span className="ml-2">{title}</span>
+          </CardTitle>
+          {count !== undefined && (
+            <Badge variant="secondary" className="ml-2">
+              {count} registros
+            </Badge>
+          )}
+        </div>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col space-y-2">
+          <Button onClick={onSync} disabled={isSyncing}>
+            {isSyncing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sincronizando...
+              </>
+            ) : (
+              <>
+                {buttonText}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+          {lastSync && (
+            <p className="text-xs text-muted-foreground">
+              Última sincronização: {lastSync}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const SincronizacaoLearnWorlds: React.FC = () => {
-  const [isTestingApi, setIsTestingApi] = useState(false);
-  const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error" | "testing">("idle");
-  const [apiResponse, setApiResponse] = useState<string>("");
-  const [lastTestedAt, setLastTestedAt] = useState<string | null>(null);
-  const [isComparingData, setIsComparingData] = useState(false);
-  const [comparisonResult, setComparisonResult] = useState<{
-    cursos: { learnworlds: number, supabase: number, matching: number },
-    alunos: { learnworlds: number, supabase: number, matching: number },
-  } | null>(null);
-  const [activeTab, setActiveTab] = useState<"api" | "dados">("api");
-  const { isAdminBypass } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [lastChecked, setLastChecked] = useState<string | null>(null);
+  const [responseData, setResponseData] = useState<any>(null);
+  
+  const [isSyncingAlunos, setIsSyncingAlunos] = useState<boolean>(false);
+  const [isSyncingCursos, setIsSyncingCursos] = useState<boolean>(false);
+  const [countAlunos, setCountAlunos] = useState<number | undefined>(undefined);
+  const [countCursos, setCountCursos] = useState<number | undefined>(undefined);
+  const [lastSyncAlunos, setLastSyncAlunos] = useState<string | null>(null);
+  const [lastSyncCursos, setLastSyncCursos] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("status");
 
   useEffect(() => {
-    checkApiStatus();
+    checkAPIConnection();
+    loadCounts();
   }, []);
 
-  const checkApiStatus = async () => {
-    setIsTestingApi(true);
-    setApiStatus("testing");
-    setApiResponse("");
-    
+  const loadCounts = async () => {
     try {
-      const token = ADMIN_BYPASS_JWT;
-      console.log("Usando token de autenticação para API LearnWorlds");
-      
-      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api`;
-      console.log("Chamando função em:", functionUrl);
-      
-      const response = await fetch(functionUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      console.log("Resposta status code:", response.status);
-      const contentType = response.headers.get("content-type") || "";
-      console.log("Content-Type da resposta:", contentType);
-      
-      try {
-        const rawText = await response.text();
-        console.log("Resposta bruta recebida:", rawText.substring(0, 200));
-        
-        let data;
-        try {
-          data = JSON.parse(rawText);
-          setApiResponse(JSON.stringify(data, null, 2));
-          
-          if (response.ok && data.message === "LearnWorlds API online") {
-            setApiStatus("success");
-            toast.success("API LearnWorlds está online e funcionando corretamente");
-          } else {
-            setApiStatus("error");
-            toast.error(`API LearnWorlds não está configurada corretamente: ${data.error || 'Erro desconhecido'}`);
-          }
-        } catch (jsonError) {
-          console.error("Falha ao interpretar resposta como JSON:", jsonError);
-          setApiResponse(`Resposta não é no formato JSON esperado: ${rawText.substring(0, 500)}`);
-          setApiStatus("error");
-          toast.error("Resposta inválida da API LearnWorlds");
-        }
-      } catch (textError) {
-        console.error("Erro ao ler resposta como texto:", textError);
-        setApiResponse("Erro ao processar resposta da API");
-        setApiStatus("error");
-        toast.error("Erro ao processar resposta da API LearnWorlds");
-      }
-    } catch (error) {
-      console.error("Erro ao testar API:", error);
-      setApiResponse(error instanceof Error ? error.message : "Erro desconhecido");
-      setApiStatus("error");
-      toast.error("Erro ao conectar com a API LearnWorlds");
-    } finally {
-      setIsTestingApi(false);
-      setLastTestedAt(new Date().toLocaleTimeString());
-    }
-  };
-
-  const compareLearnWorldsData = async () => {
-    setIsComparingData(true);
-    
-    try {
-      const token = ADMIN_BYPASS_JWT;
-      
-      const apiStatusUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api`;
-      console.log("Verificando status da API em:", apiStatusUrl);
-      
-      const apiStatusResponse = await fetch(apiStatusUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      
-      if (!apiStatusResponse.ok) {
-        throw new Error("API LearnWorlds não está online. Verifique a configuração primeiro.");
-      }
-      
-      const lwStudentsUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/users`;
-      console.log("Buscando alunos em:", lwStudentsUrl);
-      
-      const lwStudentsResponse = await fetch(lwStudentsUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      
-      let lwStudentsCount = 0;
-      if (lwStudentsResponse.ok) {
-        const lwStudentsData = await lwStudentsResponse.json();
-        lwStudentsCount = lwStudentsData.users?.length || 0;
-      }
-      
-      const { count: sbStudentsCount } = await supabase
+      // Carregar contagem de alunos
+      const { count: alunosCount, error: alunosError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .not('learnworlds_id', 'is', null);
+        .select('*', { count: 'exact', head: true });
       
-      const lwCoursesCount = 5;
+      if (!alunosError) {
+        setCountAlunos(alunosCount);
+      }
       
-      const { count: sbCoursesCount } = await supabase
+      // Carregar contagem de cursos
+      const { count: cursosCount, error: cursosError } = await supabase
         .from('cursos')
-        .select('*', { count: 'exact', head: true })
-        .not('learning_worlds_id', 'is', null);
+        .select('*', { count: 'exact', head: true });
       
-      const studentsMatching = Math.min(lwStudentsCount, sbStudentsCount || 0);
-      const coursesMatching = Math.min(lwCoursesCount, sbCoursesCount || 0);
-      
-      setComparisonResult({
-        alunos: { 
-          learnworlds: lwStudentsCount, 
-          supabase: sbStudentsCount || 0, 
-          matching: studentsMatching
-        },
-        cursos: { 
-          learnworlds: lwCoursesCount, 
-          supabase: sbCoursesCount || 0, 
-          matching: coursesMatching
+      if (!cursosError) {
+        setCountCursos(cursosCount);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar contagens:", error);
+    }
+  };
+
+  const checkAPIConnection = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
         }
       });
-      
-      toast.success("Comparação de dados realizada com sucesso");
+
+      const data = await response.json();
+      setResponseData(data);
+      setIsConnected(response.ok);
+      setLastChecked(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error("Erro ao comparar dados:", error);
-      toast.error("Erro ao comparar dados com LearnWorlds");
+      console.error("Erro ao verificar conexão com API:", error);
+      setIsConnected(false);
+      setResponseData({ error: "Falha na conexão" });
     } finally {
-      setIsComparingData(false);
+      setIsLoading(false);
     }
   };
 
-  const getStatusIcon = () => {
-    switch (apiStatus) {
-      case "success":
-        return <Check className="h-5 w-5 text-green-500" />;
-      case "error":
-        return <X className="h-5 w-5 text-red-500" />;
-      case "testing":
-        return <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />;
-      default:
-        return <AlarmClock className="h-5 w-5 text-gray-500" />;
+  const sincronizarAlunos = async () => {
+    setIsSyncingAlunos(true);
+    try {
+      const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api/users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao sincronizar alunos: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Inserir ou atualizar alunos na tabela profiles
+      for (const aluno of data.data) {
+        // Verificar se o aluno já existe
+        const { data: existingUser, error: queryError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', aluno.email)
+          .maybeSingle();
+        
+        if (queryError) {
+          console.error(`Erro ao buscar aluno ${aluno.email}:`, queryError);
+          continue;
+        }
+        
+        // Se já existe, atualizar
+        if (existingUser) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              first_name: aluno.firstName,
+              last_name: aluno.lastName,
+              phone: aluno.phoneNumber || '',
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', aluno.email);
+          
+          if (updateError) {
+            console.error(`Erro ao atualizar aluno ${aluno.email}:`, updateError);
+          }
+        } else {
+          // Se não existe, inserir novo registro
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: crypto.randomUUID(), // Gerar UUID
+              first_name: aluno.firstName,
+              last_name: aluno.lastName,
+              email: aluno.email,
+              phone: aluno.phoneNumber || '',
+              role: 'student',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error(`Erro ao inserir aluno ${aluno.email}:`, insertError);
+          }
+        }
+      }
+
+      // Atualizar contagem e última sincronização
+      setLastSyncAlunos(new Date().toLocaleTimeString());
+      loadCounts();
+      toast.success(`${data.data.length} alunos sincronizados com sucesso!`);
+    } catch (error) {
+      console.error("Erro na sincronização de alunos:", error);
+      toast.error("Erro ao sincronizar alunos. Verifique o console para mais detalhes.");
+    } finally {
+      setIsSyncingAlunos(false);
     }
   };
 
-  const getAlertVariant = () => {
-    if (apiStatus === "error") return "destructive";
-    if (apiStatus === "success") return "default";
-    return "default"; // Para idle e testing, usar default
-  };
+  const sincronizarCursos = async () => {
+    setIsSyncingCursos(true);
+    try {
+      const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api/courses", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
+        }
+      });
 
-  const calculateMatchPercentage = (matching: number, total: number) => {
-    if (total === 0) return 0;
-    return Math.round((matching / total) * 100);
-  };
+      if (!response.ok) {
+        throw new Error(`Erro ao sincronizar cursos: ${response.status}`);
+      }
 
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-600 font-bold";
-    if (percentage >= 70) return "text-yellow-600 font-bold";
-    return "text-red-600 font-bold";
+      const data = await response.json();
+      
+      // Inserir ou atualizar cursos na tabela cursos
+      for (const curso of data.data) {
+        // Verificar se o curso já existe pelo learning_worlds_id
+        const { data: existingCourse, error: queryError } = await supabase
+          .from('cursos')
+          .select('id, titulo')
+          .eq('learning_worlds_id', curso.id)
+          .maybeSingle();
+        
+        if (queryError) {
+          console.error(`Erro ao buscar curso ${curso.id}:`, queryError);
+          continue;
+        }
+        
+        // Converter duração para minutos (formato esperado)
+        const duracao = curso.duration 
+          ? parseInt(curso.duration.replace(/\D/g, '')) * 60  // Simplificação: assume formato "X horas"
+          : 0;
+        
+        // Se já existe, atualizar
+        if (existingCourse) {
+          const { error: updateError } = await supabase
+            .from('cursos')
+            .update({
+              titulo: curso.title,
+              descricao: curso.description || '',
+              valor_total: curso.price || 0,
+              valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+              carga_horaria: duracao,
+              imagem_url: curso.image || '',
+              data_atualizacao: new Date().toISOString()
+            })
+            .eq('learning_worlds_id', curso.id);
+          
+          if (updateError) {
+            console.error(`Erro ao atualizar curso ${curso.id}:`, updateError);
+          }
+        } else {
+          // Se não existe, inserir novo registro
+          const { error: insertError } = await supabase
+            .from('cursos')
+            .insert({
+              titulo: curso.title,
+              descricao: curso.description || '',
+              codigo: `LW-${curso.id.substring(0, 6).toUpperCase()}`,
+              learning_worlds_id: curso.id,
+              valor_total: curso.price || 0,
+              valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+              carga_horaria: duracao,
+              imagem_url: curso.image || '',
+              modalidade: 'EAD',
+              data_criacao: new Date().toISOString(),
+              data_atualizacao: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error(`Erro ao inserir curso ${curso.id}:`, insertError);
+          }
+        }
+      }
+
+      // Atualizar contagem e última sincronização
+      setLastSyncCursos(new Date().toLocaleTimeString());
+      loadCounts();
+      toast.success(`${data.data.length} cursos sincronizados com sucesso!`);
+    } catch (error) {
+      console.error("Erro na sincronização de cursos:", error);
+      toast.error("Erro ao sincronizar cursos. Verifique o console para mais detalhes.");
+    } finally {
+      setIsSyncingCursos(false);
+    }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          <span>Sincronização com LearnWorlds</span>
-        </CardTitle>
-        <CardDescription>
-          Verifique a conexão e sincronização com a plataforma LearnWorlds
-        </CardDescription>
-      </CardHeader>
-
-      <Separator />
-
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(v) => setActiveTab(v as "api" | "dados")} 
-        className="w-full"
-      >
-        <CardContent className="pt-6">
-          <TabsList className="mb-6">
-            <TabsTrigger value="api">Status da API</TabsTrigger>
-            <TabsTrigger value="dados">Comparação de Dados</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="api" className="space-y-6">
-            <Alert variant={apiStatus === "success" ? "default" : apiStatus === "error" ? "destructive" : "default"} 
-              className={apiStatus === "success" ? "border-green-500 bg-green-50 text-green-900" : undefined}>
-              <div className="flex items-center gap-2">
-                {apiStatus === "success" ? (
-                  <Check className="h-5 w-5 text-green-500" />
-                ) : apiStatus === "error" ? (
-                  <X className="h-5 w-5 text-red-500" />
-                ) : apiStatus === "testing" ? (
-                  <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
-                ) : (
-                  <AlarmClock className="h-5 w-5 text-gray-500" />
-                )}
-                <AlertTitle>Status da Integração</AlertTitle>
-              </div>
-              <AlertDescription>
-                {apiStatus === "testing" && "Testando conexão com a API LearnWorlds..."}
-                {apiStatus === "success" && "API LearnWorlds conectada com sucesso!"}
-                {apiStatus === "error" && "Falha na conexão com a API LearnWorlds."}
-                {apiStatus === "idle" && "Clique no botão abaixo para testar a conexão."}
-                {lastTestedAt && <div className="mt-1 text-xs">Última verificação: {lastTestedAt}</div>}
-              </AlertDescription>
-            </Alert>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Sincronização com LearnWorlds</CardTitle>
+          <CardDescription>
+            Verifique a conexão e sincronize dados com a plataforma LearnWorlds
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="status">Status da API</TabsTrigger>
+              <TabsTrigger value="dados">Sincronização de Dados</TabsTrigger>
+            </TabsList>
             
-            <div className="flex flex-col gap-4">
-              <Button 
-                onClick={checkApiStatus} 
-                disabled={isTestingApi}
-                className="w-fit"
-                variant={apiStatus === "success" ? "outline" : "default"}
-              >
-                {isTestingApi ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Testando...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Testar Conexão com API
-                  </>
-                )}
-              </Button>
+            <TabsContent value="status">
+              <APIStatus 
+                isConnected={isConnected}
+                lastChecked={lastChecked}
+                isLoading={isLoading}
+                responseData={responseData}
+                onRefresh={checkAPIConnection}
+              />
+            </TabsContent>
+            
+            <TabsContent value="dados">
+              <div className="grid md:grid-cols-2 gap-4">
+                <SincronizacaoCard
+                  title="Alunos"
+                  description="Sincronize os alunos da LearnWorlds com o sistema"
+                  buttonText="Sincronizar Alunos"
+                  count={countAlunos}
+                  lastSync={lastSyncAlunos}
+                  onSync={() => navigate("/admin/matriculas/sincronizacao/alunos")}
+                  isSyncingAlunos={isSyncingAlunos}
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
+                />
+                
+                <SincronizacaoCard
+                  title="Cursos"
+                  description="Sincronize os cursos da LearnWorlds com o sistema"
+                  buttonText="Sincronizar Cursos"
+                  count={countCursos}
+                  lastSync={lastSyncCursos}
+                  onSync={() => navigate("/admin/matriculas/sincronizacao/cursos")}
+                  isSyncingCursos={isSyncingCursos}
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>}
+                />
+              </div>
               
-              {apiStatus !== "idle" && !isTestingApi && (
-                <div className="rounded-md border p-4 mt-4">
-                  <h3 className="font-medium mb-2">Resultado do Teste</h3>
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">Sincronização Direta</h3>
+                <div className="flex flex-col gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    disabled={isSyncingAlunos || !isConnected}
+                    onClick={sincronizarAlunos}
+                  >
+                    {isSyncingAlunos ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sincronizando alunos...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                        Importar Alunos Diretamente
+                      </>
+                    )}
+                  </Button>
                   
-                  {apiResponse ? (
-                    <div className="p-4 bg-muted rounded-md overflow-x-auto">
-                      <p className="font-semibold mb-2 text-sm">Resposta da API:</p>
-                      <pre className="text-xs whitespace-pre-wrap">{apiResponse}</pre>
-                    </div>
-                  ) : (
-                    <Skeleton className="h-20 w-full" />
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="dados" className="space-y-6">
-            <Alert>
-              <div className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                <AlertTitle>Comparação de Dados LearnWorlds → Supabase</AlertTitle>
-              </div>
-              <AlertDescription>
-                Verifique se os dados da API LearnWorlds foram corretamente sincronizados com o Supabase.
-                {comparisonResult && (
-                  <div className="mt-2 text-xs">
-                    Última verificação: {new Date().toLocaleString()}
-                  </div>
-                )}
-              </AlertDescription>
-            </Alert>
-
-            <Button 
-              onClick={compareLearnWorldsData} 
-              disabled={isComparingData || apiStatus !== "success"}
-              className="w-fit"
-              variant="outline"
-            >
-              {isComparingData ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Comparando dados...
-                </>
-              ) : (
-                <>
-                  <BarChart2 className="mr-2 h-4 w-4" />
-                  Verificar Sincronização de Dados
-                </>
-              )}
-            </Button>
-
-            {comparisonResult && (
-              <div className="rounded-md border p-4 mt-4">
-                <h3 className="font-medium mb-4">Resultado da Comparação</h3>
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tipo de Dados</TableHead>
-                      <TableHead className="text-right">LearnWorlds</TableHead>
-                      <TableHead className="text-right">Supabase</TableHead>
-                      <TableHead className="text-right">Correspondência</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">Alunos</TableCell>
-                      <TableCell className="text-right">{comparisonResult.alunos.learnworlds}</TableCell>
-                      <TableCell className="text-right">{comparisonResult.alunos.supabase}</TableCell>
-                      <TableCell className={`text-right ${getMatchColor(calculateMatchPercentage(comparisonResult.alunos.matching, comparisonResult.alunos.learnworlds))}`}>
-                        {comparisonResult.alunos.matching} ({calculateMatchPercentage(comparisonResult.alunos.matching, comparisonResult.alunos.learnworlds)}%)
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">Cursos</TableCell>
-                      <TableCell className="text-right">{comparisonResult.cursos.learnworlds}</TableCell>
-                      <TableCell className="text-right">{comparisonResult.cursos.supabase}</TableCell>
-                      <TableCell className={`text-right ${getMatchColor(calculateMatchPercentage(comparisonResult.cursos.matching, comparisonResult.cursos.learnworlds))}`}>
-                        {comparisonResult.cursos.matching} ({calculateMatchPercentage(comparisonResult.cursos.matching, comparisonResult.cursos.learnworlds)}%)
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-                
-                <div className="mt-4 p-4 bg-muted rounded-md text-sm">
-                  <h4 className="font-semibold mb-2">Legenda:</h4>
-                  <ul className="space-y-1">
-                    <li><span className="text-green-600 font-bold">Verde (≥90%)</span>: Sincronização ótima</li>
-                    <li><span className="text-yellow-600 font-bold">Amarelo (≥70%)</span>: Sincronização parcial</li>
-                    <li><span className="text-red-600 font-bold">Vermelho (&lt;70%)</span>: Sincronização insuficiente</li>
-                  </ul>
-                </div>
-
-                {(comparisonResult.alunos.learnworlds > comparisonResult.alunos.supabase || 
-                  comparisonResult.cursos.learnworlds > comparisonResult.cursos.supabase) && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <h4 className="font-semibold mb-2 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
-                      Ação Recomendada
-                    </h4>
-                    <p className="text-sm">
-                      Existem dados na LearnWorlds que ainda não foram sincronizados com o Supabase. 
-                      Considere executar uma sincronização completa.
-                    </p>
-                  </div>
-                )}
-
-                {(comparisonResult.alunos.learnworlds < comparisonResult.alunos.supabase || 
-                  comparisonResult.cursos.learnworlds < comparisonResult.cursos.supabase) && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                    <h4 className="font-semibold mb-2 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-2 text-blue-600" />
-                      Observação
-                    </h4>
-                    <p className="text-sm">
-                      Existem mais registros no Supabase do que na LearnWorlds. Isso pode indicar
-                      registros criados manualmente ou que a API LearnWorlds não está retornando todos os dados.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="bg-muted p-4 rounded-md mt-6">
-              <h3 className="font-medium mb-2">Credenciais da API LearnWorlds</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-semibold mb-1">TOKEN DE ACESSO</p>
-                  <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold mb-1">ESCOLA</p>
-                  <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    grupozayneducacional
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm font-semibold mb-1">API URL</p>
-                  <p className="text-xs text-muted-foreground bg-background rounded p-2 overflow-auto">
-                    https://api.learnworlds.com
-                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    disabled={isSyncingCursos || !isConnected}
+                    onClick={sincronizarCursos}
+                  >
+                    {isSyncingCursos ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sincronizando cursos...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open mr-2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                        Importar Cursos Diretamente
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          </Tabs>
         </CardContent>
-      </Tabs>
-
-      <CardFooter className="border-t bg-muted/50 px-6 py-3">
-        <p className="text-xs text-muted-foreground">
-          Status da conexão: {apiStatus === "success" ? "Conectado" : apiStatus === "testing" ? "Testando..." : apiStatus === "error" ? "Falha na conexão" : "Não testado"}
-        </p>
-      </CardFooter>
-    </Card>
+      </Card>
+    </div>
   );
 };
 

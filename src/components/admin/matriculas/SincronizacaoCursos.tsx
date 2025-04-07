@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Search, AlertCircle, Check } from "lucide-react";
+import { Download, RefreshCw, Search, AlertCircle, Check, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { ADMIN_BYPASS_JWT } from "@/hooks/auth/adminBypass";
+import { supabase } from "@/integrations/supabase/client";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
 
 interface Curso {
   id: string;
@@ -22,8 +25,6 @@ interface Curso {
   image?: string;
 }
 
-const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
-
 const SincronizacaoCursos: React.FC = () => {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [filteredCursos, setFilteredCursos] = useState<Curso[]>([]);
@@ -31,10 +32,12 @@ const SincronizacaoCursos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
+  const [sincronizandoItem, setSincronizandoItem] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [success, setSuccess] = useState<string | null>(null);
   const itemsPerPage = 10;
+  const { getCourses, offlineMode } = useLearnWorldsApi();
   
   const navigate = useNavigate();
 
@@ -59,60 +62,22 @@ const SincronizacaoCursos: React.FC = () => {
     setError(null);
     
     try {
-      // Mock de dados já que a função LearnWorlds API foi simplificada
-      const mockCursos: Curso[] = [
-        { 
-          id: "curso-1", 
-          title: "Desenvolvimento Web Frontend", 
-          description: "Aprenda HTML, CSS e JavaScript para criar sites modernos", 
-          price: 1200.00,
-          duration: "60 horas"
-        },
-        { 
-          id: "curso-2", 
-          title: "Python para Ciência de Dados", 
-          description: "Fundamentos de Python e bibliotecas para análise de dados", 
-          price: 1500.00,
-          duration: "80 horas"
-        },
-        { 
-          id: "curso-3", 
-          title: "Marketing Digital Avançado", 
-          description: "Estratégias avançadas de marketing para o ambiente digital", 
-          price: 1800.00,
-          duration: "90 horas"
-        },
-        { 
-          id: "curso-4", 
-          title: "Design UX/UI", 
-          description: "Princípios de design de experiência e interface do usuário", 
-          price: 1400.00,
-          duration: "70 horas"
-        }
-      ];
+      const resultado = await getCourses(currentPage, itemsPerPage);
       
-      setCursos(mockCursos);
-      setTotalPages(Math.ceil(mockCursos.length / itemsPerPage));
+      if (!resultado) {
+        throw new Error("Falha ao carregar cursos");
+      }
       
-      // Tentar fazer uma chamada real para verificar a conexão
-      const token = ADMIN_BYPASS_JWT;
+      setCursos(resultado.data || []);
+      setFilteredCursos(resultado.data || []);
+      setTotalPages(Math.ceil((resultado.total || 0) / itemsPerPage));
       
-      const response = await fetch(`${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        console.warn("API LearnWorlds não está respondendo corretamente, usando dados mockados");
-      } else {
-        console.log("API LearnWorlds está online");
+      if (offlineMode) {
+        setError("API LearnWorlds está operando em modo offline. Os dados exibidos são simulados.");
       }
     } catch (err) {
       console.error("Erro ao buscar cursos:", err);
-      setError("Não foi possível carregar os cursos da LearnWorlds. Usando dados locais.");
+      setError("Não foi possível carregar os cursos da LearnWorlds.");
     } finally {
       setLoading(false);
     }
@@ -122,24 +87,182 @@ const SincronizacaoCursos: React.FC = () => {
     setSearchQuery(e.target.value);
   };
 
+  // Função para inserir/atualizar um curso no banco de dados
+  const sincronizarCursoIndividual = async (curso: Curso) => {
+    try {
+      setSincronizandoItem(curso.id);
+      
+      // Verificar se o curso já existe pelo learning_worlds_id
+      const { data: existingCourse, error: queryError } = await supabase
+        .from('cursos')
+        .select('id, titulo')
+        .eq('learning_worlds_id', curso.id)
+        .maybeSingle();
+      
+      if (queryError) {
+        console.error(`Erro ao buscar curso ${curso.id}:`, queryError);
+        throw new Error(`Erro ao verificar curso existente: ${queryError.message}`);
+      }
+      
+      // Converter duração para minutos (formato esperado)
+      const duracao = curso.duration 
+        ? parseInt(curso.duration.replace(/\D/g, '')) * 60  // Simplificação: assume formato "X horas"
+        : 0;
+      
+      // Se já existe, atualizar
+      if (existingCourse) {
+        const { error: updateError } = await supabase
+          .from('cursos')
+          .update({
+            titulo: curso.title,
+            descricao: curso.description || '',
+            valor_total: curso.price || 0,
+            valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+            carga_horaria: duracao,
+            imagem_url: curso.image || '',
+            data_atualizacao: new Date().toISOString()
+          })
+          .eq('learning_worlds_id', curso.id);
+        
+        if (updateError) {
+          console.error(`Erro ao atualizar curso ${curso.id}:`, updateError);
+          throw new Error(`Erro ao atualizar curso: ${updateError.message}`);
+        }
+        
+        toast.success(`Curso "${curso.title}" atualizado com sucesso!`);
+      } else {
+        // Se não existe, inserir novo registro
+        const { error: insertError } = await supabase
+          .from('cursos')
+          .insert({
+            titulo: curso.title,
+            descricao: curso.description || '',
+            codigo: `LW-${curso.id.substring(0, 6).toUpperCase()}`,
+            learning_worlds_id: curso.id,
+            valor_total: curso.price || 0,
+            valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+            carga_horaria: duracao,
+            imagem_url: curso.image || '',
+            modalidade: 'EAD',
+            data_criacao: new Date().toISOString(),
+            data_atualizacao: new Date().toISOString()
+          });
+        
+        if (insertError) {
+          console.error(`Erro ao inserir curso ${curso.id}:`, insertError);
+          throw new Error(`Erro ao criar curso: ${insertError.message}`);
+        }
+        
+        toast.success(`Curso "${curso.title}" importado com sucesso!`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`Erro ao sincronizar curso ${curso.id}:`, error);
+      toast.error(`Erro ao sincronizar curso "${curso.title}"`);
+      return false;
+    } finally {
+      setSincronizandoItem(null);
+    }
+  };
+
   const sincronizarCursos = async () => {
     setSincronizando(true);
     setSuccess(null);
     
     try {
-      // Simulando sincronização bem-sucedida após 1.5 segundos
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Buscar todos os cursos da API para sincronizar
+      const resultado = await getCourses(1, 100); // Pegamos um número maior para sincronizar mais cursos
+      
+      if (!resultado || !resultado.data) {
+        throw new Error("Falha ao obter cursos para sincronização");
+      }
+      
+      let atualizados = 0;
+      let criados = 0;
+      let falhas = 0;
+      
+      // Para cada curso da LearnWorlds
+      for (const curso of resultado.data) {
+        // Verificar se o curso já existe pelo learning_worlds_id
+        const { data: existingCourse, error: queryError } = await supabase
+          .from('cursos')
+          .select('id, titulo')
+          .eq('learning_worlds_id', curso.id)
+          .maybeSingle();
+        
+        if (queryError) {
+          console.error(`Erro ao buscar curso ${curso.id}:`, queryError);
+          falhas++;
+          continue;
+        }
+        
+        // Converter duração para minutos (formato esperado)
+        const duracao = curso.duration 
+          ? parseInt(curso.duration.replace(/\D/g, '')) * 60  // Simplificação: assume formato "X horas"
+          : 0;
+        
+        // Se já existe, atualizar
+        if (existingCourse) {
+          const { error: updateError } = await supabase
+            .from('cursos')
+            .update({
+              titulo: curso.title,
+              descricao: curso.description || '',
+              valor_total: curso.price || 0,
+              valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+              carga_horaria: duracao,
+              imagem_url: curso.image || '',
+              data_atualizacao: new Date().toISOString()
+            })
+            .eq('learning_worlds_id', curso.id);
+          
+          if (updateError) {
+            console.error(`Erro ao atualizar curso ${curso.id}:`, updateError);
+            falhas++;
+          } else {
+            atualizados++;
+          }
+        } else {
+          // Se não existe, inserir novo registro
+          const { error: insertError } = await supabase
+            .from('cursos')
+            .insert({
+              titulo: curso.title,
+              descricao: curso.description || '',
+              codigo: `LW-${curso.id.substring(0, 6).toUpperCase()}`,
+              learning_worlds_id: curso.id,
+              valor_total: curso.price || 0,
+              valor_mensalidade: curso.price ? (curso.price / 12) : 0,
+              carga_horaria: duracao,
+              imagem_url: curso.image || '',
+              modalidade: 'EAD',
+              data_criacao: new Date().toISOString(),
+              data_atualizacao: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error(`Erro ao inserir curso ${curso.id}:`, insertError);
+            falhas++;
+          } else {
+            criados++;
+          }
+        }
+      }
       
       // Mostrar mensagem de sucesso
-      setSuccess("Cursos sincronizados com sucesso!");
-      toast.success("Cursos sincronizados com sucesso!");
+      const mensagem = `Sincronização concluída: ${criados} cursos importados, ${atualizados} atualizados.${falhas > 0 ? ` ${falhas} falhas.` : ''}`;
+      setSuccess(mensagem);
+      toast.success(mensagem);
+      
+      // Recarregar a lista após sincronização
+      fetchCursos();
     } catch (err) {
       console.error("Erro ao sincronizar cursos:", err);
-      toast.error("Erro ao sincronizar cursos da LearnWorlds");
+      toast.error("Erro ao sincronizar cursos");
+      setError(err instanceof Error ? err.message : "Erro ao sincronizar cursos");
     } finally {
       setSincronizando(false);
-      // Atualizar a lista após sincronização
-      fetchCursos();
     }
   };
 
@@ -174,7 +297,7 @@ const SincronizacaoCursos: React.FC = () => {
         >
           {sincronizando ? (
             <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Sincronizando...
             </>
           ) : (
@@ -188,11 +311,7 @@ const SincronizacaoCursos: React.FC = () => {
 
       {/* Mensagem de erro */}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <LearnWorldsErrorAlert errorMessage={error} />
       )}
       
       {/* Mensagem de sucesso */}
@@ -259,7 +378,18 @@ const SincronizacaoCursos: React.FC = () => {
                           : "N/A"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm">Sincronizar</Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => sincronizarCursoIndividual(curso)}
+                          disabled={sincronizandoItem === curso.id}
+                        >
+                          {sincronizandoItem === curso.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Sincronizar"
+                          )}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
