@@ -68,7 +68,9 @@ const useLearnWorldsApi = () => {
         options.body = JSON.stringify(body);
       }
 
-      const url = `https://bioarzkfmcobctblzztm.supabase.co/functions/v1/${endpoint}`;
+      // URL base específica para o projeto Supabase
+      const baseUrl = 'https://bioarzkfmcobctblzztm.supabase.co/functions/v1';
+      const url = `${baseUrl}/${endpoint}`;
       console.log(`Fazendo requisição ${method} para ${url}`);
       
       const response = await fetch(url, options);
@@ -190,6 +192,7 @@ const useLearnWorldsApi = () => {
   const sincronizarAlunos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
       setLoading(true);
+      // Usamos o endpoint correto para sincronização de alunos: learnworlds-sync
       const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}`);
       
       if (result.imported > 0 || result.updated > 0) {
@@ -217,6 +220,7 @@ const useLearnWorldsApi = () => {
   const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
       setLoading(true);
+      // Usamos o endpoint correto para sincronização de cursos: learnworlds-courses-sync
       const result = await makeRequest(`learnworlds-courses-sync?syncAll=${sincronizarTodos}`);
       
       if (result.imported > 0 || result.updated > 0) {
