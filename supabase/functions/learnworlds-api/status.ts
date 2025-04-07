@@ -33,16 +33,31 @@ serve(async (req) => {
   }
 
   // Obter dados de configuração da API LearnWorlds
-  const apiKey = Deno.env.get('LEARNWORLDS_API_KEY');
+  // Conforme documentação LearnWorlds, este token é um Bearer token usado no header Authorization
+  const apiKey = Deno.env.get('LEARNWORLDS_API_KEY') || 'YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg';
   const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID');
   
   // Verificar se as configurações estão presentes
-  if (!apiKey || !schoolId) {
+  if (!apiKey) {
     return new Response(
       JSON.stringify({ 
         status: "offline",
-        error: "Configurações da API não encontradas", 
-        details: "Verifique variáveis de ambiente LEARNWORLDS_API_KEY e LEARNWORLDS_SCHOOL_ID" 
+        error: "Token da API não encontrado", 
+        details: "Token de autenticação da API LearnWorlds não configurado" 
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  if (!schoolId) {
+    return new Response(
+      JSON.stringify({ 
+        status: "offline",
+        error: "ID da escola não encontrado", 
+        details: "ID da escola LearnWorlds não configurado" 
       }),
       {
         status: 200,
@@ -52,15 +67,52 @@ serve(async (req) => {
   }
   
   try {
-    // Fazer um teste de conexão básico com a API LearnWorlds
-    // Em uma implementação completa, poderíamos verificar o status da API do LearnWorlds
-    // com uma chamada real
+    // Verificar a conexão tentando fazer uma chamada real à API LearnWorlds
+    // De acordo com a documentação, precisamos fazer uma chamada para verificar se o token é válido
     
+    // Montar a URL da API LearnWorlds
+    const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
+    const testUrl = `${apiBaseUrl}/${schoolId}/users?limit=1`;
+    
+    // Fazer uma chamada de teste para a API LearnWorlds
+    const testResponse = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    if (!testResponse.ok) {
+      // Se a resposta não for bem-sucedida, verificar o status e retornar erro apropriado
+      const errorData = await testResponse.json().catch(() => ({}));
+      
+      console.error('Erro ao testar API LearnWorlds:', testResponse.status, errorData);
+      
+      return new Response(
+        JSON.stringify({ 
+          status: "offline",
+          error: "Falha na autenticação com a API LearnWorlds",
+          errorCode: testResponse.status,
+          details: errorData
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    // Se chegou até aqui, a conexão foi bem-sucedida
     return new Response(
       JSON.stringify({ 
         status: "online",
         message: "API do LearnWorlds conectada com sucesso",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tokenInfo: {
+          isConfigured: true,
+          source: Deno.env.get('LEARNWORLDS_API_KEY') ? "environment" : "hardcoded",
+        }
       }),
       {
         status: 200,
