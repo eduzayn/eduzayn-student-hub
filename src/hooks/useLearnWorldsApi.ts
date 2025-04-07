@@ -1,7 +1,11 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+
+// URL base correta para as funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
 /**
  * Hook para facilitar chamadas à API LearnWorlds através da edge function
@@ -49,11 +53,13 @@ export const useLearnWorldsApi = () => {
       }
 
       // Construir URL com parâmetros de query se fornecidos
-      let url = `/functions/v1/learnworlds-api/${endpoint}`;
+      let url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/${endpoint}`;
       if (params && Object.keys(params).length > 0) {
         const queryString = new URLSearchParams(params).toString();
         url = `${url}?${queryString}`;
       }
+
+      console.log(`Chamando API LearnWorlds: ${method} ${url}`);
 
       // Preparar as opções para a requisição
       const options: RequestInit = {

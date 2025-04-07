@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 
+// URL base correta para as funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
+
 const SincronizacaoLearnWorlds: React.FC = () => {
   const [isTestingApi, setIsTestingApi] = useState(false);
   const [apiStatus, setApiStatus] = useState<"idle" | "success" | "error" | "testing">("idle");
@@ -42,8 +45,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       
       console.log("Iniciando verificação de status da API LearnWorlds");
       
-      // Usar a URL completa da função - importante incluir o domínio completo
-      const functionUrl = new URL('/functions/v1/learnworlds-api/status', window.location.origin).toString();
+      // Usar a URL correta da função Supabase
+      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status`;
       console.log("Chamando função em:", functionUrl);
       
       const response = await fetch(functionUrl, {
@@ -106,8 +109,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
-      // Usar a URL completa da função - importante incluir o domínio completo
-      const apiStatusUrl = new URL('/functions/v1/learnworlds-api/status', window.location.origin).toString();
+      // Usar a URL correta da função Supabase
+      const apiStatusUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status`;
       console.log("Verificando status da API em:", apiStatusUrl);
       
       const apiStatusResponse = await fetch(apiStatusUrl, {
@@ -130,8 +133,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("API LearnWorlds não está online. Verifique a configuração primeiro.");
       }
       
-      // Usar a URL completa da função para buscar usuários
-      const lwStudentsUrl = new URL('/functions/v1/learnworlds-api/users?limit=1', window.location.origin).toString();
+      // Usar a URL correta da função Supabase para buscar usuários
+      const lwStudentsUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/users?limit=1`;
       console.log("Buscando alunos em:", lwStudentsUrl);
       
       const lwStudentsResponse = await fetch(lwStudentsUrl, {
@@ -153,8 +156,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       
       const lwStudentsCount = lwStudentsData.total || 0;
       
-      // Usar a URL completa da função para buscar cursos
-      const lwCoursesUrl = new URL('/functions/v1/learnworlds-api/courses?limit=1', window.location.origin).toString();
+      // Usar a URL correta da função Supabase para buscar cursos
+      const lwCoursesUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/courses?limit=1`;
       console.log("Buscando cursos em:", lwCoursesUrl);
       
       const lwCoursesResponse = await fetch(lwCoursesUrl, {
