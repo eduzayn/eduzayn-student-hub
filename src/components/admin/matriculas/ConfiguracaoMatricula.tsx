@@ -1,16 +1,50 @@
 
 import React from "react";
-import { UseFormReturn } from "react-hook-form";
 import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
 import SelectField from "./configuracao/SelectField";
 import DatePickerField from "./configuracao/DatePickerField";
 import TextareaField from "./configuracao/TextareaField";
 
 interface ConfiguracaoMatriculaProps {
-  form: UseFormReturn<any>;
+  config: any;
+  onChange: (config: any) => void;
+  valorCurso?: number;
+  onProsseguir: () => Promise<void>;
+  isLoading?: boolean;
 }
 
-const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({ form }) => {
+const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({ 
+  config, 
+  onChange, 
+  valorCurso = 0,
+  onProsseguir,
+  isLoading = false
+}) => {
+  const form = useForm({
+    defaultValues: {
+      status: config.status || "pendente",
+      data_inicio: config.data_inicio || new Date().toISOString().split('T')[0],
+      forma_pagamento: config.forma_pagamento || "pix",
+      valor_matricula: config.valor_matricula || valorCurso,
+      observacoes: config.observacoes || "",
+      com_pagamento: config.com_pagamento !== undefined ? config.com_pagamento : true
+    }
+  });
+
+  // Atualiza o estado pai quando os valores do formulário mudam
+  const handleFormChange = () => {
+    const values = form.getValues();
+    onChange(values);
+  };
+
+  // Observa as mudanças do formulário
+  React.useEffect(() => {
+    const subscription = form.watch(handleFormChange);
+    return () => subscription.unsubscribe();
+  }, [form, form.watch]);
+
   const statusOptions = [
     { value: "ativo", label: "Ativo" },
     { value: "pendente", label: "Pendente" },
@@ -19,33 +53,17 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({ form }) =
     { value: "inativo", label: "Inativo" }
   ];
 
-  const formaIngressoOptions = [
-    { value: "Online", label: "Online" },
-    { value: "Presencial", label: "Presencial" },
-    { value: "Transferência", label: "Transferência" },
-    { value: "Reingresso", label: "Reingresso" },
-    { value: "Bolsa", label: "Bolsa" }
-  ];
-
-  const origemMatriculaOptions = [
-    { value: "Site", label: "Site" },
-    { value: "Indicação", label: "Indicação" },
-    { value: "Parceria", label: "Parceria" },
-    { value: "Presencial", label: "Presencial" },
-    { value: "Campanha Marketing", label: "Campanha de Marketing" }
-  ];
-
-  const turnoOptions = [
-    { value: "Matutino", label: "Matutino" },
-    { value: "Vespertino", label: "Vespertino" },
-    { value: "Noturno", label: "Noturno" },
-    { value: "Integral", label: "Integral" },
-    { value: "Livre", label: "Livre" }
+  const formasPagamento = [
+    { value: "pix", label: "PIX" },
+    { value: "boleto", label: "Boleto" },
+    { value: "cartao", label: "Cartão de Crédito" },
+    { value: "dinheiro", label: "Dinheiro" },
+    { value: "isento", label: "Isento" }
   ];
 
   return (
     <Form {...form}>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h2 className="text-xl font-semibold">Configuração da Matrícula</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,32 +84,28 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({ form }) =
             className="flex flex-col"
           />
           
-          {/* Forma de Ingresso */}
+          {/* Forma de Pagamento */}
           <SelectField
             form={form}
-            name="forma_ingresso"
-            label="Forma de Ingresso"
-            options={formaIngressoOptions}
-            placeholder="Selecione a forma de ingresso"
+            name="forma_pagamento"
+            label="Forma de Pagamento"
+            options={formasPagamento}
+            placeholder="Selecione a forma de pagamento"
           />
           
-          {/* Origem da Matrícula */}
-          <SelectField
-            form={form}
-            name="origem_matricula"
-            label="Origem da Matrícula"
-            options={origemMatriculaOptions}
-            placeholder="Selecione a origem"
-          />
-          
-          {/* Turno */}
-          <SelectField
-            form={form}
-            name="turno"
-            label="Turno"
-            options={turnoOptions}
-            placeholder="Selecione o turno"
-          />
+          {/* Valor da Matrícula */}
+          <div className="flex flex-col space-y-2">
+            <label htmlFor="valor" className="font-medium text-sm">
+              Valor da Matrícula
+            </label>
+            <input
+              type="number"
+              id="valor"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+              value={form.watch("valor_matricula")}
+              onChange={(e) => form.setValue("valor_matricula", Number(e.target.value))}
+            />
+          </div>
           
           {/* Observações */}
           <TextareaField
@@ -101,6 +115,15 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({ form }) =
             placeholder="Informações adicionais sobre a matrícula..."
             className="md:col-span-2"
           />
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <Button 
+            onClick={onProsseguir}
+            disabled={isLoading}
+          >
+            {isLoading ? "Processando..." : "Prosseguir"}
+          </Button>
         </div>
       </div>
     </Form>

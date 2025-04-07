@@ -4,10 +4,12 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LearnWorldsErrorAlertProps {
-  errorMessage: string;
+  errorMessage?: string;
 }
 
-const LearnWorldsErrorAlert: React.FC<LearnWorldsErrorAlertProps> = ({ errorMessage }) => {
+const LearnWorldsErrorAlert: React.FC<LearnWorldsErrorAlertProps> = ({ 
+  errorMessage = "A API do LearnWorlds está offline ou indisponível no momento." 
+}) => {
   return (
     <Alert variant="destructive" className="mb-4">
       <AlertCircle className="h-4 w-4" />

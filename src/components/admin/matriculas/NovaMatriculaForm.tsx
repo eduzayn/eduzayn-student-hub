@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,7 +14,7 @@ import { useMatricula } from "@/hooks/useMatricula";
 import { useMatriculaFormSteps } from "@/hooks/useMatriculaFormSteps";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { useMatriculaPagamento } from "@/hooks/useMatriculaPagamento";
-import { LinkPagamentoCard } from "./LinkPagamentoCard";
+import LinkPagamentoCard from "./LinkPagamentoCard";
 import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
 
 const NovaMatriculaForm: React.FC = () => {
@@ -32,7 +31,8 @@ const NovaMatriculaForm: React.FC = () => {
     valor_matricula: 0,
     forma_pagamento: 'pix',
     observacoes: '',
-    com_pagamento: true
+    com_pagamento: true,
+    status: 'pendente' as 'pendente' | 'ativo' | 'inativo' | 'trancado' | 'formado'
   });
   
   const [matriculaCriada, setMatriculaCriada] = useState<any>(null);
@@ -72,7 +72,7 @@ const NovaMatriculaForm: React.FC = () => {
         curso_id: cursoSelecionado.id,
         valor: matriculaConfig.valor_matricula,
         data_inicio: matriculaConfig.data_inicio,
-        status: 'pendente',
+        status: matriculaConfig.status,
         observacoes: matriculaConfig.observacoes,
         forma_pagamento: matriculaConfig.com_pagamento ? matriculaConfig.forma_pagamento : 'isento',
         criado_por: 'sistema',
@@ -153,7 +153,9 @@ const NovaMatriculaForm: React.FC = () => {
   return (
     <div className="space-y-6">
       {offlineMode && (
-        <LearnWorldsErrorAlert />
+        <LearnWorldsErrorAlert 
+          errorMessage="A API do LearnWorlds está offline ou indisponível no momento."
+        />
       )}
       
       {formStep === 1 && (
@@ -245,11 +247,13 @@ const NovaMatriculaForm: React.FC = () => {
           
           {matriculaConfig?.com_pagamento && pagamentoInfo?.link && (
             <LinkPagamentoCard
-              linkPagamento={pagamentoInfo.link}
+              link={pagamentoInfo.link}
               copiado={pagamentoInfo.copiado}
               enviado={pagamentoInfo.enviado}
               email={alunoSelecionado?.email}
-              onCopiar={() => {}}  // Vazio pois o hook já lida com isso
+              onCopiar={() => {}}
+              onVoltar={redirecionarParaMatriculas}
+              onNova={criarNovaMatricula}
             />
           )}
           
