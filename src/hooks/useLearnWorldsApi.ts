@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 
-// URL base correta para as funções do Supabase
+// URL base correta para as funções do Supabase - usando a versão simplificada
 const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
 // ID do cliente LearnWorlds (necessário para todas as chamadas à API)
@@ -65,7 +65,14 @@ export const useLearnWorldsApi = () => {
 
       // Construir URL com parâmetros de query se fornecidos
       // Sempre incluir client_id como parâmetro obrigatório
-      let url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/${endpoint}`;
+      let url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api`;
+      
+      // Verificar se endpoint não está vazio para evitar barras duplas
+      if (endpoint && endpoint !== '') {
+        // Remover barra inicial se existir
+        const cleanedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+        url = `${url}/${cleanedEndpoint}`;
+      }
       
       // Inicializar parâmetros com client_id
       const queryParams = new URLSearchParams();
@@ -81,7 +88,7 @@ export const useLearnWorldsApi = () => {
       // Adicionar parâmetros à URL
       url = `${url}?${queryParams.toString()}`;
       
-      console.log(`Chamando API LearnWorlds: ${method} ${url}`);
+      console.log(`Chamando API LearnWorlds versão simplificada: ${method} ${url}`);
 
       // Preparar as opções para a requisição
       const options: RequestInit = {

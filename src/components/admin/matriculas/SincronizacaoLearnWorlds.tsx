@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 
-// URL base correta para as funções do Supabase
+// URL base correta para as funções do Supabase - usando a versão simplificada
 const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
 const SincronizacaoLearnWorlds: React.FC = () => {
@@ -54,10 +54,10 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
-      console.log("Iniciando verificação de status da API LearnWorlds");
+      console.log("Iniciando verificação de status da API LearnWorlds - versão simplificada");
       
-      // Usar a URL correta da função Supabase com client_id como parâmetro de consulta
-      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status?client_id=zayn-lms-client`;
+      // Usar a URL da função Supabase simplificada
+      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api?client_id=zayn-lms-client`;
       console.log("Chamando função em:", functionUrl);
       
       const response = await fetch(functionUrl, {
@@ -81,7 +81,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
           data = JSON.parse(rawText);
           setApiResponse(JSON.stringify(data, null, 2));
           
-          if (response.ok && data.status === "online") {
+          if (response.ok && data.message === "LearnWorlds API online") {
             setApiStatus("success");
             toast.success("API LearnWorlds está online e funcionando corretamente");
           } else {

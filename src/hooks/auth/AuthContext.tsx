@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import useAuthProvider from "./useAuthProvider";
+import { useAuthProvider } from "./useAuthProvider";
 import { AuthContextType, AuthProviderProps } from "./types";
 
 // Create the authentication context
