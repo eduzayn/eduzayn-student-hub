@@ -34,6 +34,13 @@ interface LoginFormProps {
   onSwitchTab: (tab: string) => void;
 }
 
+// Ampliando a lista de emails administrativos
+export const ADMIN_EMAILS = [
+  "ana.diretoria@eduzayn.com.br",
+  "marco.diretoria@eduzayn.com.br",
+  "admin@eduzayn.com.br"
+];
+
 export const ADMIN_BYPASS = {
   email: "ana.diretoria@eduzayn.com.br",
   password: "Zayn@2025"
@@ -59,7 +66,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
     setAuthError(null);
     setNeedsEmailConfirmation(false);
     
-    if (values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password) {
+    // Verificar se é um login de administrador por bypass
+    const isAdminBypassCredentials = values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password;
+    // Verificar se é um email administrativo (para redirecionar corretamente)
+    const isAdminEmail = ADMIN_EMAILS.includes(values.email.toLowerCase());
+    
+    if (isAdminBypassCredentials) {
       localStorage.setItem('adminBypassAuthenticated', 'true');
       localStorage.setItem('adminBypassEmail', ADMIN_BYPASS.email);
       
@@ -96,9 +108,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         }
       } else {
         toast.success("Login realizado com sucesso!", {
-          description: "Bem-vindo(a) ao Portal do Aluno"
+          description: isAdminEmail ? "Bem-vindo(a) ao Portal Administrativo" : "Bem-vindo(a) ao Portal do Aluno"
         });
-        navigate("/dashboard");
+        
+        // Redirecionar com base no tipo de email
+        navigate(isAdminEmail ? "/admin" : "/dashboard");
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");

@@ -3,11 +3,12 @@ import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase, isAuthenticated } from "@/integrations/supabase/client";
+import { ADMIN_EMAILS } from "@/components/auth/LoginForm";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // Verificar autenticação ao carregar o componente e redirecionar para o novo portal
+  // Verificar autenticação ao carregar o componente e redirecionar para o portal correto
   useEffect(() => {
     const checkAuth = async () => {
       // Verificar bypass de admin
@@ -25,6 +26,15 @@ const Dashboard = () => {
       if (!data.session) {
         console.log("Usuário não autenticado, redirecionando para login");
         navigate("/login");
+        return;
+      }
+      
+      // Verificar se o email do usuário está na lista de emails administrativos
+      const userEmail = data.session?.user?.email;
+      if (userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+        console.log("Email administrativo detectado, redirecionando para o portal administrativo");
+        navigate("/admin");
+        return;
       }
     };
     

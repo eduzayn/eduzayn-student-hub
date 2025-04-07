@@ -1,11 +1,13 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase, isAuthenticated, isAdminBypassAuthenticated } from "@/integrations/supabase/client";
+import { ADMIN_EMAILS } from "@/components/auth/LoginForm";
 
 type AuthContextType = {
   isLoggedIn: boolean;
   isLoading: boolean;
   isAdminBypass: boolean;
+  isAdminUser: boolean;
   userEmail: string | null;
   checkAuth: () => Promise<boolean>;
   getAccessToken: () => Promise<string | null>;
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   isLoading: true,
   isAdminBypass: false,
+  isAdminUser: false,
   userEmail: null,
   checkAuth: async () => false,
   getAccessToken: async () => null,
@@ -26,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdminBypass, setIsAdminBypass] = useState<boolean>(false);
+  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const checkAuth = async () => {
@@ -36,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (adminBypass) {
         setIsLoggedIn(true);
         setIsAdminBypass(true);
+        setIsAdminUser(true);
         const email = localStorage.getItem('adminBypassEmail');
         setUserEmail(email);
         setIsLoading(false);
@@ -48,7 +53,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (isAuth) {
         const { data } = await supabase.auth.getSession();
-        setUserEmail(data.session?.user?.email || null);
+        const email = data.session?.user?.email || null;
+        setUserEmail(email);
+        
+        // Verificar se é um email administrativo
+        setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
       }
       
       setIsAdminBypass(false);
@@ -58,6 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Erro ao verificar autenticação:", error);
       setIsLoggedIn(false);
       setIsAdminBypass(false);
+      setIsAdminUser(false);
       setIsLoading(false);
       return false;
     }
@@ -87,11 +97,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_IN' && session) {
         setIsLoggedIn(true);
         setIsAdminBypass(false);
-        setUserEmail(session.user?.email || null);
+        const email = session.user?.email || null;
+        setUserEmail(email);
+        
+        // Verificar se é um email administrativo
+        setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(isAdminBypassAuthenticated());
         setIsAdminBypass(isAdminBypassAuthenticated());
-        setUserEmail(isAdminBypassAuthenticated() ? localStorage.getItem('adminBypassEmail') : null);
+        const email = isAdminBypassAuthenticated() ? localStorage.getItem('adminBypassEmail') : null;
+        setUserEmail(email);
+        setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
       }
     });
     
@@ -103,7 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     isLoggedIn, 
     isLoading, 
-    isAdminBypass, 
+    isAdminBypass,
+    isAdminUser,
     userEmail,
     checkAuth,
     getAccessToken,

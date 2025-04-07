@@ -9,19 +9,28 @@ import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const AlunoLayout: React.FC = () => {
-  const { isLoggedIn, isLoading, checkAuth } = useAuth();
+  const { isLoggedIn, isLoading, isAdminUser, checkAuth } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
     const verifyAuth = async () => {
       const authenticated = await checkAuth();
+      
       if (!authenticated && !isLoading) {
+        // Se não estiver autenticado, redirecionar para o login
         navigate("/login");
+        return;
+      }
+      
+      // Se for um usuário administrativo, redirecionar para o portal administrativo
+      if (authenticated && isAdminUser) {
+        navigate("/admin");
+        return;
       }
     };
     
     verifyAuth();
-  }, [navigate, isLoading, checkAuth]);
+  }, [navigate, isLoading, checkAuth, isAdminUser]);
   
   // Se estiver carregando, mostra um esqueleto de carregamento
   if (isLoading) {
