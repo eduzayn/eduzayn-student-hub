@@ -1,356 +1,194 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { CheckIcon, AlertTriangleIcon, RefreshCw, UserCircle2, Database, UsersIcon, Loader2, InfoIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, RefreshCw, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
-
-// URL base correta para as funções do Supabase
-const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
-
-interface SyncResults {
-  imported: number;
-  updated: number;
-  failed: number;
-  total: number;
-  logs: string[];
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import LearnWorldsErrorAlert from "./LearnWorldsErrorAlert";
 
 const SincronizacaoAlunos: React.FC = () => {
-  const [apiStatus, setApiStatus] = useState<"online" | "offline" | "checking">("checking");
-  const [isSynchronizing, setIsSynchronizing] = useState(false);
-  const [syncResults, setSyncResults] = useState<SyncResults | null>(null);
-  const [syncLogs, setSyncLogs] = useState<string[]>([]);
-  const { getAccessToken } = useAuth();
-
+  const [alunos, setAlunos] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [busca, setBusca] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const { getUsers, offlineMode } = useLearnWorldsApi();
+  
   useEffect(() => {
-    checkApiStatus();
-  }, []);
-
-  const checkApiStatus = async () => {
+    carregarAlunos();
+  }, [page]);
+  
+  const carregarAlunos = async (termo?: string) => {
+    setLoading(true);
+    setApiError(null);
+    
     try {
-      setApiStatus("checking");
+      const termoBusca = termo !== undefined ? termo : busca;
+      const resultado = await getUsers(page, 10, termoBusca);
       
-      const token = await getAccessToken();
-      
-      if (!token) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status`;
-      
-      const response = await fetch(functionUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erro ao verificar status: ${response.status}`);
+      if (!resultado) {
+        throw new Error("Falha ao carregar alunos do LearnWorlds");
       }
       
-      // Tentar extrair texto primeiro para logar se houver um problema
-      const responseText = await response.text();
+      setAlunos(resultado.data || []);
+      setTotalPages(resultado.pages || 1);
       
-      try {
-        // Tentar parsear o texto como JSON
-        const data = JSON.parse(responseText);
-        if (data && data.status === "online") {
-          setApiStatus("online");
-        } else {
-          console.error("API retornou status diferente de online:", data);
-          setApiStatus("offline");
-        }
-      } catch (jsonError) {
-        console.error("Resposta não é JSON:", responseText);
-        setApiStatus("offline");
+      if (offlineMode) {
+        setApiError("API LearnWorlds está operando em modo offline. Os dados exibidos são simulados.");
       }
     } catch (error) {
-      console.error("Erro ao verificar status da API:", error);
-      setApiStatus("offline");
-    }
-  };
-
-  const sincronizarAlunos = async (syncAll: boolean = false) => {
-    try {
-      setIsSynchronizing(true);
-      setSyncResults(null);
-      setSyncLogs([]);
-      
-      const token = await getAccessToken();
-      
-      if (!token) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      const params = new URLSearchParams();
-      if (syncAll) {
-        params.append('syncAll', 'true');
-      }
-      params.append('pageSize', '20');
-      
-      const url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-sync?${params.toString()}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        // Tentar extrair texto primeiro para diagnóstico
-        const errorText = await response.text();
-        
-        try {
-          // Tentar parsear como JSON se possível
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
-        } catch (parseError) {
-          // Se não for JSON, usar o texto bruto
-          throw new Error(`Erro na sincronização: ${response.status} - ${errorText.substring(0, 100)}...`);
-        }
-      }
-      
-      // Obter o texto primeiro
-      const responseText = await response.text();
-      
-      try {
-        // Tentar parsear como JSON
-        const results = JSON.parse(responseText);
-        
-        setSyncResults(results);
-        setSyncLogs(results.logs || []);
-        
-        toast.success(
-          `Sincronização concluída`, 
-          { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
-        );
-      } catch (jsonError) {
-        console.error("Erro ao processar resposta JSON:", jsonError, "Texto da resposta:", responseText);
-        throw new Error("Resposta da API não é JSON válido");
-      }
-    } catch (error) {
-      console.error("Erro na sincronização:", error);
-      toast.error("Falha na sincronização", { description: error instanceof Error ? error.message : "Erro desconhecido" });
+      console.error("Erro ao carregar alunos:", error);
+      setApiError(error instanceof Error ? error.message : "Erro desconhecido");
     } finally {
-      setIsSynchronizing(false);
+      setLoading(false);
     }
   };
-
-  const criarPerfilManualmente = async (email: string, nome: string, sobrenome: string, learnworldsId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("create-profile", {
-        body: {
-          email,
-          firstName: nome, 
-          lastName: sobrenome,
-          phone: null,
-          learnworldsId
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Perfil criado/atualizado com sucesso", {
-        description: `ID: ${data}`
-      });
-      
-      return data;
-    } catch (error) {
-      console.error("Erro ao criar perfil:", error);
-      toast.error("Falha ao criar perfil", { 
-        description: error instanceof Error ? error.message : "Erro desconhecido" 
-      });
+  
+  const handleSearch = () => {
+    setPage(1); // Voltar para a primeira página ao buscar
+    carregarAlunos(busca);
+  };
+  
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(p => p + 1);
     }
   };
-
+  
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(p => p - 1);
+    }
+  };
+  
+  const refreshAlunos = () => {
+    carregarAlunos();
+    toast.success("Lista de alunos atualizada");
+  };
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <UsersIcon className="h-5 w-5" />
-            <span>Sincronização de Alunos</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge 
-              variant={apiStatus === "online" ? "outline" : "destructive"} 
-              className={`${apiStatus === "online" ? "bg-green-50 text-green-700 border-green-200" : apiStatus === "checking" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-red-50"}`}
-            >
-              {apiStatus === "online" ? (
-                <>
-                  <CheckIcon className="h-3 w-3 mr-1" />
-                  API Online
-                </>
-              ) : apiStatus === "checking" ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                <>
-                  <AlertTriangleIcon className="h-3 w-3 mr-1" />
-                  API Offline
-                </>
-              )}
-            </Badge>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={checkApiStatus} 
-              disabled={apiStatus === "checking"}
-            >
-              <RefreshCw className={`h-3 w-3 mr-1 ${apiStatus === "checking" ? "animate-spin" : ""}`} />
-              Verificar API
+    <div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-xl font-bold flex items-center">
+            <Users className="mr-2 h-5 w-5" />
+            Alunos LearnWorlds
+          </CardTitle>
+          <Button variant="outline" size="sm" onClick={refreshAlunos}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {apiError && (
+            <LearnWorldsErrorAlert errorMessage={apiError} />
+          )}
+          
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Buscar alunos por nome, email ou CPF..."
+                className="pl-8"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+            </div>
+            <Button onClick={handleSearch} disabled={loading}>
+              Buscar
             </Button>
           </div>
-        </CardTitle>
-        <CardDescription>
-          Sincronize dados de alunos entre LearnWorlds e o sistema de matrículas
-        </CardDescription>
-      </CardHeader>
-
-      <Separator />
-
-      <CardContent className="pt-6">
-        <Tabs defaultValue="sincronizar">
-          <TabsList className="mb-4">
-            <TabsTrigger value="sincronizar">Sincronizar</TabsTrigger>
-            <TabsTrigger value="logs">Logs</TabsTrigger>
-            <TabsTrigger value="ajuda">Ajuda</TabsTrigger>
-          </TabsList>
           
-          <TabsContent value="sincronizar" className="space-y-4">
-            <Alert>
-              <InfoIcon className="h-4 w-4" />
-              <AlertTitle>Sincronização de Alunos</AlertTitle>
-              <AlertDescription>
-                Esta funcionalidade importa dados de alunos da plataforma LearnWorlds para o sistema de matrículas.
-                Você pode sincronizar todos os alunos ou apenas a página atual.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="flex gap-4 py-4">
-              <Button 
-                onClick={() => sincronizarAlunos(false)} 
-                disabled={isSynchronizing || apiStatus !== "online"}
-              >
-                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCircle2 className="mr-2 h-4 w-4" />}
-                Sincronizar Página Atual
-              </Button>
-              
-              <Button 
-                onClick={() => sincronizarAlunos(true)} 
-                variant="secondary" 
-                disabled={isSynchronizing || apiStatus !== "online"}
-              >
-                {isSynchronizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UsersIcon className="mr-2 h-4 w-4" />}
-                Sincronizar Todos
-              </Button>
-            </div>
-            
-            {syncResults && (
-              <div className="mt-6 space-y-2">
-                <h3 className="text-lg font-medium">Resultados da Sincronização</h3>
-                <div className="grid grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold">{syncResults.total}</div>
-                      <p className="text-xs text-muted-foreground">Total de alunos</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-green-600">{syncResults.imported}</div>
-                      <p className="text-xs text-muted-foreground">Novos importados</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-blue-600">{syncResults.updated}</div>
-                      <p className="text-xs text-muted-foreground">Atualizados</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-red-600">{syncResults.failed}</div>
-                      <p className="text-xs text-muted-foreground">Falhas</p>
-                    </CardContent>
-                  </Card>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>CPF</TableHead>
+                      <TableHead>Telefone</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {alunos.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          Nenhum aluno encontrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      alunos.map((aluno) => (
+                        <TableRow key={aluno.id}>
+                          <TableCell className="font-medium">{aluno.id}</TableCell>
+                          <TableCell>{`${aluno.firstName} ${aluno.lastName}`}</TableCell>
+                          <TableCell>{aluno.email}</TableCell>
+                          <TableCell>{aluno.customField1 || "N/A"}</TableCell>
+                          <TableCell>{aluno.phoneNumber || "N/A"}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-            )}
-          </TabsContent>
+              
+              {alunos.length > 0 && (
+                <div className="flex items-center justify-between space-x-2 py-4">
+                  <div className="text-sm text-muted-foreground">
+                    Página {page} de {totalPages}
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={page <= 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="sr-only">Página anterior</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={page >= totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      <span className="sr-only">Próxima página</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
           
-          <TabsContent value="logs">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Logs de Sincronização</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-                  {syncLogs.length > 0 ? (
-                    <div className="space-y-1">
-                      {syncLogs.map((log, index) => (
-                        <div key={index} className="text-sm font-mono">
-                          {log}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <Database className="mx-auto h-8 w-8 opacity-50" />
-                      <p className="mt-2">Nenhum log disponível</p>
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="ajuda">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ajuda sobre Sincronização</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <h3 className="font-medium">Como funciona a sincronização?</h3>
-                <p>O processo de sincronização conecta à API da LearnWorlds e importa dados de alunos para nosso sistema.</p>
-                
-                <h3 className="font-medium mt-4">Por que sincronizar?</h3>
-                <p>A sincronização permite que alunos cadastrados na plataforma LearnWorlds sejam automaticamente importados para o sistema de matrículas, facilitando a gestão integrada.</p>
-                
-                <h3 className="font-medium mt-4">Resolução de problemas</h3>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Verifique se o status da API está online</li>
-                  <li>Confira se as configurações da API estão corretas nas variáveis de ambiente</li>
-                  <li>Analise os logs de sincronização para identificar eventuais erros</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-
-      <CardFooter className="border-t bg-muted/50 px-6 py-3">
-        <p className="text-xs text-muted-foreground">
-          Último status da API: <span className={apiStatus === "online" ? "text-green-600" : "text-red-600"}>
-            {apiStatus === "online" ? "Online" : apiStatus === "checking" ? "Verificando..." : "Offline"}
-          </span>
-        </p>
-      </CardFooter>
-    </Card>
+          <div className="mt-6 text-sm text-muted-foreground bg-muted p-3 rounded-md">
+            <p>Estes alunos estão sincronizados com a plataforma LearnWorlds. Qualquer alteração feita na plataforma será refletida aqui após a sincronização.</p>
+            <p className="mt-1">Total de alunos encontrados: {alunos.length}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

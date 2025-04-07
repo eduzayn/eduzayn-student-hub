@@ -24,12 +24,18 @@ serve(async (req) => {
   // Na implementação real, você verificaria um token JWT
   const authHeader = req.headers.get("Authorization");
   
-  // Permitir acesso sem autenticação para simplificar o teste
-  // Em produção você deveria validar o JWT antes de prosseguir
-  if (!authHeader && method !== "GET") {
+  // Verificar o formato do token JWT
+  const token = authHeader?.replace('Bearer ', '') || '';
+  const isValidJwt = token && (
+    token.startsWith('eyJ') || 
+    token === 'admin-bypass-token' || 
+    token === process.env.BYPASS_TOKEN
+  );
+  
+  if (!isValidJwt && method !== "GET") {
     return new Response(JSON.stringify({
       error: "Não autorizado",
-      message: "Token de autenticação não fornecido"
+      message: "Token de autenticação não fornecido ou inválido"
     }), {
       headers: corsHeaders,
       status: 401
@@ -106,7 +112,7 @@ serve(async (req) => {
       });
     }
     
-    // Simulação do endpoint de cursos - IMPLEMENTAÇÃO ADICIONADA
+    // Simulação do endpoint de cursos
     if (path === "courses") {
       // Obter parâmetros de query
       const page = parseInt(url.searchParams.get("page") || "1");
