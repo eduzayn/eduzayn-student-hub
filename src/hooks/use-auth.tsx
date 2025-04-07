@@ -33,11 +33,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const checkAuth = async () => {
-    setIsLoading(true);
     try {
+      console.log("Verificando autenticação...");
       // Verificar bypass de admin
       const adminBypass = isAdminBypassAuthenticated();
+      
       if (adminBypass) {
+        console.log("Admin bypass autenticado");
         setIsLoggedIn(true);
         setIsAdminBypass(true);
         setIsAdminUser(true);
@@ -49,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Verificar autenticação normal
       const isAuth = await isAuthenticated();
+      console.log("Resultado da verificação de autenticação:", isAuth);
       setIsLoggedIn(isAuth);
       
       if (isAuth) {
@@ -57,7 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserEmail(email);
         
         // Verificar se é um email administrativo
-        setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
+        const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
+        console.log("É um email administrativo:", isAdmin, email);
+        setIsAdminUser(isAdmin);
+      } else {
+        setIsAdminUser(false);
       }
       
       setIsAdminBypass(false);
@@ -90,10 +97,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    checkAuth();
+    console.log("Inicializando hook de autenticação");
+    
+    const initAuth = async () => {
+      await checkAuth();
+    };
+    
+    initAuth();
     
     // Configurar listener para mudanças de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Evento de autenticação:", event);
+      
       if (event === 'SIGNED_IN' && session) {
         setIsLoggedIn(true);
         setIsAdminBypass(false);
@@ -101,11 +116,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserEmail(email);
         
         // Verificar se é um email administrativo
-        setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
+        const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
+        console.log("Email administrativo após login:", isAdmin, email);
+        setIsAdminUser(isAdmin);
+        
       } else if (event === 'SIGNED_OUT') {
-        setIsLoggedIn(isAdminBypassAuthenticated());
-        setIsAdminBypass(isAdminBypassAuthenticated());
-        const email = isAdminBypassAuthenticated() ? localStorage.getItem('adminBypassEmail') : null;
+        const adminBypass = isAdminBypassAuthenticated();
+        setIsLoggedIn(adminBypass);
+        setIsAdminBypass(adminBypass);
+        const email = adminBypass ? localStorage.getItem('adminBypassEmail') : null;
         setUserEmail(email);
         setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
       }
