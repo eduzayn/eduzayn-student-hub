@@ -9,66 +9,68 @@ import { toast } from "sonner";
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, isLoading, isAdminUser, userEmail, checkAuth } = useAuth();
+  const { isLoggedIn, isLoading, isAdminUser, userEmail, checkAuth, refreshAuth } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [checkCount, setCheckCount] = useState(0); // Contador para evitar loops infinitos
   
   useEffect(() => {
     let isMounted = true;
     
-    // Evitamos verificar mais de 3 vezes para prevenir loops infinitos
-    if (checkCount > 3) {
-      console.error("Muitas tentativas de verificação de autenticação. Possível loop infinito.");
-      setAuthError("Erro ao verificar autenticação após várias tentativas");
-      setIsChecking(false);
-      return;
-    }
-    
     // Dar um tempo antes de fazer a verificação para que o login tenha tempo de propagar
     const verifyAuth = async () => {
-      console.log(`[Admin] Aguardando antes de verificar autenticação (tentativa ${checkCount + 1})...`);
+      console.log(`[Admin] Iniciando verificação de autenticação`);
       
-      // Aguardar um tempo adicional após o login antes de verificar autenticação
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (!isMounted) return;
+      // Definir isChecking como true para mostrar o indicador de carregamento
       setIsChecking(true);
 
       try {
-        console.log(`[Admin] Verificando autenticação no componente Admin (tentativa ${checkCount + 1})...`);
+        // Primeiro, verificar estado atual
         console.log("[Admin] Estado atual antes da verificação:", { isLoggedIn, isAdminUser, userEmail });
         
-        // Primeiro, verificamos se já estamos autenticados com um usuário admin
+        // Se já estamos autenticados com um usuário admin, podemos pular o resto da verificação
         if (isLoggedIn && isAdminUser && !isLoading) {
-          console.log("[Admin] Usuário já está autenticado como administrador, pulando verificação");
-          setIsChecking(false);
+          console.log("[Admin] Usuário já está autenticado como administrador, exibindo portal");
+          if (isMounted) {
+            setIsChecking(false);
+          }
           return;
         }
 
+        // Forçar um refresh completo da autenticação
+        console.log("[Admin] Forçando atualização do estado de autenticação");
+        await refreshAuth();
+        
+        if (!isMounted) return;
+        
+        // Tentar autenticação novamente após o refresh
         const authenticated = await checkAuth();
         
         if (!isMounted) return;
         
-        console.log("[Admin] Resultado da verificação Admin:", { 
+        console.log("[Admin] Resultado da verificação após refresh:", { 
           authenticated, 
-          isAdminUser, 
-          userEmail,
-          isLoggedIn
+          isLoggedIn: isLoggedIn, 
+          isAdminUser: isAdminUser, 
+          userEmail: userEmail
         });
         
         // Se o usuário não estiver autenticado, redirecionar para login
         if (!authenticated) {
           console.log("[Admin] Usuário não autenticado, redirecionando para login");
-          navigate("/login");
+          if (isMounted) {
+            toast.error("Você precisa fazer login para acessar esta página");
+            navigate("/login");
+          }
           return;
         }
         
         // Se não for um usuário administrativo, redirecionar para o portal do aluno
         if (authenticated && !isAdminUser) {
           console.log("[Admin] Usuário não é administrativo, redirecionando para dashboard");
-          toast.warning("Acesso negado. Você não tem permissões administrativas.");
-          navigate("/dashboard");
+          if (isMounted) {
+            toast.warning("Acesso negado. Você não tem permissões administrativas.");
+            navigate("/dashboard");
+          }
           return;
         }
         
@@ -84,7 +86,6 @@ const Admin: React.FC = () => {
       } finally {
         if (isMounted) {
           setIsChecking(false);
-          setCheckCount(prev => prev + 1);
         }
       }
     };
@@ -94,16 +95,16 @@ const Admin: React.FC = () => {
       if (isMounted) {
         verifyAuth();
       }
-    }, 1000);  // Aumentando o delay para dar mais tempo para a autenticação ser processada
+    }, 500);
     
     return () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [navigate, checkAuth, isAdminUser, userEmail, isLoggedIn, isLoading, checkCount]);
+  }, [navigate, checkAuth, refreshAuth, isAdminUser, userEmail, isLoggedIn, isLoading]);
   
   // Mostrar mensagens de depuração para diagnóstico
-  console.log("[Admin] Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking, authError, checkCount });
+  console.log("[Admin] Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking, authError });
   
   // Se estiver carregando ou verificando, mostra o indicador de carregamento
   if (isLoading || isChecking) {

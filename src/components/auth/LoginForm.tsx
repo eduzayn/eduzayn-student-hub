@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, setAdminBypassAuthentication } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const loginSchema = z.object({
@@ -62,6 +62,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
     },
   });
 
+  // Limpar qualquer estado de autenticação anterior ao carregar o componente
+  useEffect(() => {
+    // Apenas para desenvolvimento - facilita o login após reload
+    // supabase.auth.signOut();
+  }, []);
+
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     setAuthError(null);
@@ -75,8 +81,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
     
     if (isAdminBypassCredentials) {
       console.log("Login bypass de administrador iniciado");
-      localStorage.setItem('adminBypassAuthenticated', 'true');
-      localStorage.setItem('adminBypassEmail', ADMIN_BYPASS.email);
+      
+      // Usar a nova função de configuração de bypass
+      setAdminBypassAuthentication(ADMIN_BYPASS.email);
       
       toast.success("Login realizado com sucesso!", {
         description: "Bem-vindo(a) ao Portal Administrativo"
@@ -84,12 +91,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
       
       setIsSuccessful(true);
       
-      // Maior delay para garantir que o localStorage seja atualizado e reconhecido
+      // Garantir que todos os estados e localStorage sejam atualizados antes de redirecionar
       setTimeout(() => {
         setIsLoading(false);
         console.log("Redirecionando para /admin após login bypass");
         navigate("/admin", { replace: true });
-      }, 3000);
+      }, 1000);
       
       return;
     }
@@ -125,7 +132,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         
         setIsSuccessful(true);
         
-        // Aumentar substancialmente o tempo de espera para garantir que a sessão seja processada
+        // Garantir que a sessão seja processada antes de redirecionar
         setTimeout(() => {
           setIsLoading(false);
           
@@ -136,7 +143,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
             console.log(`Redirecionando para ${redirectPath} após login normal`);
             navigate(redirectPath, { replace: true });
           });
-        }, 3000);
+        }, 1000);
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");

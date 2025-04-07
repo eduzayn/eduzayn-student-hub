@@ -20,29 +20,75 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   // Removendo o cabeçalho global x-application-name para evitar problemas de CORS
 });
 
+// Chave de armazenamento no localStorage para admin bypass
+const ADMIN_BYPASS_AUTH_KEY = 'adminBypassAuthenticated';
+const ADMIN_BYPASS_EMAIL_KEY = 'adminBypassEmail';
+
 // Verificar se o usuário com bypass está logado
 export const isAdminBypassAuthenticated = () => {
-  return localStorage.getItem('adminBypassAuthenticated') === 'true';
+  try {
+    return localStorage.getItem(ADMIN_BYPASS_AUTH_KEY) === 'true';
+  } catch (e) {
+    console.error("Erro ao verificar bypass admin:", e);
+    return false;
+  }
+};
+
+// Definir autenticação de bypass do administrador
+export const setAdminBypassAuthentication = (email: string) => {
+  try {
+    localStorage.setItem(ADMIN_BYPASS_AUTH_KEY, 'true');
+    localStorage.setItem(ADMIN_BYPASS_EMAIL_KEY, email);
+    console.log("Admin bypass definido com sucesso para:", email);
+    return true;
+  } catch (e) {
+    console.error("Erro ao definir bypass admin:", e);
+    return false;
+  }
+};
+
+// Obter o email do administrador bypass
+export const getAdminBypassEmail = () => {
+  try {
+    return localStorage.getItem(ADMIN_BYPASS_EMAIL_KEY);
+  } catch (e) {
+    console.error("Erro ao obter email de bypass admin:", e);
+    return null;
+  }
 };
 
 // Verificar qualquer tipo de autenticação (normal ou bypass)
 export const isAuthenticated = async () => {
   // Verificar primeiro bypass de admin
   if (isAdminBypassAuthenticated()) {
+    console.log("[client] Admin bypass autenticado");
     return true;
   }
   
   // Verificar autenticação normal
-  const { data } = await supabase.auth.getSession();
-  return !!data.session;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return !!data.session;
+  } catch (e) {
+    console.error("Erro ao verificar autenticação:", e);
+    return false;
+  }
 };
 
 // Função para logout (limpa tanto o auth do Supabase quanto o bypass de admin)
 export const logoutUser = async () => {
-  // Limpar bypass de admin se existir
-  localStorage.removeItem('adminBypassAuthenticated');
-  localStorage.removeItem('adminBypassEmail');
-  
-  // Logout normal do Supabase
-  await supabase.auth.signOut();
+  try {
+    // Limpar bypass de admin se existir
+    localStorage.removeItem(ADMIN_BYPASS_AUTH_KEY);
+    localStorage.removeItem(ADMIN_BYPASS_EMAIL_KEY);
+    
+    // Logout normal do Supabase
+    await supabase.auth.signOut();
+    
+    console.log("Usuário deslogado com sucesso");
+    return true;
+  } catch (e) {
+    console.error("Erro ao fazer logout:", e);
+    return false;
+  }
 };
