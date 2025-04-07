@@ -84,12 +84,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
       
       setIsSuccessful(true);
       
-      // Aguardar um pouco para garantir que o localStorage seja atualizado
+      // Maior delay para garantir que o localStorage seja atualizado e reconhecido
       setTimeout(() => {
         setIsLoading(false);
         console.log("Redirecionando para /admin após login bypass");
         navigate("/admin", { replace: true });
-      }, 2000);
+      }, 3000);
       
       return;
     }
@@ -125,14 +125,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         
         setIsSuccessful(true);
         
-        // Esperar um tempo maior para que a sessão seja processada completamente
+        // Aumentar substancialmente o tempo de espera para garantir que a sessão seja processada
         setTimeout(() => {
           setIsLoading(false);
-          // Redirecionar com base no tipo de email
-          const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
-          console.log(`Redirecionando para ${redirectPath} após login normal`);
-          navigate(redirectPath, { replace: true });
-        }, 2000);
+          
+          // Forçar refresh da sessão antes de redirecionar
+          supabase.auth.refreshSession().then(() => {
+            // Redirecionar com base no tipo de email
+            const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
+            console.log(`Redirecionando para ${redirectPath} após login normal`);
+            navigate(redirectPath, { replace: true });
+          });
+        }, 3000);
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");

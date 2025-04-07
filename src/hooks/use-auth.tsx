@@ -33,14 +33,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
+  const [lastCheck, setLastCheck] = useState<number>(0);
 
   // Função para verificar autenticação com bypass de admin
   const checkAdminBypass = () => {
     const adminBypass = isAdminBypassAuthenticated();
-    console.log("Verificando admin bypass:", adminBypass);
+    console.log("[useAuth] Verificando admin bypass:", adminBypass);
     
     if (adminBypass) {
-      console.log("Admin bypass autenticado");
+      console.log("[useAuth] Admin bypass autenticado");
       setIsLoggedIn(true);
       setIsAdminBypass(true);
       setIsAdminUser(true);
@@ -56,16 +57,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Verificar se já há uma autenticação via bypass antes de consultar o Supabase
       if (checkAdminBypass()) {
-        console.log("Autenticação por bypass confirmada, pulando verificação do Supabase");
+        console.log("[useAuth] Autenticação por bypass confirmada, pulando verificação do Supabase");
         return true;
       }
 
       const { data } = await supabase.auth.getSession();
       const session = data?.session;
-      console.log("Verificando sessão do Supabase:", !!session, "Email:", session?.user?.email);
+      console.log("[useAuth] Verificando sessão do Supabase:", !!session, "Email:", session?.user?.email);
       
       if (session) {
-        console.log("Usuário autenticado via Supabase");
+        console.log("[useAuth] Usuário autenticado via Supabase");
         setIsLoggedIn(true);
         setIsAdminBypass(false);
         const email = session.user?.email || null;
@@ -73,29 +74,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Verificar se é um email administrativo
         const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
-        console.log("Verificação de email admin:", isAdmin, email);
+        console.log("[useAuth] Verificação de email admin:", isAdmin, email);
         setIsAdminUser(isAdmin);
         return true;
       }
       
-      console.log("Usuário não autenticado via Supabase");
+      console.log("[useAuth] Usuário não autenticado via Supabase");
+      setIsLoggedIn(false);
+      setIsAdminUser(false);
+      setUserEmail(null);
       return false;
     } catch (error) {
-      console.error("Erro ao verificar sessão Supabase:", error);
+      console.error("[useAuth] Erro ao verificar sessão Supabase:", error);
       return false;
     }
   };
 
   const checkAuth = async () => {
     try {
-      console.log("Verificando autenticação...");
-      setIsLoading(true);
+      // Evitar chamadas muito frequentes (throttling)
+      const now = Date.now();
+      if (now - lastCheck < 1000) {
+        console.log("[useAuth] Verificação muito frequente, usando cache:", {isLoggedIn, isAdminUser});
+        return isLoggedIn;
+      }
+      
+      setLastCheck(now);
+      console.log("[useAuth] Verificando autenticação...");
+      
+      // Não definir isLoading como true aqui para evitar rerendering desnecessário
       
       // Primeiro verificar o bypass de admin (mais rápido, sem chamada assíncrona)
       const adminBypassAuth = checkAdminBypass();
       
       if (adminBypassAuth) {
-        console.log("Admin bypass autenticado e confirmado");
+        console.log("[useAuth] Admin bypass autenticado e confirmado");
         setIsLoading(false);
         return true;
       }
@@ -103,20 +116,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Se não for admin bypass, verificar autenticação normal do Supabase
       const supabaseAuth = await checkSupabaseAuth();
       
-      if (!supabaseAuth) {
-        console.log("Nenhuma autenticação válida encontrada");
-        setIsLoggedIn(false);
-        setIsAdminUser(false);
-        setUserEmail(null);
-      } else {
-        console.log("Autenticação Supabase confirmada");
-      }
-      
-      setIsAdminBypass(false);
+      console.log("[useAuth] Resultado da verificação:", {supabaseAuth, isLoggedIn, isAdminUser, userEmail});
       setIsLoading(false);
       return supabaseAuth;
     } catch (error) {
-      console.error("Erro ao verificar autenticação:", error);
+      console.error("[useAuth] Erro ao verificar autenticação:", error);
       setIsLoggedIn(false);
       setIsAdminBypass(false);
       setIsAdminUser(false);
@@ -143,50 +147,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Inicialização única quando o componente é montado
   useEffect(() => {
-    console.log("Inicializando hook de autenticação");
+    console.log("[useAuth] Inicializando hook de autenticação");
+    let isMounted = true;
     
     // Inicializar o estado com base no localStorage (para bypass admin) ou sessão existente
     const initializeAuthState = async () => {
       // Primeiro verificar o bypass de admin
       if (checkAdminBypass()) {
-        setSessionInitialized(true);
-        setIsLoading(false);
-        console.log("Estado inicial: Admin bypass autenticado");
+        if (isMounted) {
+          setSessionInitialized(true);
+          setIsLoading(false);
+          console.log("[useAuth] Estado inicial: Admin bypass autenticado");
+        }
         return;
       }
       
       // Se não for bypass, verificar sessão do Supabase
       try {
         const { data } = await supabase.auth.getSession();
-        if (data.session) {
+        if (data.session && isMounted) {
           const email = data.session.user?.email || null;
-          console.log("Sessão existente encontrada para:", email);
+          console.log("[useAuth] Sessão existente encontrada para:", email);
           setIsLoggedIn(true);
           setUserEmail(email);
           
           // Verificar se é um email administrativo
           const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
           setIsAdminUser(isAdmin);
-          console.log("Estado inicial: Usuário autenticado via Supabase, isAdmin:", isAdmin);
-        } else {
-          console.log("Estado inicial: Nenhuma sessão encontrada");
+          console.log("[useAuth] Estado inicial: Usuário autenticado via Supabase, isAdmin:", isAdmin);
+        } else if (isMounted) {
+          console.log("[useAuth] Estado inicial: Nenhuma sessão encontrada");
         }
       } catch (error) {
-        console.error("Erro ao inicializar estado de autenticação:", error);
+        console.error("[useAuth] Erro ao inicializar estado de autenticação:", error);
       } finally {
-        setSessionInitialized(true);
-        setIsLoading(false);
+        if (isMounted) {
+          setSessionInitialized(true);
+          setIsLoading(false);
+        }
       }
     };
     
-    initializeAuthState();
+    // Carregar com pequeno delay para garantir que localStorage esteja disponível
+    setTimeout(() => {
+      initializeAuthState();
+    }, 500);
     
     // Configurar listener para mudanças de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Evento de autenticação:", event);
+      console.log("[useAuth] Evento de autenticação:", event);
       
-      if (event === 'SIGNED_IN' && session) {
-        console.log("Evento SIGNED_IN recebido");
+      if (event === 'SIGNED_IN' && session && isMounted) {
+        console.log("[useAuth] Evento SIGNED_IN recebido");
         setIsLoggedIn(true);
         setIsAdminBypass(false);
         const email = session.user?.email || null;
@@ -194,17 +206,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Verificar se é um email administrativo
         const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
-        console.log("Email administrativo após login:", isAdmin, email);
+        console.log("[useAuth] Email administrativo após login:", isAdmin, email);
         setIsAdminUser(isAdmin);
         
         // Notificar o usuário (já feito no LoginForm)
-      } else if (event === 'SIGNED_OUT') {
-        console.log("Evento SIGNED_OUT recebido");
+      } else if (event === 'SIGNED_OUT' && isMounted) {
+        console.log("[useAuth] Evento SIGNED_OUT recebido");
         // Primeiro verificar se há um bypass de admin ativo
         const adminBypass = isAdminBypassAuthenticated();
         
         if (adminBypass) {
-          console.log("Admin bypass permanece ativo após sign out");
+          console.log("[useAuth] Admin bypass permanece ativo após sign out");
           setIsLoggedIn(true);
           setIsAdminBypass(true);
           const email = localStorage.getItem('adminBypassEmail');
@@ -212,17 +224,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
         } else {
           // Caso contrário, está realmente deslogado
-          console.log("Usuário completamente deslogado");
+          console.log("[useAuth] Usuário completamente deslogado");
           setIsLoggedIn(false);
           setIsAdminUser(false);
           setUserEmail(null);
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log("Token atualizado com sucesso");
+      } else if (event === 'TOKEN_REFRESHED' && isMounted) {
+        console.log("[useAuth] Token atualizado com sucesso");
       }
     });
     
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
