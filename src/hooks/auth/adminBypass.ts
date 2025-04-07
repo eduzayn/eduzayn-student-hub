@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Token JWT para bypass administrativo (substituído pelo token criado no Supabase)
+// Token JWT para bypass administrativo (esse token deve corresponder ao ADMIN_BYPASS_TOKEN configurado na edge function)
 // Este token será usado apenas para chamadas de API quando estiver em modo bypass
-export const ADMIN_BYPASS_JWT = "Zayn@2025";
+export const ADMIN_BYPASS_JWT = "eduzayn-bypass-token-2025";
 
 // Verificar se o usuário com bypass está logado
 export const isAdminBypassAuthenticated = () => {

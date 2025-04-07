@@ -2,15 +2,19 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
+// Definir cabeçalhos CORS para permitir chamadas da aplicação
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Content-Type": "application/json"
+};
+
+// Token fixo para autenticação bypass admin (deve corresponder ao valor no frontend)
+const ADMIN_BYPASS_TOKEN = "eduzayn-bypass-token-2025";
+
 serve(async (req) => {
   const { method } = req;
-
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Content-Type": "application/json"
-  };
 
   // Tratamento da requisição de pré-flight CORS
   if (method === "OPTIONS") {
@@ -20,27 +24,24 @@ serve(async (req) => {
     });
   }
 
-  // Verificação de autenticação básica (apenas para demonstração)
-  // Na implementação real, você verificaria um token JWT
+  // Verificação de autenticação
   const authHeader = req.headers.get("Authorization");
-  
-  // Verificar o formato do token JWT
   const token = authHeader?.replace('Bearer ', '') || '';
-  const isValidJwt = token && (
-    token.startsWith('eyJ') || 
-    token === 'admin-bypass-token' || 
-    token === process.env.BYPASS_TOKEN
-  );
   
-  if (!isValidJwt && method !== "GET") {
+  // Verificar se o token é igual ao token de bypass
+  if (token !== ADMIN_BYPASS_TOKEN) {
+    console.log("Token inválido recebido:", token);
     return new Response(JSON.stringify({
-      error: "Não autorizado",
-      message: "Token de autenticação não fornecido ou inválido"
+      code: 401,
+      message: "Invalid JWT"
     }), {
       headers: corsHeaders,
       status: 401
     });
   }
+
+  // Se chegar aqui, a autenticação foi bem-sucedida
+  console.log("Autenticação bem-sucedida com token de bypass");
 
   if (method === "GET") {
     // Endpoint simples de verificação de status
