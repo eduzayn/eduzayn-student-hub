@@ -1,64 +1,201 @@
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
-// Definindo uma interface para o retorno da função processarPagamento
-interface ResultadoPagamento {
-  success: boolean;
-  paymentId?: string;
-  invoiceUrl?: string;
-  errorMessage?: string;
+// URL base correta para funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
+
+interface AsaasBilling {
+  customer: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+  };
+  dueDate: string;
+  value: number;
+  description?: string;
+  externalReference?: string;
 }
 
-export const useGatewayPagamento = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface LytexBilling {
+  customer: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    mobilePhone?: string;
+  };
+  payment: {
+    value: number;
+    dueDate: string;
+    description?: string;
+    externalReference?: string;
+  };
+}
 
-  /**
-   * Processa um pagamento através do gateway selecionado
-   */
-  const processarPagamento = async (gateway: string, params: any): Promise<ResultadoPagamento> => {
-    setLoading(true);
-    setError(null);
+const useGatewayPagamento = () => {
+  const { getAccessToken } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const processarPagamento = async (gateway: string, params: any) => {
+    setIsLoading(true);
     
     try {
-      // Simulação de processamento de pagamento
-      console.log(`Processando pagamento via ${gateway}`, params);
-      
-      // Em um ambiente de produção, isto chamaria o gateway real
-      // Por enquanto, apenas simulamos um sucesso após um breve delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const result: ResultadoPagamento = {
-        success: true,
-        paymentId: `pay_${Math.random().toString(36).substring(2, 12)}`,
-        invoiceUrl: `https://pagamento.exemplo.com/${gateway}/${Math.random().toString(36).substring(2, 15)}`
-      };
-      
-      return result;
-    } catch (err: any) {
-      const errorMsg = err.message || `Erro ao processar pagamento via ${gateway}`;
-      setError(errorMsg);
-      toast.error(errorMsg);
-      
-      // Retornamos um objeto com a mesma estrutura, mas com success: false
-      return { 
-        success: false,
-        errorMessage: errorMsg,
-        // Incluímos campos vazios para garantir a consistência do tipo
-        paymentId: undefined,
-        invoiceUrl: undefined
-      };
+      // Determinar qual gateway usar
+      if (gateway.startsWith('asaas')) {
+        return await processarPagamentoAsaas(gateway, params);
+      } else if (gateway.startsWith('lytex')) {
+        return await processarPagamentoLytex(gateway, params);
+      } else {
+        throw new Error(`Gateway de pagamento não suportado: ${gateway}`);
+      }
+    } catch (error) {
+      console.error("Erro ao processar pagamento:", error);
+      return { success: false, error: error instanceof Error ? error.message : "Erro desconhecido" };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  return {
-    loading,
-    error,
-    processarPagamento
+  
+  const processarPagamentoAsaas = async (gateway: string, params: any) => {
+    const { matricula_id, customerData, dueDate, value, description } = params;
+    
+    const billingData: AsaasBilling = {
+      customer: {
+        name: customerData.nome,
+        email: customerData.email,
+        cpfCnpj: customerData.cpf,
+      },
+      dueDate: dueDate,
+      value: value,
+      description: description || "Pagamento de matrícula",
+      externalReference: matricula_id
+    };
+    
+    // Determinar tipo de pagamento
+    let paymentType = "BOLETO";
+    if (gateway === "asaas_credit_card") {
+      paymentType = "CREDIT_CARD";
+    } else if (gateway === "asaas_pix") {
+      paymentType = "PIX";
+    }
+    
+    const token = await getAccessToken();
+    
+    if (!token) {
+      throw new Error("Usuário não autenticado");
+    }
+    
+    const response = await fetch(`${SUPABASE_FUNCTION_BASE_URL}/asaas-payments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        operation: "create-payment",
+        payload: {
+          ...billingData,
+          paymentType
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ao processar pagamento: ${response.status}`);
+      } catch (e) {
+        throw new Error(`Erro ao processar pagamento: ${response.status}`);
+      }
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.message || "Falha ao processar pagamento");
+    }
+    
+    return {
+      success: true,
+      paymentId: data.payment?.id,
+      invoiceUrl: data.payment?.invoiceUrl,
+    };
   };
+  
+  const processarPagamentoLytex = async (gateway: string, params: any) => {
+    const { matricula_id, customerData, dueDate, value, description } = params;
+    
+    const billingData: LytexBilling = {
+      customer: {
+        name: customerData.nome,
+        email: customerData.email,
+        cpfCnpj: customerData.cpf,
+        mobilePhone: customerData.telefone
+      },
+      payment: {
+        value: value,
+        dueDate: dueDate,
+        description: description || "Pagamento de matrícula",
+        externalReference: matricula_id
+      }
+    };
+    
+    // Determinar operação baseada no gateway
+    let paymentMethod = "BOLETO";
+    if (gateway === "lytex_credit_card") {
+      paymentMethod = "CREDIT_CARD";
+    } else if (gateway === "lytex_pix") {
+      paymentMethod = "PIX";
+    }
+    
+    const token = await getAccessToken();
+    
+    if (!token) {
+      throw new Error("Usuário não autenticado");
+    }
+    
+    // Correto uso da URL base para a função Lytex
+    const response = await fetch(`${SUPABASE_FUNCTION_BASE_URL}/lytex-integration`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        operation: "create-customer-and-payment",
+        payload: {
+          ...billingData,
+          paymentMethod
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Erro ao processar pagamento: ${response.status}`);
+      } catch (e) {
+        throw new Error(`Erro ao processar pagamento: ${response.status}`);
+      }
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.message || "Falha ao processar pagamento");
+    }
+    
+    return {
+      success: true,
+      paymentId: data.payment?.id,
+      invoiceUrl: data.payment?.invoiceUrl,
+      customerId: data.customer?.id
+    };
+  };
+  
+  return { processarPagamento, isLoading };
 };
 
 export default useGatewayPagamento;
