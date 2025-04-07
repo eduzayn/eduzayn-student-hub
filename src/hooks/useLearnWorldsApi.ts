@@ -1,19 +1,6 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// URL base da função edge do Supabase
-const SUPABASE_FUNCTION_URL = 'https://bioarzkfmcobctblzztm.supabase.co/functions/v1';
-
-// Interface para parâmetros do aluno
-interface AlunoParams {
-  firstName: string;
-  lastName: string;
-  email: string;
-  cpf?: string;
-  phoneNumber?: string;
-}
 
 /**
  * Hook para interagir com a API do LearnWorlds através das funções edge do Supabase
@@ -67,7 +54,7 @@ const useLearnWorldsApi = () => {
         options.body = JSON.stringify(body);
       }
 
-      const url = `${SUPABASE_FUNCTION_URL}/${endpoint}`;
+      const url = `https://bioarzkfmcobctblzztm.supabase.co/functions/v1/${endpoint}`;
       console.log(`Fazendo requisição ${method} para ${url}`);
       
       const response = await fetch(url, options);

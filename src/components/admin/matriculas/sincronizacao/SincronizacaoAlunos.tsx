@@ -9,31 +9,28 @@ import { toast } from "sonner";
 import LearnWorldsErrorAlert from "@/components/admin/matriculas/LearnWorldsErrorAlert";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 
-interface SincronizacaoCursosProps {
+interface SincronizacaoAlunosProps {
   // Props if needed
 }
 
-const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
+const SincronizacaoAlunos: React.FC<SincronizacaoAlunosProps> = () => {
   const navigate = useNavigate();
-  const { sincronizarCursos, loading, error, offlineMode } = useLearnWorldsApi();
+  const { sincronizarAlunos, loading, error, offlineMode } = useLearnWorldsApi();
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   
   const handleSincronizar = async (todos: boolean = false) => {
     try {
-      const result = await sincronizarCursos(todos);
+      const result = await sincronizarAlunos(todos);
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
       }
     } catch (error) {
       console.error("Erro ao sincronizar:", error);
-      toast.error("Erro ao sincronizar cursos com LearnWorlds");
+      toast.error("Erro ao sincronizar alunos com LearnWorlds");
     }
   };
-  
-  // Opção de alternar entre modo offline e online foi removida
-  // pois não existe nos métodos do hook
 
   return (
     <div className="p-4">
@@ -54,7 +51,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
           <CardHeader>
             <CardTitle>Sincronização Incremental</CardTitle>
             <CardDescription>
-              Sincroniza apenas os cursos que foram modificados ou são novos.
+              Sincroniza apenas os alunos que foram modificados ou são novos.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -68,7 +65,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
               )}
-              {loading ? "Sincronizando..." : "Sincronizar Novos Cursos"}
+              {loading ? "Sincronizando..." : "Sincronizar Novos Alunos"}
             </Button>
           </CardContent>
         </Card>
@@ -77,7 +74,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
           <CardHeader>
             <CardTitle>Sincronização Completa</CardTitle>
             <CardDescription>
-              Sincroniza todos os cursos do LearnWorlds. Isso pode demorar mais.
+              Sincroniza todos os alunos do LearnWorlds. Isso pode demorar mais.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,7 +89,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
               )}
-              {loading ? "Sincronizando..." : "Sincronizar Todos os Cursos"}
+              {loading ? "Sincronizando..." : "Sincronizar Todos os Alunos"}
             </Button>
           </CardContent>
         </Card>
@@ -110,7 +107,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
             <div className="flex flex-col gap-2">
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                  <div className="text-xs text-green-700 font-semibold">NOVOS CURSOS</div>
+                  <div className="text-xs text-green-700 font-semibold">NOVOS ALUNOS</div>
                   <div className="text-2xl font-bold text-green-600">{resultado.imported}</div>
                 </div>
                 <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
@@ -132,7 +129,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Atenção</AlertTitle>
                   <AlertDescription>
-                    {resultado.failed} cursos não puderam ser sincronizados. 
+                    {resultado.failed} alunos não puderam ser sincronizados. 
                     Verifique os logs para mais detalhes.
                   </AlertDescription>
                 </Alert>
@@ -143,7 +140,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
                   <CheckCircle className="h-4 w-4" />
                   <AlertTitle>Tudo em dia</AlertTitle>
                   <AlertDescription>
-                    Nenhuma alteração foi necessária. Todos os cursos já estão sincronizados.
+                    Nenhuma alteração foi necessária. Todos os alunos já estão sincronizados.
                   </AlertDescription>
                 </Alert>
               )}
@@ -179,4 +176,4 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
   );
 };
 
-export default SincronizacaoCursos;
+export default SincronizacaoAlunos;
