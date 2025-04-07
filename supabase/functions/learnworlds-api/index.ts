@@ -17,6 +17,8 @@ const ADMIN_BYPASS_TOKEN = adminToken || fallbackToken;
 
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token do ambiente configurado:", adminToken ? "Sim (✓)" : "Não (usando fallback)");
+console.log("Comprimento do token esperado:", ADMIN_BYPASS_TOKEN.length);
+console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_TOKEN.substring(0, 5) + "...");
 
 serve(async (req) => {
   const { method } = req;
@@ -69,6 +71,15 @@ serve(async (req) => {
   
   if (!tokenMatches) {
     console.log("Token inválido - nenhuma correspondência encontrada");
+    // TEMPORARIAMENTE para diagnóstico - compare caractere por caractere
+    let firstMismatchPos = -1;
+    for (let i = 0; i < Math.min(token.length, ADMIN_BYPASS_TOKEN.length); i++) {
+      if (token[i] !== ADMIN_BYPASS_TOKEN[i]) {
+        firstMismatchPos = i;
+        break;
+      }
+    }
+    
     return new Response(JSON.stringify({
       code: 401,
       message: "Invalid JWT",
@@ -76,7 +87,9 @@ serve(async (req) => {
         tokenLength: token.length,
         expectedLength: ADMIN_BYPASS_TOKEN.length,
         tokenStart: token.substring(0, 5) + "...",
-        expectedStart: ADMIN_BYPASS_TOKEN.substring(0, 5) + "..."
+        expectedStart: ADMIN_BYPASS_TOKEN.substring(0, 5) + "...",
+        firstMismatchAt: firstMismatchPos >= 0 ? firstMismatchPos : "Nenhum (tamanhos diferentes)",
+        usingEnvironmentToken: !!adminToken
       }
     }), {
       headers: corsHeaders,
