@@ -106,6 +106,107 @@ serve(async (req) => {
       });
     }
     
+    // Simulação do endpoint de cursos - IMPLEMENTAÇÃO ADICIONADA
+    if (path === "courses") {
+      // Obter parâmetros de query
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "20");
+      const searchTerm = url.searchParams.get("q") || "";
+      
+      // Dados mockados para simulação
+      const mockCourses = [
+        { 
+          id: "course-1", 
+          title: "Desenvolvimento Web Frontend", 
+          description: "Aprenda HTML, CSS e JavaScript para criar sites modernos", 
+          price: 1200.00,
+          duration: "60 horas",
+          image: "https://via.placeholder.com/300x200"
+        },
+        { 
+          id: "course-2", 
+          title: "Python para Ciência de Dados", 
+          description: "Fundamentos de Python e bibliotecas para análise de dados", 
+          price: 1500.00,
+          duration: "80 horas",
+          image: "https://via.placeholder.com/300x200"
+        },
+        { 
+          id: "course-3", 
+          title: "Marketing Digital Avançado", 
+          description: "Estratégias avançadas de marketing para o ambiente digital", 
+          price: 1800.00,
+          duration: "90 horas",
+          image: "https://via.placeholder.com/300x200"
+        },
+        { 
+          id: "course-4", 
+          title: "Design UX/UI", 
+          description: "Princípios de design de experiência e interface do usuário", 
+          price: 1400.00,
+          duration: "70 horas",
+          image: "https://via.placeholder.com/300x200"
+        }
+      ];
+      
+      // Filtrar se houver termo de busca
+      const filteredCourses = searchTerm ? 
+        mockCourses.filter(c => 
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          c.description.toLowerCase().includes(searchTerm.toLowerCase())
+        ) : mockCourses;
+      
+      return new Response(JSON.stringify({
+        data: filteredCourses,
+        total: filteredCourses.length,
+        page: page,
+        pages: 1
+      }), {
+        headers: corsHeaders,
+        status: 200
+      });
+    }
+    
+    // Endpoint para detalhes de um curso específico
+    if (path.startsWith("courses/")) {
+      const courseId = path.split("courses/")[1];
+      
+      // Dados mockados
+      const mockCourseDetails = {
+        id: courseId,
+        title: `Curso ${courseId}`,
+        description: `Descrição detalhada do curso ${courseId}`,
+        price: 1500.00,
+        duration: "80 horas",
+        image: "https://via.placeholder.com/600x400",
+        modules: [
+          {
+            id: "module-1",
+            title: "Introdução",
+            description: "Fundamentos básicos",
+            lessons: [
+              { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
+              { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
+            ]
+          },
+          {
+            id: "module-2",
+            title: "Nível intermediário",
+            description: "Aprofundando conhecimentos",
+            lessons: [
+              { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
+              { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
+            ]
+          }
+        ]
+      };
+      
+      return new Response(JSON.stringify(mockCourseDetails), {
+        headers: corsHeaders,
+        status: 200
+      });
+    }
+    
     return new Response(JSON.stringify({
       message: "Endpoint não implementado",
       path: path

@@ -12,7 +12,7 @@ const LearnWorldsErrorAlert: React.FC<LearnWorldsErrorAlertProps> = ({
 }) => {
   return (
     <Alert variant="destructive" className="mb-4">
-      <AlertCircle className="h-4 w-4" />
+      <AlertCircle className="h-4 w-4 mr-2" />
       <AlertDescription>
         {errorMessage}
         <p className="text-xs mt-1">A matrícula será criada apenas no sistema local.</p>
