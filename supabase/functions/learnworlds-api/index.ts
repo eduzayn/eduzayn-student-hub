@@ -84,70 +84,22 @@ serve(async (req) => {
     if (path === 'status' || path === '/status') {
       console.log("🔄 Redirecionando para endpoint de status");
       
-      // Obter a URL base atual e criar URL para status
-      // Importante: NUNCA usar URL relativas para funções Supabase
-      const urlObj = new URL(req.url);
-      const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-      const statusUrl = `${baseUrl}/functions/v1/learnworlds-api/status`;
-      
-      console.log(`🔄 Redirecionando para: ${statusUrl}`);
-      
       try {
-        const statusResponse = await fetch(statusUrl, {
-          method: 'GET',
-          headers: req.headers
-        });
+        // Importar e executar o código do módulo status diretamente
+        const { default: statusModule } = await import('./status.ts');
+        console.log("✅ Módulo de status importado com sucesso");
         
-        // Garantir que seja uma resposta JSON válida
-        const contentType = statusResponse.headers.get('content-type') || '';
-        console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
+        // Criar uma nova requisição para o módulo de status
+        return await statusModule(req);
         
-        // Sempre retornamos como JSON, independente do que recebemos
-        try {
-          const text = await statusResponse.text();
-          try {
-            // Tenta parsear como JSON
-            const data = JSON.parse(text);
-            return new Response(
-              JSON.stringify(data),
-              {
-                status: statusResponse.status,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              }
-            );
-          } catch (e) {
-            // Se não for JSON, wrap em um objeto JSON
-            return new Response(
-              JSON.stringify({ 
-                status: "offline",
-                error: "Resposta inválida do status endpoint", 
-                rawResponse: text.substring(0, 500)
-              }),
-              {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              }
-            );
-          }
-        } catch (e) {
-          console.error("Erro ao ler texto da resposta:", e);
-          return new Response(
-            JSON.stringify({ 
-              status: "offline",
-              error: "Erro ao processar resposta do status endpoint" 
-            }),
-            {
-              status: 200,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            }
-          );
-        }
-      } catch (e) {
-        console.error("Erro ao chamar status endpoint:", e);
+      } catch (statusError) {
+        console.error("❌ Erro ao executar módulo de status:", statusError);
+        
         return new Response(
           JSON.stringify({ 
             status: "offline",
-            error: "Erro ao chamar status endpoint" 
+            error: "Erro ao processar verificação de status", 
+            details: statusError instanceof Error ? statusError.message : "Erro desconhecido"
           }),
           {
             status: 200,

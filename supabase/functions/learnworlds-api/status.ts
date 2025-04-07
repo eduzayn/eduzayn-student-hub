@@ -44,9 +44,11 @@ serve(async (req) => {
     const apiKey = Deno.env.get('LEARNWORLDS_API_KEY') || 'YEmshZGseUfFldAcQA65P9WHaY5MzdTM4Vk87uWg';
     const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || 'grupozayneducacional';
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
+    const clientId = Deno.env.get('LEARNWORLDS_CLIENT_ID') || 'zayn-lms-client';
     
     console.log(`📚 Usando escola: ${schoolId}`);
     console.log(`🔗 API Base URL: ${apiBaseUrl}`);
+    console.log(`👤 Client ID: ${clientId}`);
     
     // Verificar se as configurações estão presentes
     if (!apiKey) {
@@ -79,9 +81,24 @@ serve(async (req) => {
       );
     }
     
+    if (!clientId) {
+      console.log("❌ Client ID não encontrado");
+      return new Response(
+        JSON.stringify({ 
+          status: "offline",
+          error: "Client ID não encontrado", 
+          details: "ID do cliente LearnWorlds não configurado" 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
     // Verificar a conexão tentando fazer uma chamada real à API LearnWorlds
-    // Montar a URL da API LearnWorlds
-    const testUrl = `${apiBaseUrl}/api/v2/schools/${schoolId}/users?limit=1`;
+    // Montar a URL da API LearnWorlds com o client_id necessário
+    const testUrl = `${apiBaseUrl}/api/v2/schools/${schoolId}/users?limit=1&client_id=${clientId}`;
     console.log(`🔍 Testando conexão com URL: ${testUrl}`);
     
     // Fazer uma chamada de teste para a API LearnWorlds
