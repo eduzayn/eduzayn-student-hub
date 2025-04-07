@@ -23,6 +23,30 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Chave de armazenamento no localStorage para admin bypass
 const ADMIN_BYPASS_AUTH_KEY = 'adminBypassAuthenticated';
 const ADMIN_BYPASS_EMAIL_KEY = 'adminBypassEmail';
+// Novo: Flag para desativar temporariamente a confirmação de email
+const BYPASS_EMAIL_CONFIRMATION_KEY = 'bypassEmailConfirmationEnabled';
+
+// Definir se a confirmação de email está desativada
+export const setBypassEmailConfirmation = (enabled: boolean) => {
+  try {
+    localStorage.setItem(BYPASS_EMAIL_CONFIRMATION_KEY, String(enabled));
+    console.log(`Confirmação de email ${enabled ? 'desativada' : 'ativada'}`);
+    return true;
+  } catch (e) {
+    console.error("Erro ao configurar bypass de confirmação de email:", e);
+    return false;
+  }
+};
+
+// Verificar se a confirmação de email está desativada
+export const isEmailConfirmationBypassed = () => {
+  try {
+    return localStorage.getItem(BYPASS_EMAIL_CONFIRMATION_KEY) === 'true';
+  } catch (e) {
+    console.error("Erro ao verificar bypass de confirmação de email:", e);
+    return false;
+  }
+};
 
 // Verificar se o usuário com bypass está logado
 export const isAdminBypassAuthenticated = () => {
@@ -92,3 +116,6 @@ export const logoutUser = async () => {
     return false;
   }
 };
+
+// Ativar bypass de confirmação de email por padrão
+setBypassEmailConfirmation(true);

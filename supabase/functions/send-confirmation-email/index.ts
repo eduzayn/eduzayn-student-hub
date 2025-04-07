@@ -45,7 +45,24 @@ serve(async (req) => {
         }
       );
     }
+    
+    // *** MODO DE DESENVOLVIMENTO - DESATIVAÇÃO TEMPORÁRIA ***
+    // Simular sucesso sem tentar realmente enviar o email
+    console.log(`[BYPASS ATIVADO] Simulando envio de email para ${email} com URL: ${confirmationUrl}`);
 
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: `Simulação de email para ${email} - Função temporariamente desativada`,
+        bypass: true
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+
+    /* CÓDIGO ORIGINAL DE ENVIO DE EMAIL - COMENTADO TEMPORARIAMENTE
     // Construir o template de email
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -98,7 +115,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+    */
+  } catch (error: any) {
     // Lidar com erros gerais
     console.error("Erro ao processar solicitação:", error);
     return new Response(

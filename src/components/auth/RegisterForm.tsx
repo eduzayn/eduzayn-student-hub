@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isEmailConfirmationBypassed } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const registroSchema = z.object({
@@ -46,6 +45,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState<string>("");
+  const bypassEmailConfirmation = isEmailConfirmationBypassed();
 
   const form = useForm<RegistroFormValues>({
     resolver: zodResolver(registroSchema),
@@ -63,110 +63,61 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
     setNeedsEmailConfirmation(false);
     
     try {
+      console.log("Iniciando registro para:", values.email);
+      console.log("Bypass de confirmação de email:", bypassEmailConfirmation ? "ATIVADO" : "DESATIVADO");
+      
       const { error, data } = await supabase.auth.signUp({
         email: values.email,
         password: values.senha,
         options: {
           data: {
             full_name: values.nome,
-          }
+          },
+          emailRedirectTo: bypassEmailConfirmation ? undefined : window.location.origin + '/login'
         }
       });
 
       if (error) {
+        console.error("Erro ao registrar:", error.message);
         setAuthError(error.message);
       } else {
         setConfirmationEmail(values.email);
         
         if (data?.user?.identities?.length === 0) {
-          // Usuário já existe
+          console.log("Email já cadastrado, redirecionando para login");
           setAuthError("Este email já está cadastrado. Por favor, tente fazer login.");
           onSwitchTab("login");
-        } else if (data?.user && !data.user.confirmed_at) {
-          // Email precisa ser confirmado
-          try {
-            const { origin } = window.location;
-            const confirmationUrl = `${origin}/login?email=${encodeURIComponent(values.email)}&confirmation=true`;
-            
-            // Chamar nossa função personalizada de envio de e-mail
-            const response = await supabase.functions.invoke('send-confirmation-email', {
-              body: {
-                email: values.email,
-                confirmationUrl: confirmationUrl
-              }
-            });
-            
-            if (response.error) {
-              throw new Error(response.error.message);
-            }
-            
-            setNeedsEmailConfirmation(true);
-            toast.info("Verifique seu email!", {
-              description: "Enviamos um link de confirmação para seu email."
-            });
-            setAuthError("Verifique seu email para confirmar seu cadastro!");
-            form.reset();
-          } catch (emailError: any) {
-            console.error("Erro ao enviar email de confirmação:", emailError);
-            // Em caso de erro CORS, ainda mostramos uma mensagem positiva ao usuário
-            setNeedsEmailConfirmation(true);
-            toast.info("Cadastro realizado!", {
-              description: "Por favor verifique seu email para confirmar seu cadastro."
-            });
-            setAuthError("Verifique seu email para confirmar seu cadastro. Se não receber, contate o suporte.");
-            form.reset();
-          }
+        } else if (!bypassEmailConfirmation && data?.user && !data.user.confirmed_at) {
+          console.log("Email precisa ser confirmado (bypass desativado)");
+          
+          setNeedsEmailConfirmation(true);
+          toast.info("Verificação de email desativada!", {
+            description: "Normalmente enviamos um link de confirmação, mas esta função está temporariamente desativada."
+          });
+          setAuthError("Registro realizado com sucesso! Em um ambiente de produção, você receberia um email de confirmação.");
+          form.reset();
         } else {
+          console.log("Registro concluído com sucesso");
           toast.success("Cadastro realizado com sucesso!", {
             description: "Você já pode fazer login."
           });
-          setAuthError("Usuário cadastrado com sucesso! Você já pode fazer login.");
+          setAuthError(null);
           onSwitchTab("login");
           form.reset();
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erro não tratado durante o registro:", error);
       setAuthError("Ocorreu um erro durante o registro. Tente novamente.");
-      console.error("Erro de registro:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const resendConfirmationEmail = async () => {
-    if (!confirmationEmail) return;
-    
-    setIsLoading(true);
-    try {
-      const { origin } = window.location;
-      const confirmationUrl = `${origin}/login?email=${encodeURIComponent(confirmationEmail)}&confirmation=true`;
-      
-      // Chamar nossa função personalizada de envio de e-mail
-      const response = await supabase.functions.invoke('send-confirmation-email', {
-        body: {
-          email: confirmationEmail,
-          confirmationUrl: confirmationUrl
-        }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-      
-      setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
-      toast.success("Email reenviado com sucesso!", {
-        description: "Verifique sua caixa de entrada e pasta de spam."
-      });
-    } catch (error) {
-      // Mesmo com erro, damos uma mensagem positiva ao usuário
-      setAuthError("Solicitação de confirmação processada. Se não receber o email em alguns minutos, contate o suporte.");
-      toast.info("Solicitação processada", {
-        description: "Se não receber o email, contate o suporte."
-      });
-      console.error("Erro ao reenviar email:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    toast.info("Função de confirmação de email desativada", {
+      description: "A verificação por email está temporariamente desativada."
+    });
   };
 
   return (
@@ -176,7 +127,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{authError}</AlertDescription>
           
-          {needsEmailConfirmation && (
+          {needsEmailConfirmation && !bypassEmailConfirmation && (
             <Button 
               variant="link" 
               onClick={resendConfirmationEmail} 
@@ -186,6 +137,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchTab }) => {
               Reenviar email de confirmação
             </Button>
           )}
+        </Alert>
+      )}
+      
+      {bypassEmailConfirmation && (
+        <Alert variant="default" className="bg-yellow-50 border-yellow-200 mb-4">
+          <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <AlertDescription className="text-yellow-700">
+            A confirmação de email está temporariamente desativada. Registros são concluídos automaticamente.
+          </AlertDescription>
         </Alert>
       )}
       

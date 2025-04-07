@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { supabase, setAdminBypassAuthentication } from "@/integrations/supabase/client";
+import { supabase, setAdminBypassAuthentication, isEmailConfirmationBypassed } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const loginSchema = z.object({
@@ -53,6 +52,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
   const [confirmationEmail, setConfirmationEmail] = useState<string>("");
   const [isSuccessful, setIsSuccessful] = useState(false);
   const navigate = useNavigate();
+  const bypassEmailConfirmation = isEmailConfirmationBypassed();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -111,6 +111,44 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
       if (error) {
         console.error("Erro de login:", error.message);
         
+        // Se o bypass de confirmação de email estiver ativo, tentar automaticamente concluir o registro
+        if (bypassEmailConfirmation && (
+          error.message.includes("Email not confirmed") || 
+          error.message.toLowerCase().includes("email não confirmado"))
+        ) {
+          console.log("Email não confirmado, mas bypass está ativo. Tentando login novamente após pequeno delay...");
+          
+          // Mostrar mensagem para o usuário indicando que o sistema está processando
+          toast.info("Processando seu login...", {
+            description: "Aguarde um momento enquanto configuramos sua conta."
+          });
+          
+          // Tentar login novamente após um pequeno delay
+          setTimeout(async () => {
+            try {
+              const secondAttempt = await supabase.auth.signInWithPassword({
+                email: values.email,
+                password: values.senha,
+              });
+              
+              if (secondAttempt.error) {
+                console.error("Segunda tentativa falhou:", secondAttempt.error.message);
+                setAuthError("Não foi possível fazer login. Tente novamente ou contate o suporte.");
+                setIsLoading(false);
+              } else {
+                console.log("Login concluído com sucesso após segunda tentativa");
+                handleSuccessfulLogin(isAdminEmail);
+              }
+            } catch (err) {
+              console.error("Erro na segunda tentativa:", err);
+              setAuthError("Ocorreu um erro durante o login. Tente novamente.");
+              setIsLoading(false);
+            }
+          }, 1500);
+          
+          return;
+        }
+        
         // Verificar diferentes tipos de erros
         if (error.message.includes("Email not confirmed") || 
             error.message.toLowerCase().includes("email não confirmado") ||
@@ -123,27 +161,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         }
         setIsLoading(false);
       } else {
-        console.log("Login bem-sucedido para:", values.email);
-        console.log("Sessão criada:", !!data.session);
-        
-        toast.success("Login realizado com sucesso!", {
-          description: isAdminEmail ? "Bem-vindo(a) ao Portal Administrativo" : "Bem-vindo(a) ao Portal do Aluno"
-        });
-        
-        setIsSuccessful(true);
-        
-        // Garantir que a sessão seja processada antes de redirecionar
-        setTimeout(() => {
-          setIsLoading(false);
-          
-          // Forçar refresh da sessão antes de redirecionar
-          supabase.auth.refreshSession().then(() => {
-            // Redirecionar com base no tipo de email
-            const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
-            console.log(`Redirecionando para ${redirectPath} após login normal`);
-            navigate(redirectPath, { replace: true });
-          });
-        }, 1000);
+        handleSuccessfulLogin(isAdminEmail);
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");
@@ -151,37 +169,35 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
       setIsLoading(false);
     }
   };
-
-  const resendConfirmationEmail = async () => {
-    if (!confirmationEmail) return;
+  
+  const handleSuccessfulLogin = (isAdminEmail: boolean) => {
+    console.log("Login bem-sucedido");
     
-    setIsLoading(true);
-    try {
-      const { origin } = window.location;
-      const confirmationUrl = `${origin}/login?email=${encodeURIComponent(confirmationEmail)}&confirmation=true`;
-      
-      // Chamar nossa função personalizada de envio de e-mail
-      const response = await supabase.functions.invoke('send-confirmation-email', {
-        body: {
-          email: confirmationEmail,
-          confirmationUrl: confirmationUrl
-        }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-      
-      setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
-      toast.success("Email reenviado com sucesso!", {
-        description: "Verifique sua caixa de entrada e pasta de spam."
-      });
-    } catch (error) {
-      setAuthError("Ocorreu um erro ao reenviar o email de confirmação.");
-      console.error("Erro ao reenviar email:", error);
-    } finally {
+    toast.success("Login realizado com sucesso!", {
+      description: isAdminEmail ? "Bem-vindo(a) ao Portal Administrativo" : "Bem-vindo(a) ao Portal do Aluno"
+    });
+    
+    setIsSuccessful(true);
+    
+    // Garantir que a sessão seja processada antes de redirecionar
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      
+      // Forçar refresh da sessão antes de redirecionar
+      supabase.auth.refreshSession().then(() => {
+        // Redirecionar com base no tipo de email
+        const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
+        console.log(`Redirecionando para ${redirectPath} após login normal`);
+        navigate(redirectPath, { replace: true });
+      });
+    }, 1000);
+  };
+
+  // Função simplificada para reenvio apenas para exibição na interface
+  const resendConfirmationEmail = async () => {
+    toast.info("Verificação de email desativada!", {
+      description: "A verificação por email está temporariamente desativada."
+    });
   };
 
   return (
@@ -201,6 +217,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
               Reenviar email de confirmação
             </Button>
           )}
+        </Alert>
+      )}
+      
+      {bypassEmailConfirmation && (
+        <Alert variant="default" className="bg-yellow-50 border-yellow-200 mb-4">
+          <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <AlertDescription className="text-yellow-700">
+            Modo de desenvolvimento: confirmação de email desativada
+          </AlertDescription>
         </Alert>
       )}
       
