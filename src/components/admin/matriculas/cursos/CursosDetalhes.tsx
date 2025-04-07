@@ -2,21 +2,23 @@
 import React, { useState, useEffect } from "react";
 import { 
   Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardDescription,
-  CardFooter
+  CardContent,
+  CardHeader
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, DollarSign, Users, BookOpen, RefreshCw } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Curso } from "@/types/matricula";
+
+// Componentes refatorados
+import CursoHeader from "./detalhes/CursoHeader";
+import CursoEstatisticas from "./detalhes/CursoEstatisticas";
+import CursoActions from "./detalhes/CursoActions";
+import CursoInfoTab from "./detalhes/CursoInfoTab";
+import CursoMatriculasTab from "./detalhes/CursoMatriculasTab";
+
+// Mantém CursosModulos como está
 import CursosModulos from "./CursosModulos";
 
 interface CursosDetalhesProps {
@@ -69,13 +71,6 @@ const CursosDetalhes: React.FC<CursosDetalhesProps> = ({ cursoId }) => {
     }
   };
 
-  const formatarMoeda = (valor: number = 0) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
-
   if (loading) {
     return (
       <Card>
@@ -109,88 +104,11 @@ const CursosDetalhes: React.FC<CursosDetalhesProps> = ({ cursoId }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex flex-wrap gap-2 mb-2">
-            <Badge variant="outline" className="bg-primary/10">
-              {curso.modalidade || 'EAD'}
-            </Badge>
-            <Badge variant="outline">
-              Código: {curso.codigo}
-            </Badge>
-            {curso.learning_worlds_id && (
-              <Badge variant="secondary">
-                LearnWorlds ID: {curso.learning_worlds_id}
-              </Badge>
-            )}
-          </div>
-          <CardTitle className="text-2xl">{curso.titulo}</CardTitle>
-          {curso.descricao && (
-            <CardDescription className="mt-2">
-              {curso.descricao}
-            </CardDescription>
-          )}
-        </CardHeader>
+        <CursoHeader curso={curso} />
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-muted/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2 text-primary" />
-                  <span className="text-sm font-medium">Valor Total</span>
-                </div>
-                <p className="text-2xl font-bold">{formatarMoeda(curso.valor_total)}</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-muted/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2 text-primary" />
-                  <span className="text-sm font-medium">Mensalidade</span>
-                </div>
-                <p className="text-2xl font-bold">{formatarMoeda(curso.valor_mensalidade)}</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-muted/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-2 text-primary" />
-                  <span className="text-sm font-medium">Carga Horária</span>
-                </div>
-                <p className="text-2xl font-bold">
-                  {curso.carga_horaria || 0}h
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-muted/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-primary" />
-                  <span className="text-sm font-medium">Alunos Matriculados</span>
-                </div>
-                <p className="text-2xl font-bold">{totalAlunos}</p>
-              </CardContent>
-            </Card>
-          </div>
+          <CursoEstatisticas curso={curso} totalAlunos={totalAlunos} />
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={carregarCurso}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
-          <Button asChild>
-            <a 
-              href={`/admin/matriculas/nova?cursoId=${curso.id}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Nova Matrícula
-            </a>
-          </Button>
-        </CardFooter>
+        <CursoActions cursoId={curso.id} onRefresh={carregarCurso} />
       </Card>
 
       <Tabs value={detailsTab} onValueChange={setDetailsTab} className="w-full">
@@ -201,52 +119,7 @@ const CursosDetalhes: React.FC<CursosDetalhesProps> = ({ cursoId }) => {
         </TabsList>
 
         <TabsContent value="info" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações do Curso</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Código do Curso</h3>
-                  <p>{curso.codigo}</p>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Modalidade</h3>
-                  <p>{curso.modalidade || 'EAD'}</p>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Parcelas</h3>
-                  <p>{curso.total_parcelas || 12}</p>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                  <Badge variant={curso.ativo ? "success" : "destructive"}>
-                    {curso.ativo ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </div>
-                {curso.learning_worlds_id && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">ID na LearnWorlds</h3>
-                      <p>{curso.learning_worlds_id}</p>
-                    </div>
-                  </>
-                )}
-                <Separator />
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Data de Cadastro</h3>
-                  <p>
-                    {curso.data_criacao ? new Date(curso.data_criacao).toLocaleDateString('pt-BR') : 'Não disponível'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <CursoInfoTab curso={curso} />
         </TabsContent>
 
         <TabsContent value="modulos" className="pt-4">
@@ -254,22 +127,7 @@ const CursosDetalhes: React.FC<CursosDetalhesProps> = ({ cursoId }) => {
         </TabsContent>
 
         <TabsContent value="matriculas" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Matrículas</CardTitle>
-              <CardDescription>
-                Lista de alunos matriculados neste curso.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <a href={`/admin/matriculas/lista?cursoId=${curso.id}`}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Ver Todas as Matrículas
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
+          <CursoMatriculasTab cursoId={cursoId} />
         </TabsContent>
       </Tabs>
     </div>
