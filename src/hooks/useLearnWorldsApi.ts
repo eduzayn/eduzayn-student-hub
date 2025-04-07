@@ -48,19 +48,20 @@ export const useLearnWorldsApi = () => {
       // Obter token de autenticação
       let token;
       
-      if (isAdminBypass) {
-        // Se for admin bypass, usar o token especial
-        token = 'admin-bypass-token';
-        console.log("Usando admin-bypass-token para autenticação");
-      } else {
+      try {
+        // Usando o token JWT anônimo que já está definido no arquivo adminBypass.ts
+        // Importante: Não estamos mais usando 'admin-bypass-token', e sim o token JWT real
         token = await getAccessToken();
-        console.log("Usando token de autenticação normal");
-      }
-
-      if (!token) {
-        console.warn("Usuário não autenticado - ativando modo offline");
+        
+        if (!token) {
+          console.warn("Sem token de autorização - ativando modo offline");
+          setOfflineMode(true);
+          throw new Error('Usuário não autenticado');
+        }
+      } catch (authError) {
+        console.error("Erro ao obter token de autenticação:", authError);
         setOfflineMode(true);
-        throw new Error('Usuário não autenticado');
+        throw new Error('Erro de autenticação');
       }
 
       // Construir URL com parâmetros de query se fornecidos
@@ -107,7 +108,6 @@ export const useLearnWorldsApi = () => {
           client_id: CLIENT_ID
         };
         options.body = JSON.stringify(bodyWithClientId);
-        console.log("Body da requisição:", JSON.stringify(bodyWithClientId, null, 2));
       }
 
       // Fazer a chamada para a edge function
@@ -125,7 +125,8 @@ export const useLearnWorldsApi = () => {
           
           if (response.status === 401) {
             errorMessage = 'Não autorizado - verifique as credenciais da API';
-            toast.error('Sessão expirada ou inválida', { description: 'Por favor, faça login novamente' });
+            console.error('Erro de autenticação JWT:', errorData);
+            // Ativar modo offline automaticamente quando houver erro de autenticação
             setOfflineMode(true);
           } else if (response.status === 403) {
             errorMessage = 'Sem permissão para acessar este recurso';
@@ -133,10 +134,8 @@ export const useLearnWorldsApi = () => {
             errorMessage = 'Recurso não encontrado na LearnWorlds';
           } else if (response.status === 429) {
             errorMessage = 'Muitas requisições - aguarde um momento e tente novamente';
-            toast.warning('Muitas requisições', { description: 'Aguarde um momento antes de tentar novamente' });
           } else if (response.status >= 500) {
             errorMessage = 'Erro no servidor da LearnWorlds - tente novamente mais tarde';
-            toast.error('Serviço temporariamente indisponível', { description: 'Tente novamente mais tarde' });
           }
           
           throw new Error(errorMessage);
@@ -151,7 +150,6 @@ export const useLearnWorldsApi = () => {
         
         if (response.status === 200) {
           // Se o status for 200 mas não for JSON, pode ser uma resposta HTML válida
-          console.log("Recebido uma resposta 200 não-JSON, tratando como sucesso genérico");
           return { success: true } as unknown as T;
         } else {
           throw new Error(`Resposta inválida do servidor: ${response.status} ${response.statusText}`);
@@ -160,6 +158,10 @@ export const useLearnWorldsApi = () => {
     } catch (err: any) {
       console.error('Erro ao chamar API:', err);
       setError(err.message || 'Erro desconhecido ao chamar API');
+      
+      // Em caso de erro, ativar modo offline automaticamente
+      setOfflineMode(true);
+      
       return null;
     } finally {
       setLoading(false);
