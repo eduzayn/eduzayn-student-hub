@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 // Token fixo para autenticação bypass admin (deve corresponder ao valor no frontend)
-const ADMIN_BYPASS_TOKEN = "eduzayn-bypass-token-2025";
+const ADMIN_BYPASS_TOKEN = "byZ4yn-#v0lt-2025!SEC";
 
 serve(async (req) => {
   const { method } = req;
