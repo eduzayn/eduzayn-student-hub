@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase, isAuthenticated, isAdminBypassAuthenticated } from "@/integrations/supabase/client";
 
@@ -7,6 +8,7 @@ type AuthContextType = {
   isAdminBypass: boolean;
   userEmail: string | null;
   checkAuth: () => Promise<boolean>;
+  getAccessToken: () => Promise<string | null>;
   getAuthToken: () => Promise<string | null>;
 };
 
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdminBypass: false,
   userEmail: null,
   checkAuth: async () => false,
+  getAccessToken: async () => null,
   getAuthToken: async () => null,
 });
 
@@ -60,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getAuthToken = async (): Promise<string | null> => {
+  const getAccessToken = async (): Promise<string | null> => {
     if (isAdminBypass) {
       // Para bypass admin, retornar um token especial
       return 'admin-bypass-token';
@@ -69,6 +72,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Para autenticação normal, obter o token da sessão do Supabase
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token || null;
+  };
+
+  // Alias para getAccessToken para compatibilidade
+  const getAuthToken = async (): Promise<string | null> => {
+    return getAccessToken();
   };
 
   useEffect(() => {
@@ -98,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAdminBypass, 
     userEmail,
     checkAuth,
+    getAccessToken,
     getAuthToken,
   };
 
