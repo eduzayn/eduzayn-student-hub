@@ -35,14 +35,15 @@ export const useMatriculaPagamento = () => {
     
     toast.success("Matrícula e pagamento configurados com sucesso!");
     
-    if (resultadoPagamento.invoiceUrl) {
+    // Corrigido para verificar se resultadoPagamento possui a propriedade invoiceUrl
+    if ('invoiceUrl' in resultadoPagamento && resultadoPagamento.invoiceUrl) {
       setPagamentoInfo({
         link: resultadoPagamento.invoiceUrl,
         copiado: false,
         enviado: false
       });
       
-      if (params.customerData?.email && resultadoPagamento.invoiceUrl) {
+      if (params.customerData?.email && 'invoiceUrl' in resultadoPagamento && resultadoPagamento.invoiceUrl) {
         setTimeout(() => {
           console.log(`E-mail enviado para ${params.customerData.email} com link de pagamento: ${resultadoPagamento.invoiceUrl}`);
           setPagamentoInfo(prev => ({...prev, enviado: true}));
@@ -51,7 +52,8 @@ export const useMatriculaPagamento = () => {
       }
     }
     
-    return !!resultadoPagamento.invoiceUrl;
+    // Verifica a propriedade invoiceUrl de forma segura
+    return 'invoiceUrl' in resultadoPagamento && !!resultadoPagamento.invoiceUrl;
   };
   
   const copiarLinkPagamento = () => {
