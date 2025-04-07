@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { ADMIN_BYPASS_JWT } from "@/hooks/auth/adminBypass";
+import { toast } from "sonner";
 
 export const useApiStatus = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -11,6 +12,8 @@ export const useApiStatus = () => {
   const checkAPIConnection = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Verificando conexão com API usando token:", ADMIN_BYPASS_JWT);
+      
       const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
         method: "GET",
         headers: {
@@ -19,14 +22,32 @@ export const useApiStatus = () => {
         }
       });
 
-      const data = await response.json();
+      console.log("Resposta da API:", response.status);
+      
+      // Verificar resposta mesmo se não for OK para debug
+      let data;
+      try {
+        data = await response.json();
+        console.log("Dados da resposta:", data);
+      } catch (e) {
+        console.error("Erro ao processar resposta JSON:", e);
+        data = { error: "Erro ao processar resposta" };
+      }
+      
       setResponseData(data);
       setIsConnected(response.ok);
       setLastChecked(new Date().toLocaleTimeString());
+      
+      if (response.ok) {
+        toast.success("Conexão com a API estabelecida com sucesso!");
+      } else {
+        toast.error(`Erro de conexão: ${response.status} ${data?.message || ''}`);
+      }
     } catch (error) {
       console.error("Erro ao verificar conexão com API:", error);
       setIsConnected(false);
       setResponseData({ error: "Falha na conexão" });
+      toast.error("Falha ao conectar com a API");
     } finally {
       setIsLoading(false);
     }

@@ -9,11 +9,14 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Token fixo para autenticação admin bypass
+// Token fixo para autenticação admin bypass (deve ser igual ao ADMIN_BYPASS_JWT no front-end)
 const ADMIN_BYPASS_TOKEN = "byZ4yn-#v0lt-2025!SEC";
 
 serve(async (req) => {
   const { method } = req;
+
+  // Logging para depuração
+  console.log(`Requisição recebida: ${method} ${new URL(req.url).pathname}`);
 
   // Pré-flight CORS
   if (method === "OPTIONS") {
@@ -25,10 +28,25 @@ serve(async (req) => {
 
   // Verificação de token JWT
   const authHeader = req.headers.get("Authorization");
-  const token = authHeader?.replace("Bearer ", "").trim() || "";
+  console.log("Auth header recebido:", authHeader);
+  
+  if (!authHeader) {
+    console.log("Token não fornecido");
+    return new Response(JSON.stringify({
+      code: 401,
+      message: "Authorization header missing"
+    }), {
+      headers: corsHeaders,
+      status: 401
+    });
+  }
 
+  const token = authHeader.replace("Bearer ", "").trim();
+  console.log("Token extraído:", token);
+  console.log("Token esperado:", ADMIN_BYPASS_TOKEN);
+  
   if (token !== ADMIN_BYPASS_TOKEN) {
-    console.log("Token inválido recebido:", token);
+    console.log("Token inválido recebido");
     return new Response(JSON.stringify({
       code: 401,
       message: "Invalid JWT"

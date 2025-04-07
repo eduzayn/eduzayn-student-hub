@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -71,6 +72,7 @@ export const useLearnWorldsApi = () => {
       }
       
       console.log(`Chamando API LearnWorlds: ${method} ${url}`);
+      console.log(`Token utilizado: ${token.substring(0, 3)}...${token.substring(token.length - 3)}`);
 
       // Preparar as opções para a requisição
       const options: RequestInit = {
@@ -88,12 +90,14 @@ export const useLearnWorldsApi = () => {
 
       // Fazer a chamada para a edge function
       const response = await fetch(url, options);
+      console.log("Resposta recebida:", response.status, response.statusText);
       
       // Verificar se a resposta é um formato válido antes de tentar converter para JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         if (!response.ok) {
           const errorData = await response.json();
+          console.error("Erro retornado da API:", errorData);
           
           // Mostrar mensagem de erro amigável baseada nos códigos de erro
           let errorMessage = errorData.error || errorData.message || 'Erro ao chamar API';
