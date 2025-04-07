@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdminBypass, setIsAdminBypass] = useState<boolean>(false);
   const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
 
   // Função para verificar autenticação com bypass de admin
   const checkAdminBypass = () => {
@@ -53,13 +54,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função para verificar autenticação do Supabase
   const checkSupabaseAuth = async () => {
     try {
+      // Verificar se já há uma autenticação via bypass antes de consultar o Supabase
+      if (checkAdminBypass()) {
+        console.log("Autenticação por bypass confirmada, pulando verificação do Supabase");
+        return true;
+      }
+
       const { data } = await supabase.auth.getSession();
       const session = data?.session;
-      console.log("Verificando sessão do Supabase:", !!session);
+      console.log("Verificando sessão do Supabase:", !!session, "Email:", session?.user?.email);
       
       if (session) {
         console.log("Usuário autenticado via Supabase");
         setIsLoggedIn(true);
+        setIsAdminBypass(false);
         const email = session.user?.email || null;
         setUserEmail(email);
         
@@ -99,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log("Nenhuma autenticação válida encontrada");
         setIsLoggedIn(false);
         setIsAdminUser(false);
+        setUserEmail(null);
       } else {
         console.log("Autenticação Supabase confirmada");
       }
@@ -132,65 +141,89 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return getAccessToken();
   };
 
+  // Inicialização única quando o componente é montado
   useEffect(() => {
     console.log("Inicializando hook de autenticação");
-    let authSubscription: { subscription: { unsubscribe: () => void } } | null = null;
     
-    const initAuth = async () => {
-      // Verificação inicial de autenticação
-      await checkAuth();
+    // Inicializar o estado com base no localStorage (para bypass admin) ou sessão existente
+    const initializeAuthState = async () => {
+      // Primeiro verificar o bypass de admin
+      if (checkAdminBypass()) {
+        setSessionInitialized(true);
+        setIsLoading(false);
+        console.log("Estado inicial: Admin bypass autenticado");
+        return;
+      }
       
-      // Configurar listener para mudanças de autenticação
-      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log("Evento de autenticação:", event);
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log("Evento SIGNED_IN recebido");
+      // Se não for bypass, verificar sessão do Supabase
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          const email = data.session.user?.email || null;
+          console.log("Sessão existente encontrada para:", email);
           setIsLoggedIn(true);
-          setIsAdminBypass(false);
-          const email = session.user?.email || null;
           setUserEmail(email);
           
           // Verificar se é um email administrativo
           const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
-          console.log("Email administrativo após login:", isAdmin, email);
           setIsAdminUser(isAdmin);
-          
-          // Notificar o usuário
-          toast.success("Login realizado com sucesso!");
-          
-        } else if (event === 'SIGNED_OUT') {
-          console.log("Evento SIGNED_OUT recebido");
-          // Primeiro verificar se há um bypass de admin ativo
-          const adminBypass = isAdminBypassAuthenticated();
-          
-          if (adminBypass) {
-            console.log("Admin bypass permanece ativo após sign out");
-            setIsLoggedIn(true);
-            setIsAdminBypass(true);
-            const email = localStorage.getItem('adminBypassEmail');
-            setUserEmail(email);
-            setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
-          } else {
-            // Caso contrário, está realmente deslogado
-            console.log("Usuário completamente deslogado");
-            setIsLoggedIn(false);
-            setIsAdminUser(false);
-            setUserEmail(null);
-          }
+          console.log("Estado inicial: Usuário autenticado via Supabase, isAdmin:", isAdmin);
+        } else {
+          console.log("Estado inicial: Nenhuma sessão encontrada");
         }
-      });
-      
-      authSubscription = data;
+      } catch (error) {
+        console.error("Erro ao inicializar estado de autenticação:", error);
+      } finally {
+        setSessionInitialized(true);
+        setIsLoading(false);
+      }
     };
     
-    initAuth();
+    initializeAuthState();
+    
+    // Configurar listener para mudanças de autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Evento de autenticação:", event);
+      
+      if (event === 'SIGNED_IN' && session) {
+        console.log("Evento SIGNED_IN recebido");
+        setIsLoggedIn(true);
+        setIsAdminBypass(false);
+        const email = session.user?.email || null;
+        setUserEmail(email);
+        
+        // Verificar se é um email administrativo
+        const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
+        console.log("Email administrativo após login:", isAdmin, email);
+        setIsAdminUser(isAdmin);
+        
+        // Notificar o usuário (já feito no LoginForm)
+      } else if (event === 'SIGNED_OUT') {
+        console.log("Evento SIGNED_OUT recebido");
+        // Primeiro verificar se há um bypass de admin ativo
+        const adminBypass = isAdminBypassAuthenticated();
+        
+        if (adminBypass) {
+          console.log("Admin bypass permanece ativo após sign out");
+          setIsLoggedIn(true);
+          setIsAdminBypass(true);
+          const email = localStorage.getItem('adminBypassEmail');
+          setUserEmail(email);
+          setIsAdminUser(email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false);
+        } else {
+          // Caso contrário, está realmente deslogado
+          console.log("Usuário completamente deslogado");
+          setIsLoggedIn(false);
+          setIsAdminUser(false);
+          setUserEmail(null);
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("Token atualizado com sucesso");
+      }
+    });
     
     return () => {
-      // Limpar o listener ao desmontar
-      if (authSubscription) {
-        authSubscription.subscription.unsubscribe();
-      }
+      authListener.subscription.unsubscribe();
     };
   }, []);
 

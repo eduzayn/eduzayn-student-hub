@@ -51,6 +51,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState<string>("");
+  const [isSuccessful, setIsSuccessful] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm<LoginFormValues>({
@@ -65,6 +66,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
     setIsLoading(true);
     setAuthError(null);
     setNeedsEmailConfirmation(false);
+    setIsSuccessful(false);
     
     // Verificar se é um login de administrador por bypass
     const isAdminBypassCredentials = values.email === ADMIN_BYPASS.email && values.senha === ADMIN_BYPASS.password;
@@ -80,12 +82,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         description: "Bem-vindo(a) ao Portal Administrativo"
       });
       
+      setIsSuccessful(true);
+      
       // Aguardar um pouco para garantir que o localStorage seja atualizado
       setTimeout(() => {
         setIsLoading(false);
         console.log("Redirecionando para /admin após login bypass");
-        navigate("/admin");
-      }, 1500);
+        navigate("/admin", { replace: true });
+      }, 2000);
       
       return;
     }
@@ -119,14 +123,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
           description: isAdminEmail ? "Bem-vindo(a) ao Portal Administrativo" : "Bem-vindo(a) ao Portal do Aluno"
         });
         
-        // Aguardar um pouco mais para garantir que a sessão seja processada corretamente
+        setIsSuccessful(true);
+        
+        // Esperar um tempo maior para que a sessão seja processada completamente
         setTimeout(() => {
           setIsLoading(false);
           // Redirecionar com base no tipo de email
           const redirectPath = isAdminEmail ? "/admin" : "/dashboard";
           console.log(`Redirecionando para ${redirectPath} após login normal`);
-          navigate(redirectPath);
-        }, 1500);
+          navigate(redirectPath, { replace: true });
+        }, 2000);
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");
@@ -187,6 +193,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         </Alert>
       )}
       
+      {isSuccessful && (
+        <Alert variant="default" className="bg-green-50 border-green-200">
+          <AlertDescription className="text-green-800">
+            Login realizado com sucesso! Redirecionando...
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -215,8 +229,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+          <Button type="submit" className="w-full" disabled={isLoading || isSuccessful}>
+            {isLoading ? "Entrando..." : isSuccessful ? "Redirecionando..." : "Entrar"}
           </Button>
         </form>
       </Form>

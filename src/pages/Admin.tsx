@@ -12,14 +12,34 @@ const Admin: React.FC = () => {
   const { isLoggedIn, isLoading, isAdminUser, userEmail, checkAuth } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [checkCount, setCheckCount] = useState(0); // Contador para evitar loops infinitos
   
   useEffect(() => {
     let isMounted = true;
     
+    // Evitamos verificar mais de 3 vezes para prevenir loops infinitos
+    if (checkCount > 3) {
+      console.error("Muitas tentativas de verificação de autenticação. Possível loop infinito.");
+      setAuthError("Erro ao verificar autenticação após várias tentativas");
+      setIsChecking(false);
+      return;
+    }
+    
     const verifyAuth = async () => {
+      if (!isMounted) return;
       setIsChecking(true);
+
       try {
-        console.log("Verificando autenticação no componente Admin...");
+        console.log(`Verificando autenticação no componente Admin (tentativa ${checkCount + 1})...`);
+        console.log("Estado atual antes da verificação:", { isLoggedIn, isAdminUser, userEmail });
+        
+        // Primeiro, verificamos se já estamos autenticados com um usuário admin
+        if (isLoggedIn && isAdminUser && !isLoading) {
+          console.log("Usuário já está autenticado como administrador, pulando verificação");
+          setIsChecking(false);
+          return;
+        }
+
         const authenticated = await checkAuth();
         
         if (!isMounted) return;
@@ -31,6 +51,7 @@ const Admin: React.FC = () => {
           isLoggedIn
         });
         
+        // Se o usuário não estiver autenticado, redirecionar para login
         if (!authenticated) {
           console.log("Admin: Usuário não autenticado, redirecionando para login");
           navigate("/login");
@@ -49,31 +70,34 @@ const Admin: React.FC = () => {
       } catch (error) {
         console.error("Admin: Erro ao verificar autenticação:", error);
         setAuthError("Erro ao verificar autenticação");
-        toast.error("Erro ao verificar autenticação");
         
         if (isMounted) {
+          toast.error("Erro ao verificar autenticação");
           navigate("/login");
         }
       } finally {
         if (isMounted) {
           setIsChecking(false);
+          setCheckCount(prev => prev + 1);
         }
       }
     };
     
-    // Pequeno atraso para permitir que o estado de autenticação seja atualizado corretamente
+    // Verificar autenticação após um pequeno delay para permitir que os estados sejam atualizados
     const timer = setTimeout(() => {
-      verifyAuth();
-    }, 500);
+      if (isMounted) {
+        verifyAuth();
+      }
+    }, 800);  // Aumentando o delay para dar mais tempo para a autenticação ser processada
     
     return () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [navigate, checkAuth, isAdminUser, userEmail, isLoggedIn]);
+  }, [navigate, checkAuth, isAdminUser, userEmail, isLoggedIn, isLoading, checkCount]);
   
   // Mostrar mensagens de depuração para diagnóstico
-  console.log("Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking, authError });
+  console.log("Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking, authError, checkCount });
   
   // Se estiver carregando ou verificando, mostra o indicador de carregamento
   if (isLoading || isChecking) {
