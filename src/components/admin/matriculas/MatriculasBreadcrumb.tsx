@@ -38,7 +38,7 @@ const MatriculasBreadcrumb: React.FC = () => {
         const displayName = pathMap[value] || value;
         
         return (
-          <React.Fragment key={to}>
+          <div key={to} className="flex items-center">
             <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
             {isLast ? (
               <span className="font-medium">{displayName}</span>
@@ -50,7 +50,7 @@ const MatriculasBreadcrumb: React.FC = () => {
                 {displayName}
               </Link>
             )}
-          </React.Fragment>
+          </div>
         );
       })}
     </nav>
