@@ -87,7 +87,7 @@ const ContratosAluno: React.FC = () => {
                           <div>
                             <h3 className="font-medium">{contrato.titulo}</h3>
                             <div className="text-sm text-muted-foreground">
-                              {contrato.matricula.curso} - Código: {contrato.codigo}
+                              {contrato.matricula?.curso || ''} - Código: {contrato.codigo}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               Data: {formatarData(contrato.data_geracao)}

@@ -1,3 +1,4 @@
+
 export interface Aluno {
   id: string;
   nome: string;
@@ -53,6 +54,15 @@ export interface Contrato {
   assinado: boolean;
   url_contrato_assinado?: string;
   hash_validacao?: string;
+  // Adicionar propriedades aninhadas para compatibilidade com o código existente
+  aluno?: {
+    nome: string;
+    email: string;
+  };
+  matricula?: {
+    id: string;
+    curso: string;
+  };
 }
 
 export interface Aditivo {
@@ -69,6 +79,10 @@ export interface Aditivo {
   assinado: boolean;
   url_aditivo_assinado?: string;
   hash_validacao?: string;
+  // Adicionar propriedade aninhada para compatibilidade
+  aluno?: {
+    nome: string;
+  };
 }
 
 export interface Pagamento {
@@ -96,4 +110,18 @@ export interface HistoricoMatricula {
   alterado_por?: string;
   motivo?: string;
   observacoes?: string;
+}
+
+// Interface estendida para uso na página de pagamentos
+export interface PagamentoCompleto extends Pagamento {
+  matriculas: {
+    id: string;
+    alunos?: {
+      nome?: string;
+      email?: string;
+    };
+    cursos?: {
+      titulo?: string;
+    };
+  };
 }

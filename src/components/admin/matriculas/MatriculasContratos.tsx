@@ -169,14 +169,14 @@ const MatriculasContratos: React.FC = () => {
   // Filtragem dos dados com base na busca
   const contratosFiltrados = contratos.filter(
     contrato =>
-      contrato.aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      (contrato.aluno?.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
       contrato.codigo.toLowerCase().includes(busca.toLowerCase()) ||
-      contrato.matricula.curso.toLowerCase().includes(busca.toLowerCase())
+      (contrato.matricula?.curso || '').toLowerCase().includes(busca.toLowerCase())
   );
   
   const aditivosFiltrados = aditivos.filter(
     aditivo =>
-      aditivo.aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      (aditivo.aluno?.nome || '').toLowerCase().includes(busca.toLowerCase()) ||
       aditivo.titulo.toLowerCase().includes(busca.toLowerCase()) ||
       aditivo.motivo.toLowerCase().includes(busca.toLowerCase())
   );
@@ -248,11 +248,11 @@ const MatriculasContratos: React.FC = () => {
                         <TableCell className="font-medium">{contrato.codigo}</TableCell>
                         <TableCell>
                           <div>
-                            <div>{contrato.aluno.nome}</div>
-                            <div className="text-sm text-muted-foreground">{contrato.aluno.email}</div>
+                            <div>{contrato.aluno?.nome || ''}</div>
+                            <div className="text-sm text-muted-foreground">{contrato.aluno?.email || ''}</div>
                           </div>
                         </TableCell>
-                        <TableCell>{contrato.matricula.curso}</TableCell>
+                        <TableCell>{contrato.matricula?.curso || ''}</TableCell>
                         <TableCell>{formatarData(contrato.data_geracao)}</TableCell>
                         <TableCell>
                           {contrato.assinado ? (
@@ -330,7 +330,7 @@ const MatriculasContratos: React.FC = () => {
                   ) : (
                     aditivosFiltrados.map((aditivo) => (
                       <TableRow key={aditivo.id}>
-                        <TableCell>{aditivo.aluno.nome}</TableCell>
+                        <TableCell>{aditivo.aluno?.nome || ''}</TableCell>
                         <TableCell className="font-medium">{aditivo.titulo}</TableCell>
                         <TableCell>{aditivo.motivo}</TableCell>
                         <TableCell>{formatarData(aditivo.data_geracao)}</TableCell>

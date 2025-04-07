@@ -44,21 +44,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pagamento } from "@/types/matricula";
-
-// Definindo tipo para os pagamentos com informações relacionadas
-interface PagamentoCompleto extends Pagamento {
-  matriculas: {
-    id: string;
-    alunos?: {
-      nome?: string;
-      email?: string;
-    };
-    cursos?: {
-      titulo?: string;
-    };
-  };
-}
+import { Pagamento, PagamentoCompleto } from "@/types/matricula";
 
 const MatriculasPagamentos: React.FC = () => {
   const [filtro, setFiltro] = useState("todos");
@@ -78,7 +64,7 @@ const MatriculasPagamentos: React.FC = () => {
       `);
       
       if (filtro !== "todos") {
-        query = query.eq("status", filtro);
+        query = query.eq("status", filtro as "pendente" | "processando" | "pago" | "cancelado" | "atrasado" | "estornado");
       }
       
       const { data, error } = await query;
@@ -87,7 +73,7 @@ const MatriculasPagamentos: React.FC = () => {
         throw new Error(error.message);
       }
       
-      return data || [];
+      return data as PagamentoCompleto[] || [];
     },
     meta: {
       onError: (error: Error) => {
@@ -119,7 +105,7 @@ const MatriculasPagamentos: React.FC = () => {
   };
   
   // Filtrar pagamentos com base na busca
-  const pagamentosFiltrados = pagamentos?.filter((pagamento: PagamentoCompleto) => {
+  const pagamentosFiltrados = pagamentos?.filter((pagamento) => {
     if (!busca) return true;
     
     const termoLower = busca.toLowerCase();
@@ -140,6 +126,21 @@ const MatriculasPagamentos: React.FC = () => {
       currency: 'BRL'
     }).format(valor);
   };
+
+  // Cálculo de totais para estatísticas
+  const totalRecebido = pagamentos
+    ? pagamentos
+        .filter(p => p.status === 'pago')
+        .reduce((acc, p) => acc + Number(p.valor), 0)
+    : 0;
+    
+  const totalPendentes = pagamentos
+    ? pagamentos.filter(p => p.status === 'pendente').length
+    : 0;
+    
+  const totalAtrasados = pagamentos
+    ? pagamentos.filter(p => p.status === 'atrasado').length
+    : 0;
 
   return (
     <MatriculasLayout>
@@ -164,8 +165,7 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatarMoeda(pagamentos?.filter((p: PagamentoCompleto) => p.status === 'pago')
-                      .reduce((acc: number, p: PagamentoCompleto) => acc + Number(p.valor), 0) || 0)}
+                    {formatarMoeda(totalRecebido)}
                   </div>
                 </CardContent>
               </Card>
@@ -179,7 +179,7 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {pagamentos?.filter((p: PagamentoCompleto) => p.status === 'pendente').length || 0}
+                    {totalPendentes}
                   </div>
                 </CardContent>
               </Card>
@@ -193,7 +193,7 @@ const MatriculasPagamentos: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {pagamentos?.filter((p: PagamentoCompleto) => p.status === 'atrasado').length || 0}
+                    {totalAtrasados}
                   </div>
                 </CardContent>
               </Card>
@@ -261,7 +261,7 @@ const MatriculasPagamentos: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pagamentosFiltrados?.map((pagamento: PagamentoCompleto) => (
+                      {pagamentosFiltrados?.map((pagamento) => (
                         <TableRow key={pagamento.id}>
                           <TableCell className="font-medium">
                             {pagamento.matriculas?.alunos?.nome || "N/A"}
