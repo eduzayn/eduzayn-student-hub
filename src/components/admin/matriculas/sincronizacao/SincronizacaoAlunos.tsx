@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 import LearnWorldsErrorAlert from "@/components/admin/matriculas/LearnWorldsErrorAlert";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 
@@ -14,7 +15,11 @@ interface SincronizacaoAlunosProps {
 }
 
 const SincronizacaoAlunos: React.FC<SincronizacaoAlunosProps> = () => {
+  // Hooks - mantenha a ordem consistente
+  const { isAdminBypass } = useAuth();
   const { sincronizarAlunos, loading, error, offlineMode } = useLearnWorldsApi();
+  
+  // Estados - mantenha todos juntos
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   

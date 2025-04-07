@@ -8,11 +8,16 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/use-auth";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 
 const SincronizacaoAlunos: React.FC = () => {
+  // Hooks precisam estar na mesma ordem em todas as renderizações
   const navigate = useNavigate();
-  const { sincronizarAlunos, loading } = useLearnWorldsApi();
+  const { isAdminBypass } = useAuth();
+  const { sincronizarAlunos, loading, error, offlineMode } = useLearnWorldsApi();
+  
+  // Estados - mantenha todos os useState juntos
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   
@@ -42,6 +47,24 @@ const SincronizacaoAlunos: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de Comunicação</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {offlineMode && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Modo Offline</AlertTitle>
+          <AlertDescription>
+            O sistema está operando em modo offline. Algumas funcionalidades podem estar limitadas.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs defaultValue="sincronizacao">
         <TabsList>
