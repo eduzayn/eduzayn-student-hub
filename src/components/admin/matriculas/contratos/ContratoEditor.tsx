@@ -150,7 +150,7 @@ const ContratoEditor: React.FC<ContratoEditorProps> = ({ contratoId, onSave, onC
                 placeholder="Digite o conteúdo do contrato aqui..."
               />
               <p className="text-sm text-muted-foreground mt-2">
-                Use variáveis como {{nome_aluno}} ou {{nome_curso}} que serão substituídas pelos dados reais.
+                Use variáveis como {"{{nome_aluno}}"} ou {"{{nome_curso}}"} que serão substituídas pelos dados reais.
               </p>
             </div>
           </TabsContent>
@@ -179,11 +179,11 @@ const ContratoEditor: React.FC<ContratoEditorProps> = ({ contratoId, onSave, onC
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><code>{{'{{'}}nome_aluno{{'}}'}}</code> - Nome completo do aluno</li>
-                      <li><code>{{'{{'}}email_aluno{{'}}'}}</code> - Email do aluno</li>
-                      <li><code>{{'{{'}}cpf_aluno{{'}}'}}</code> - CPF do aluno</li>
-                      <li><code>{{'{{'}}telefone_aluno{{'}}'}}</code> - Telefone do aluno</li>
-                      <li><code>{{'{{'}}endereco_aluno{{'}}'}}</code> - Endereço do aluno</li>
+                      <li><code>{"{{nome_aluno}}"}</code> - Nome completo do aluno</li>
+                      <li><code>{"{{email_aluno}}"}</code> - Email do aluno</li>
+                      <li><code>{"{{cpf_aluno}}"}</code> - CPF do aluno</li>
+                      <li><code>{"{{telefone_aluno}}"}</code> - Telefone do aluno</li>
+                      <li><code>{"{{endereco_aluno}}"}</code> - Endereço do aluno</li>
                     </ul>
                   </CardContent>
                 </Card>
@@ -194,11 +194,11 @@ const ContratoEditor: React.FC<ContratoEditorProps> = ({ contratoId, onSave, onC
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><code>{{'{{'}}nome_curso{{'}}'}}</code> - Nome do curso</li>
-                      <li><code>{{'{{'}}codigo_curso{{'}}'}}</code> - Código do curso</li>
-                      <li><code>{{'{{'}}valor_curso{{'}}'}}</code> - Valor total do curso</li>
-                      <li><code>{{'{{'}}valor_mensalidade{{'}}'}}</code> - Valor da mensalidade</li>
-                      <li><code>{{'{{'}}carga_horaria{{'}}'}}</code> - Carga horária do curso</li>
+                      <li><code>{"{{nome_curso}}"}</code> - Nome do curso</li>
+                      <li><code>{"{{codigo_curso}}"}</code> - Código do curso</li>
+                      <li><code>{"{{valor_curso}}"}</code> - Valor total do curso</li>
+                      <li><code>{"{{valor_mensalidade}}"}</code> - Valor da mensalidade</li>
+                      <li><code>{"{{carga_horaria}}"}</code> - Carga horária do curso</li>
                     </ul>
                   </CardContent>
                 </Card>
@@ -209,10 +209,10 @@ const ContratoEditor: React.FC<ContratoEditorProps> = ({ contratoId, onSave, onC
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><code>{{'{{'}}data_matricula{{'}}'}}</code> - Data da matrícula</li>
-                      <li><code>{{'{{'}}codigo_matricula{{'}}'}}</code> - Código da matrícula</li>
-                      <li><code>{{'{{'}}data_inicio{{'}}'}}</code> - Data de início do curso</li>
-                      <li><code>{{'{{'}}data_termino{{'}}'}}</code> - Data de término do curso</li>
+                      <li><code>{"{{data_matricula}}"}</code> - Data da matrícula</li>
+                      <li><code>{"{{codigo_matricula}}"}</code> - Código da matrícula</li>
+                      <li><code>{"{{data_inicio}}"}</code> - Data de início do curso</li>
+                      <li><code>{"{{data_termino}}"}</code> - Data de término do curso</li>
                     </ul>
                   </CardContent>
                 </Card>
@@ -223,10 +223,10 @@ const ContratoEditor: React.FC<ContratoEditorProps> = ({ contratoId, onSave, onC
                   </CardHeader>
                   <CardContent>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><code>{{'{{'}}data_atual{{'}}'}}</code> - Data atual</li>
-                      <li><code>{{'{{'}}hora_atual{{'}}'}}</code> - Hora atual</li>
-                      <li><code>{{'{{'}}nome_instituicao{{'}}'}}</code> - Nome da instituição</li>
-                      <li><code>{{'{{'}}cnpj_instituicao{{'}}'}}</code> - CNPJ da instituição</li>
+                      <li><code>{"{{data_atual}}"}</code> - Data atual</li>
+                      <li><code>{"{{hora_atual}}"}</code> - Hora atual</li>
+                      <li><code>{"{{nome_instituicao}}"}</code> - Nome da instituição</li>
+                      <li><code>{"{{cnpj_instituicao}}"}</code> - CNPJ da instituição</li>
                     </ul>
                   </CardContent>
                 </Card>
