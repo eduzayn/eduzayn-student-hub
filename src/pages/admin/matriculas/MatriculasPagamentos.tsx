@@ -66,7 +66,7 @@ const MatriculasPagamentos: React.FC = () => {
       `);
       
       if (filtro !== "todos") {
-        query = query.eq("status", filtro);
+        query = query.eq("status", filtro as "pendente" | "processando" | "pago" | "cancelado" | "atrasado" | "estornado");
       }
       
       const { data, error } = await query;

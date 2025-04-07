@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 /**
  * Hook base para interagir com a API do LearnWorlds
@@ -10,22 +11,7 @@ const useLearnWorldsBase = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
-
-  /**
-   * Obtém o token JWT do usuário atual ou usa o token bypass para admin
-   */
-  const getToken = async (): Promise<string | null> => {
-    // Primeiro tenta obter a sessão do usuário atual
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.access_token) {
-      return session.access_token;
-    }
-
-    // Se não tiver sessão, usa o token bypass de admin
-    // Note: Isso seria substituído por uma abordagem mais segura em produção
-    return 'byZ4yn-#v0lt-2025!SEC'; // Token de bypass para testes
-  };
+  const { getAccessToken } = useAuth();
 
   /**
    * Função auxiliar para fazer requisições para as funções edge
@@ -35,7 +21,7 @@ const useLearnWorldsBase = () => {
       setLoading(true);
       setError(null);
 
-      const token = await getToken();
+      const token = await getAccessToken();
       
       if (!token) {
         throw new Error('Não foi possível autenticar. Faça login novamente.');
@@ -45,6 +31,8 @@ const useLearnWorldsBase = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       };
+
+      console.log(`Usando token para request: ${token.substring(0, 10)}...`);
 
       const options: RequestInit = {
         method,

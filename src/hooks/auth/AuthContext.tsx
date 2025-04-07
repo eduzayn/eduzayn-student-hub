@@ -7,6 +7,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
   isAdminUser: boolean;
+  isAdminBypass: boolean;
   userEmail: string | null;
   checkAuth: () => Promise<boolean>;
   getAccessToken: () => Promise<string | null>;

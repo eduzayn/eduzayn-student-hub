@@ -9,6 +9,9 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
+// Token de bypass para admins
+const ADMIN_BYPASS_JWT = "byZ4yn-#v0lt-2025!SEC";
+
 // Interface para dados do aluno da LearnWorlds
 interface LearnWorldsUser {
   id: string;
@@ -54,7 +57,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Sem token de autenticação' }),
+        JSON.stringify({ error: 'Sem token de autenticação', code: 401 }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -64,18 +67,58 @@ serve(async (req) => {
 
     // Extrair o token do cabeçalho Authorization
     const token = authHeader.replace('Bearer ', '');
+    
+    // Log para depuração
+    console.log(`Token recebido: ${token.substring(0, 10)}...`);
 
-    // Criar um cliente Supabase para verificar o token
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Verificar o token de bypass admin primeiro
+    let isAuthenticated = false;
+    let user = null;
 
-    // Verificar se o token é válido
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      console.error('Erro de autenticação:', authError);
+    // Verificar se é o token de bypass
+    if (token === ADMIN_BYPASS_JWT) {
+      console.log("Autenticação via token bypass de admin");
+      isAuthenticated = true;
+    } else {
+      // Se não for o token de bypass, verificar no Supabase
+      try {
+        // Criar um cliente Supabase para verificar o token
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
+        const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Verificar se o token é válido
+        const { data: userData, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !userData.user) {
+          console.error('Erro de autenticação:', authError);
+          return new Response(
+            JSON.stringify({ error: 'Token de autenticação inválido', code: 401, details: authError }),
+            {
+              status: 401,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+        
+        user = userData.user;
+        isAuthenticated = true;
+        console.log(`Autenticado como: ${user.email}`);
+      } catch (authError) {
+        console.error('Erro ao verificar token:', authError);
+        return new Response(
+          JSON.stringify({ error: 'Erro ao verificar token', code: 401, details: authError.message }),
+          {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+    
+    if (!isAuthenticated) {
       return new Response(
-        JSON.stringify({ error: 'Token de autenticação inválido' }),
+        JSON.stringify({ error: 'Não autenticado', code: 401 }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
