@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,16 +78,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         description: "Bem-vindo(a) ao Portal Administrativo"
       });
       
+      // Aguardar um pouco para garantir que o localStorage seja atualizado
       setTimeout(() => {
         setIsLoading(false);
         navigate("/admin");
-      }, 500);
+      }, 1000);
       
       return;
     }
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.senha,
       });
@@ -106,18 +106,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchTab }) => {
         } else {
           setAuthError(error.message);
         }
+        setIsLoading(false);
       } else {
         toast.success("Login realizado com sucesso!", {
           description: isAdminEmail ? "Bem-vindo(a) ao Portal Administrativo" : "Bem-vindo(a) ao Portal do Aluno"
         });
         
-        // Redirecionar com base no tipo de email
-        navigate(isAdminEmail ? "/admin" : "/dashboard");
+        // Aguardar um pouco para garantir que a sessão seja processada corretamente
+        setTimeout(() => {
+          setIsLoading(false);
+          // Redirecionar com base no tipo de email
+          navigate(isAdminEmail ? "/admin" : "/dashboard");
+        }, 1000);
       }
     } catch (error) {
       setAuthError("Ocorreu um erro durante o login. Tente novamente.");
       console.error("Erro de login:", error);
-    } finally {
       setIsLoading(false);
     }
   };

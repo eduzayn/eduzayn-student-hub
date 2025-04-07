@@ -9,14 +9,16 @@ import { toast } from "sonner";
 
 const Admin: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, isLoading, isAdminUser, checkAuth } = useAuth();
+  const { isLoggedIn, isLoading, isAdminUser, userEmail, checkAuth } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
     const verifyAuth = async () => {
       setIsChecking(true);
       try {
+        console.log("Verificando autenticação no componente Admin...");
         const authenticated = await checkAuth();
+        console.log("Resultado da verificação:", { authenticated, isAdminUser, userEmail });
         
         if (!authenticated) {
           console.log("Usuário não autenticado, redirecionando para login");
@@ -32,9 +34,10 @@ const Admin: React.FC = () => {
           return;
         }
         
-        console.log("Autenticação verificada com sucesso:", { authenticated, isAdminUser });
+        console.log("Autenticação verificada com sucesso no Admin:", { authenticated, isAdminUser });
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
+        toast.error("Erro ao verificar autenticação");
         navigate("/login");
       } finally {
         setIsChecking(false);
@@ -43,6 +46,9 @@ const Admin: React.FC = () => {
     
     verifyAuth();
   }, [navigate, checkAuth, isAdminUser]);
+  
+  // Mostrar mensagens de depuração para diagnóstico
+  console.log("Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking });
   
   // Se estiver carregando ou verificando, mostra o indicador de carregamento
   if (isLoading || isChecking) {
@@ -58,6 +64,9 @@ const Admin: React.FC = () => {
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Verificando autenticação...
+          </p>
         </div>
       </div>
     );
