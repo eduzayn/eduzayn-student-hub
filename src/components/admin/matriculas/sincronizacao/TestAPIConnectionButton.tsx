@@ -12,9 +12,11 @@ const TestAPIConnectionButton = () => {
   const testConnection = async () => {
     setIsLoading(true);
     try {
-      console.log("Testando conexão com token:", ADMIN_BYPASS_JWT);
+      // Registrar o token e seu tamanho para debug
+      console.log("Testando conexão com token (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
       console.log("Comprimento do token:", ADMIN_BYPASS_JWT.length);
       
+      // Preparar headers para a requisição
       const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${ADMIN_BYPASS_JWT}`
@@ -22,6 +24,7 @@ const TestAPIConnectionButton = () => {
       
       console.log("Headers enviados:", headers);
       
+      // Fazer a requisição para a API
       const response = await fetch("https://bioarzkfmcobctblzztm.supabase.co/functions/v1/learnworlds-api", {
         method: "GET",
         headers: headers
@@ -30,15 +33,27 @@ const TestAPIConnectionButton = () => {
       console.log("Status da resposta:", response.status);
       setLastStatus(response.status);
       
+      // Processar a resposta
       const data = await response.json();
       console.log("Dados da resposta:", data);
       
       if (response.ok) {
         toast.success("Conexão com a API estabelecida com sucesso!");
       } else {
-        const errorMsg = data.debug 
-          ? `Erro ${response.status}: ${data.message} - ${data.debug}`
-          : `Erro ${response.status}: ${data.message || "Erro desconhecido"}`;
+        // Exibir mensagens de erro mais detalhadas quando disponíveis
+        let errorMsg = `Erro ${response.status}: ${data.message || "Erro desconhecido"}`;
+        
+        if (data.debug) {
+          console.log("Detalhes de debug:", data.debug);
+          if (typeof data.debug === 'object') {
+            const debugInfo = Object.entries(data.debug)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(", ");
+            errorMsg += `\nDebug: ${debugInfo}`;
+          } else {
+            errorMsg += `\nDebug: ${data.debug}`;
+          }
+        }
         
         toast.error(errorMsg);
       }
