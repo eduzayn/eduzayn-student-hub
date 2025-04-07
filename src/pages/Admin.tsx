@@ -11,44 +11,69 @@ const Admin: React.FC = () => {
   const navigate = useNavigate();
   const { isLoggedIn, isLoading, isAdminUser, userEmail, checkAuth } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   useEffect(() => {
+    let isMounted = true;
+    
     const verifyAuth = async () => {
       setIsChecking(true);
       try {
         console.log("Verificando autenticação no componente Admin...");
         const authenticated = await checkAuth();
-        console.log("Resultado da verificação:", { authenticated, isAdminUser, userEmail });
+        
+        if (!isMounted) return;
+        
+        console.log("Resultado da verificação Admin:", { 
+          authenticated, 
+          isAdminUser, 
+          userEmail,
+          isLoggedIn
+        });
         
         if (!authenticated) {
-          console.log("Usuário não autenticado, redirecionando para login");
+          console.log("Admin: Usuário não autenticado, redirecionando para login");
           navigate("/login");
           return;
         }
         
         // Se não for um usuário administrativo, redirecionar para o portal do aluno
         if (authenticated && !isAdminUser) {
-          console.log("Usuário não é administrativo, redirecionando para dashboard");
+          console.log("Admin: Usuário não é administrativo, redirecionando para dashboard");
           toast.warning("Acesso negado. Você não tem permissões administrativas.");
           navigate("/dashboard");
           return;
         }
         
-        console.log("Autenticação verificada com sucesso no Admin:", { authenticated, isAdminUser });
+        console.log("Admin: Autenticação verificada com sucesso:", { authenticated, isAdminUser });
       } catch (error) {
-        console.error("Erro ao verificar autenticação:", error);
+        console.error("Admin: Erro ao verificar autenticação:", error);
+        setAuthError("Erro ao verificar autenticação");
         toast.error("Erro ao verificar autenticação");
-        navigate("/login");
+        
+        if (isMounted) {
+          navigate("/login");
+        }
       } finally {
-        setIsChecking(false);
+        if (isMounted) {
+          setIsChecking(false);
+        }
       }
     };
     
-    verifyAuth();
-  }, [navigate, checkAuth, isAdminUser]);
+    // Pequeno atraso para permitir que o estado de autenticação seja atualizado corretamente
+    const timer = setTimeout(() => {
+      verifyAuth();
+    }, 500);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [navigate, checkAuth, isAdminUser, userEmail, isLoggedIn]);
   
   // Mostrar mensagens de depuração para diagnóstico
-  console.log("Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking });
+  console.log("Estado atual de Admin: ", { isLoggedIn, isLoading, isAdminUser, isChecking, authError });
   
   // Se estiver carregando ou verificando, mostra o indicador de carregamento
   if (isLoading || isChecking) {
@@ -65,8 +90,25 @@ const Admin: React.FC = () => {
             <Skeleton className="h-20 w-full" />
           </div>
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Verificando autenticação...
+            Verificando autenticação administrativa...
           </p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Se houver erro de autenticação
+  if (authError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-8">
+        <div className="w-full max-w-md space-y-6 text-center">
+          <p className="text-red-500">{authError}</p>
+          <button 
+            onClick={() => navigate("/login")} 
+            className="px-4 py-2 bg-primary text-white rounded-md"
+          >
+            Voltar para o Login
+          </button>
         </div>
       </div>
     );
@@ -74,10 +116,12 @@ const Admin: React.FC = () => {
   
   // Se não estiver logado ou não for admin, não renderiza o portal (redirecionamento já foi feito no useEffect)
   if (!isLoggedIn || !isAdminUser) {
+    console.log("Admin: Não renderizando portal - não logado ou não admin");
     return null;
   }
   
   // Se estiver logado como admin, renderiza o portal administrativo
+  console.log("Admin: Renderizando portal administrativo");
   return (
     <AdminLayout>
       <PortalAdministrativo />
