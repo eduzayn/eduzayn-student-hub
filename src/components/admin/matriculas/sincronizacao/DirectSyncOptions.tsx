@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users, BookOpen } from "lucide-react";
 
-interface DirectSyncOptionsProps {
+export interface DirectSyncOptionsProps {
   isSyncingAlunos: boolean;
   isSyncingCursos: boolean;
   isConnected: boolean;

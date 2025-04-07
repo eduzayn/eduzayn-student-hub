@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-interface SincronizacaoCardProps {
+export interface SincronizacaoCardProps {
   title: string;
   description: string;
-  buttonText: string;
+  buttonText?: string;
+  syncLabel?: string; // Adicionando propriedade opcional
+  countLabel?: string; // Adicionando propriedade opcional
   count?: number;
   lastSync?: string;
   onSync: () => void;
@@ -20,12 +22,18 @@ const SincronizacaoCard: React.FC<SincronizacaoCardProps> = ({
   title,
   description,
   buttonText,
+  syncLabel,
+  countLabel,
   count,
   lastSync,
   onSync,
   isSyncing,
   icon,
 }) => {
+  // Usar buttonText ou syncLabel, garantindo que pelo menos um esteja disponível
+  const displayButtonText = buttonText || syncLabel || "Sincronizar";
+  const displayCountLabel = countLabel || "registros";
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -36,7 +44,7 @@ const SincronizacaoCard: React.FC<SincronizacaoCardProps> = ({
           </CardTitle>
           {count !== undefined && (
             <Badge variant="secondary" className="ml-2">
-              {count} registros
+              {count} {displayCountLabel}
             </Badge>
           )}
         </div>
@@ -52,7 +60,7 @@ const SincronizacaoCard: React.FC<SincronizacaoCardProps> = ({
               </>
             ) : (
               <>
-                {buttonText}
+                {displayButtonText}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}

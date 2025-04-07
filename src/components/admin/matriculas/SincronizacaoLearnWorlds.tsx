@@ -53,7 +53,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         lastSync={lastSyncAlunos}
         isSyncing={isSyncingAlunos}
         onSync={sincronizarAlunos}
-        syncLabel="Sincronizar Alunos"
+        buttonText="Sincronizar Alunos"
         countLabel="alunos cadastrados"
         icon={<RefreshCw className="h-4 w-4 mr-2" />}
       />
@@ -65,7 +65,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         lastSync={lastSyncCursos}
         isSyncing={isSyncingCursos}
         onSync={sincronizarCursos}
-        syncLabel="Sincronizar Cursos"
+        buttonText="Sincronizar Cursos"
         countLabel="cursos cadastrados"
         icon={<RefreshCw className="h-4 w-4 mr-2" />}
       />
@@ -75,7 +75,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
           <CardTitle>Sincronização Direta</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="default" className="mb-4">
             <AlertTitle>Atenção!</AlertTitle>
             <AlertDescription>
               A sincronização direta permite acessar recursos específicos da API do LearnWorlds. 
@@ -83,7 +83,13 @@ const SincronizacaoLearnWorlds: React.FC = () => {
             </AlertDescription>
           </Alert>
           
-          <DirectSyncOptions />
+          <DirectSyncOptions 
+            isSyncingAlunos={isSyncingAlunos}
+            isSyncingCursos={isSyncingCursos}
+            isConnected={isConnected}
+            onSyncAlunos={sincronizarAlunos}
+            onSyncCursos={sincronizarCursos}
+          />
         </CardContent>
       </Card>
     </div>
