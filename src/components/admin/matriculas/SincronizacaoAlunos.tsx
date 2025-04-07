@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
-// Interface para resultados da sincronização
 interface SyncResults {
   imported: number;
   updated: number;
@@ -28,12 +26,10 @@ const SincronizacaoAlunos: React.FC = () => {
   const [syncLogs, setSyncLogs] = useState<string[]>([]);
   const { getAccessToken } = useAuth();
 
-  // Verificar o status da API ao carregar o componente
   useEffect(() => {
     checkApiStatus();
   }, []);
 
-  // Função para verificar o status da API LearnWorlds
   const checkApiStatus = async () => {
     try {
       setApiStatus("checking");
@@ -56,18 +52,14 @@ const SincronizacaoAlunos: React.FC = () => {
         throw new Error(`Erro ao verificar status: ${response.status}`);
       }
       
-      // Verificar se a resposta é JSON antes de tentar analisar
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      try {
         const data = await response.json();
-        
-        if (data.status === "online") {
+        if (data && data.status === "online") {
           setApiStatus("online");
         } else {
           setApiStatus("offline");
         }
-      } else {
-        // Se não for JSON, considere como erro
+      } catch (jsonError) {
         console.error("Resposta não é JSON:", await response.text());
         setApiStatus("offline");
       }
@@ -77,7 +69,6 @@ const SincronizacaoAlunos: React.FC = () => {
     }
   };
 
-  // Função para iniciar a sincronização de alunos
   const sincronizarAlunos = async (syncAll: boolean = false) => {
     try {
       setIsSynchronizing(true);
@@ -90,12 +81,11 @@ const SincronizacaoAlunos: React.FC = () => {
         throw new Error("Usuário não autenticado");
       }
       
-      // Parâmetros de consulta para a API
       const params = new URLSearchParams();
       if (syncAll) {
         params.append('syncAll', 'true');
       }
-      params.append('pageSize', '20'); // Tamanho da página reduzido para teste
+      params.append('pageSize', '20');
       
       const url = `/functions/v1/learnworlds-sync?${params.toString()}`;
       
@@ -108,32 +98,28 @@ const SincronizacaoAlunos: React.FC = () => {
       });
       
       if (!response.ok) {
-        // Verificar se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        try {
           const errorData = await response.json();
           throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
-        } else {
-          throw new Error(`Erro na sincronização: ${response.status}`);
+        } catch (parseError) {
+          const errorText = await response.text();
+          throw new Error(`Erro na sincronização: ${response.status} - ${errorText.substring(0, 100)}...`);
         }
       }
       
-      // Verificar se a resposta é JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      try {
         const results = await response.json();
         
-        // Atualizar os resultados e logs
         setSyncResults(results);
         setSyncLogs(results.logs || []);
         
-        // Mostrar notificação de sucesso
         toast.success(
           `Sincronização concluída`, 
           { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
         );
-      } else {
-        throw new Error("Resposta da API não é JSON");
+      } catch (jsonError) {
+        console.error("Erro ao processar resposta JSON:", jsonError);
+        throw new Error("Resposta da API não é JSON válido");
       }
     } catch (error) {
       console.error("Erro na sincronização:", error);
@@ -143,10 +129,8 @@ const SincronizacaoAlunos: React.FC = () => {
     }
   };
 
-  // Função para criar ou atualizar um perfil manualmente
   const criarPerfilManualmente = async (email: string, nome: string, sobrenome: string, learnworldsId: string) => {
     try {
-      // Chamar a função criar perfil sem auth direto via SQL
       const { data, error } = await supabase.functions.invoke("create-profile", {
         body: {
           email,

@@ -50,16 +50,19 @@ serve(async (req) => {
   
   // Verificar status da API LearnWorlds
   try {
-    // Garantir que a resposta seja sempre JSON
+    // Garantir que a resposta seja sempre JSON válido com o Content-Type correto
     return new Response(
       JSON.stringify({ status: "online" }),
       {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
       }
     );
   } catch (error) {
-    // Retornar informação de erro também como JSON
+    // Retornar informação de erro também como JSON com o Content-Type correto
     return new Response(
       JSON.stringify({ 
         status: "offline",
@@ -67,7 +70,10 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
       }
     );
   }
