@@ -85,6 +85,13 @@ const SincronizacaoLearnWorlds: React.FC = () => {
     }
   };
 
+  // Função helper para determinar o variant correto do Alert
+  const getAlertVariant = () => {
+    if (apiStatus === "error") return "destructive";
+    if (apiStatus === "success") return "default";
+    return "default"; // Para idle e testing, usar default
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -101,7 +108,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
 
       <CardContent className="pt-6">
         <div className="space-y-6">
-          <Alert variant={apiStatus === "error" ? "destructive" : apiStatus === "success" ? "default" : "outline"} 
+          <Alert variant={getAlertVariant()} 
             className={apiStatus === "success" ? "border-green-500 bg-green-50 text-green-900" : undefined}>
             <div className="flex items-center gap-2">
               {getStatusIcon()}
