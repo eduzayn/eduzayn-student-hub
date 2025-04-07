@@ -121,7 +121,7 @@ const SincronizacaoAlunos: React.FC = () => {
           // Verificar se o aluno já existe no banco de dados
           const { data: alunosExistentes, error: errorConsulta } = await supabase
             .from('profiles')
-            .select('id, email, learnworlds_id')
+            .select('id, email')
             .eq('email', aluno.email)
             .maybeSingle();
           
@@ -133,18 +133,18 @@ const SincronizacaoAlunos: React.FC = () => {
             // Aluno não existe, criar novo
             adicionarLog(`Criando novo perfil para ${aluno.email}...`);
             
-            const { error: errorInsert } = await supabase
-              .from('profiles')
-              .insert({
-                first_name: aluno.firstName || '',
-                last_name: aluno.lastName || '',
-                email: aluno.email,
-                phone: aluno.phoneNumber || '',
-                learnworlds_id: aluno.id,
+            // Usar RPC para criar um perfil sem auth
+            const { error: errorRPC } = await supabase
+              .rpc('create_profile_without_auth', {
+                user_email: aluno.email,
+                user_first_name: aluno.firstName || '',
+                user_last_name: aluno.lastName || '',
+                user_phone: aluno.phoneNumber || '',
+                user_learnworlds_id: aluno.id
               });
             
-            if (errorInsert) {
-              throw new Error(`Erro ao criar perfil: ${errorInsert.message}`);
+            if (errorRPC) {
+              throw new Error(`Erro ao criar perfil: ${errorRPC.message}`);
             }
             
             novos++;
@@ -156,10 +156,11 @@ const SincronizacaoAlunos: React.FC = () => {
             const { error: errorUpdate } = await supabase
               .from('profiles')
               .update({
-                first_name: aluno.firstName || alunosExistentes.first_name || '',
-                last_name: aluno.lastName || alunosExistentes.last_name || '',
-                phone: aluno.phoneNumber || alunosExistentes.phone || '',
+                first_name: aluno.firstName || '',
+                last_name: aluno.lastName || '',
+                phone: aluno.phoneNumber || '',
                 learnworlds_id: aluno.id,
+                updated_at: new Date().toISOString()
               })
               .eq('email', aluno.email);
             

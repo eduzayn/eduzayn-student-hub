@@ -62,6 +62,17 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.pathname.split('/learnworlds-api/')[1];
 
+    // Tratar requisição de status
+    if (path === 'status') {
+      return new Response(
+        JSON.stringify({ status: "online", timestamp: new Date().toISOString() }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     if (!path) {
       return new Response(
         JSON.stringify({ error: 'Endpoint não especificado' }),
