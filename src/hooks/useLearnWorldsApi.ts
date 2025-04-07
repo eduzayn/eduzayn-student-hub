@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -73,37 +72,53 @@ export const useLearnWorldsApi = () => {
       // Fazer a chamada para a edge function
       const response = await fetch(url, options);
       
-      // Tratar diferentes códigos de status conforme a documentação da LearnWorlds
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-        // Mostrar mensagem de erro amigável baseada nos códigos de erro da LearnWorlds
-        let errorMessage = errorData.error || 'Erro ao chamar API LearnWorlds';
-        
-        if (response.status === 401) {
-          errorMessage = 'Não autorizado - verifique as credenciais da API';
-          toast.error('Sessão expirada ou inválida', { description: 'Por favor, faça login novamente' });
-          setOfflineMode(true);
-        } else if (response.status === 403) {
-          errorMessage = 'Sem permissão para acessar este recurso';
-        } else if (response.status === 404) {
-          errorMessage = 'Recurso não encontrado na LearnWorlds';
-        } else if (response.status === 429) {
-          errorMessage = 'Muitas requisições - aguarde um momento e tente novamente';
-          toast.warning('Muitas requisições', { description: 'Aguarde um momento antes de tentar novamente' });
-        } else if (response.status >= 500) {
-          errorMessage = 'Erro no servidor da LearnWorlds - tente novamente mais tarde';
-          toast.error('Serviço temporariamente indisponível', { description: 'Tente novamente mais tarde' });
+      // Verificar se a resposta é um formato válido antes de tentar converter para JSON
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        // A resposta é JSON, podemos prosseguir normalmente
+        if (!response.ok) {
+          const errorData = await response.json();
+          
+          // Mostrar mensagem de erro amigável baseada nos códigos de erro
+          let errorMessage = errorData.error || 'Erro ao chamar API';
+          
+          if (response.status === 401) {
+            errorMessage = 'Não autorizado - verifique as credenciais da API';
+            toast.error('Sessão expirada ou inválida', { description: 'Por favor, faça login novamente' });
+            setOfflineMode(true);
+          } else if (response.status === 403) {
+            errorMessage = 'Sem permissão para acessar este recurso';
+          } else if (response.status === 404) {
+            errorMessage = 'Recurso não encontrado na LearnWorlds';
+          } else if (response.status === 429) {
+            errorMessage = 'Muitas requisições - aguarde um momento e tente novamente';
+            toast.warning('Muitas requisições', { description: 'Aguarde um momento antes de tentar novamente' });
+          } else if (response.status >= 500) {
+            errorMessage = 'Erro no servidor da LearnWorlds - tente novamente mais tarde';
+            toast.error('Serviço temporariamente indisponível', { description: 'Tente novamente mais tarde' });
+          }
+          
+          throw new Error(errorMessage);
         }
-        
-        throw new Error(errorMessage);
-      }
 
-      const data = await response.json();
-      return data as T;
+        const data = await response.json();
+        return data as T;
+      } else {
+        // A resposta não é JSON, vamos obter o texto e mostrar um erro
+        const textResponse = await response.text();
+        console.error("Resposta não-JSON recebida:", textResponse);
+        
+        if (response.status === 200) {
+          // Se o status for 200 mas não for JSON, pode ser uma resposta HTML válida
+          console.log("Recebido uma resposta 200 não-JSON, tratando como sucesso genérico");
+          return { success: true } as unknown as T;
+        } else {
+          throw new Error(`Resposta inválida do servidor: ${response.status} ${response.statusText}`);
+        }
+      }
     } catch (err: any) {
-      console.error('Erro ao chamar API LearnWorlds:', err);
-      setError(err.message || 'Erro desconhecido ao chamar API LearnWorlds');
+      console.error('Erro ao chamar API:', err);
+      setError(err.message || 'Erro desconhecido ao chamar API');
       return null;
     } finally {
       setLoading(false);

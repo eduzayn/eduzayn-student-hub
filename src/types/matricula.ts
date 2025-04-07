@@ -11,10 +11,17 @@ export interface Curso {
   id: string;
   titulo: string;
   descricao?: string;
+  codigo: string;
   modalidade?: string;
+  valor_total: number;
+  valor_mensalidade: number;
   carga_horaria?: number;
-  valor_mensalidade?: number;
-  valor_total?: number;
+  total_parcelas?: number;
+  ativo?: boolean;
+  learning_worlds_id?: string;
+  data_criacao?: string;
+  data_atualizacao?: string;
+  imagem_url?: string;
 }
 
 export interface Matricula {

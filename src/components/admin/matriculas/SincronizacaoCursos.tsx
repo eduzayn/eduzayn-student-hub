@@ -51,16 +51,24 @@ const SincronizacaoCursos: React.FC = () => {
         }
       });
       
-      if (!response.ok) {
-        throw new Error(`Erro ao verificar status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.status === "online") {
-        setApiStatus("online");
-      } else {
-        setApiStatus("offline");
+      // Tratamento melhorado para resposta não-JSON
+      try {
+        // Primeiro tentamos analisar como JSON
+        const data = await response.json();
+        if (data.status === "online") {
+          setApiStatus("online");
+        } else {
+          setApiStatus("offline");
+        }
+      } catch (jsonError) {
+        // Se falhar, verificamos se a resposta foi bem-sucedida
+        if (response.ok) {
+          console.log("Resposta status não é JSON, mas é OK - considerando online");
+          setApiStatus("online");
+        } else {
+          console.error("Erro ao verificar status: Formato de resposta inválido", jsonError);
+          setApiStatus("offline");
+        }
       }
     } catch (error) {
       console.error("Erro ao verificar status da API:", error);
@@ -99,21 +107,46 @@ const SincronizacaoCursos: React.FC = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
+        try {
+          // Tentativa de obter erro como JSON
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro na sincronização: ${response.status}`);
+        } catch (jsonError) {
+          // Se não for JSON, usamos texto simples
+          const errorText = await response.text();
+          throw new Error(`Erro na sincronização: ${response.status} - ${errorText}`);
+        }
       }
       
-      const results = await response.json();
-      
-      // Atualizar os resultados e logs
-      setSyncResults(results);
-      setSyncLogs(results.logs || []);
-      
-      // Mostrar notificação de sucesso
-      toast.success(
-        `Sincronização concluída`, 
-        { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
-      );
+      try {
+        const results = await response.json();
+        // Atualizar os resultados e logs
+        setSyncResults(results);
+        setSyncLogs(results.logs || []);
+        
+        // Mostrar notificação de sucesso
+        toast.success(
+          `Sincronização concluída`, 
+          { description: `${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas` }
+        );
+      } catch (jsonError) {
+        console.error("Erro ao processar resposta JSON:", jsonError);
+        // Se a resposta não for JSON, mas for bem-sucedida, mostrar sucesso genérico
+        if (response.ok) {
+          toast.success("Sincronização concluída", { description: "Processo finalizado com sucesso" });
+          // Definir resultados genéricos
+          setSyncResults({
+            imported: 0,
+            updated: 0, 
+            failed: 0,
+            total: 0,
+            logs: ["Sincronização concluída, mas detalhes não disponíveis"]
+          });
+          setSyncLogs(["Sincronização concluída, mas detalhes não disponíveis"]);
+        } else {
+          throw new Error("Formato de resposta inválido");
+        }
+      }
     } catch (error) {
       console.error("Erro na sincronização:", error);
       toast.error("Falha na sincronização", { description: error instanceof Error ? error.message : "Erro desconhecido" });

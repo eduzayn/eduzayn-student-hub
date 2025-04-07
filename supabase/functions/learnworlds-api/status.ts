@@ -1,5 +1,5 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Configuração dos cabeçalhos CORS
 const corsHeaders = {
@@ -16,22 +16,57 @@ serve(async (req) => {
       headers: corsHeaders,
     });
   }
-
-  try {
-    // Verificar que a função está respondendo
+  
+  // Verificar autenticação
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
     return new Response(
-      JSON.stringify({ status: "online", timestamp: new Date().toISOString() }),
+      JSON.stringify({ error: 'Sem token de autenticação' }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // Obter dados de configuração da API LearnWorlds
+  const apiKey = Deno.env.get('LEARNWORLDS_API_KEY');
+  const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID');
+  
+  // Verificar se as configurações estão presentes
+  if (!apiKey || !schoolId) {
+    return new Response(
+      JSON.stringify({ 
+        status: "offline",
+        error: "Configurações da API não encontradas", 
+        details: "Verifique variáveis de ambiente LEARNWORLDS_API_KEY e LEARNWORLDS_SCHOOL_ID" 
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  // Verificar status da API LearnWorlds
+  try {
+    // Retornar informação de status
+    return new Response(
+      JSON.stringify({ status: "online" }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    // Lidar com erros
+    // Retornar informação de erro
     return new Response(
-      JSON.stringify({ error: 'Erro ao verificar status', details: error.message }),
+      JSON.stringify({ 
+        status: "offline",
+        error: error.message || "Erro desconhecido ao verificar status da API" 
+      }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

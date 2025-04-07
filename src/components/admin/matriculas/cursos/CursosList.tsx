@@ -17,7 +17,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, RefreshCw, BookOpen, FileEdit } from "lucide-react";
+import { Search, RefreshCw, BookOpen, FileEdit, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
