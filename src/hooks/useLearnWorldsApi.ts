@@ -1,6 +1,20 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+/**
+ * Interface para os parâmetros de cadastro de aluno
+ */
+interface AlunoParams {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  cpf?: string;
+  phoneNumber?: string;
+  customField1?: string;
+  customField2?: string;
+}
 
 /**
  * Hook para interagir com a API do LearnWorlds através das funções edge do Supabase
