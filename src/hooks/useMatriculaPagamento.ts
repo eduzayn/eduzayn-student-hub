@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import useGatewayPagamento from "@/hooks/useGatewayPagamento";
 
+// URL base correta para funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
+
 export const useMatriculaPagamento = () => {
   const navigate = useNavigate();
   const { processarPagamento } = useGatewayPagamento();

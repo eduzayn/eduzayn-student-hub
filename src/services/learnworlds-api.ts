@@ -1,9 +1,13 @@
+
 /**
  * Serviço de integração com a API da LearnWorlds e Supabase
  * Documentação: https://developers.learnworlds.com/
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { RotaAprendizagemType } from "@/types/aprendizagem";
+
+// URL base correta para funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
 interface LearnWorldsCourse {
   id: string;

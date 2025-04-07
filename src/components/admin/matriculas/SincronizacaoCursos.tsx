@@ -11,6 +11,9 @@ import { CheckIcon, AlertTriangleIcon, RefreshCw, BookOpen, Database, Loader2, I
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
+// URL base correta para as funções do Supabase
+const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
+
 // Interface para resultados da sincronização
 interface SyncResults {
   imported: number;
@@ -43,7 +46,7 @@ const SincronizacaoCursos: React.FC = () => {
         throw new Error("Usuário não autenticado");
       }
       
-      const response = await fetch('/functions/v1/learnworlds-api/status', {
+      const response = await fetch(`${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +99,7 @@ const SincronizacaoCursos: React.FC = () => {
       }
       params.append('pageSize', '20'); // Tamanho da página reduzido para teste
       
-      const url = `/functions/v1/learnworlds-courses-sync?${params.toString()}`;
+      const url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-courses-sync?${params.toString()}`;
       
       const response = await fetch(url, {
         method: 'GET',
