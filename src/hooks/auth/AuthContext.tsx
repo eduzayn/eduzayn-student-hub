@@ -1,8 +1,10 @@
 
-import { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import useAuthProvider from "./useAuthProvider";
 import { AuthContextType, AuthProviderProps } from "./types";
-import { useAuthProvider } from "./useAuthProvider";
 
+// Create the authentication context
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   isLoading: true,
@@ -15,20 +17,18 @@ const AuthContext = createContext<AuthContextType>({
   refreshAuth: async () => false,
 });
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const authState = useAuthProvider();
-  
-  return (
-    <AuthContext.Provider value={authState}>
-      {children}
-    </AuthContext.Provider>
-  );
+// Provider component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const auth = useAuthProvider();
+
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
+// Hook for accessing auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

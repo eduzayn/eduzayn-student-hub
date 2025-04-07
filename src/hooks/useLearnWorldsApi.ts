@@ -7,6 +7,9 @@ import { useAuth } from '@/hooks/use-auth';
 // URL base correta para as funções do Supabase
 const SUPABASE_FUNCTION_BASE_URL = "https://bioarzkfmcobctblzztm.supabase.co/functions/v1";
 
+// ID do cliente LearnWorlds (necessário para todas as chamadas à API)
+const CLIENT_ID = "zayn-lms-client";
+
 /**
  * Hook para facilitar chamadas à API LearnWorlds através da edge function
  * @see https://www.learnworlds.dev/ para documentação completa
@@ -17,7 +20,7 @@ export const useLearnWorldsApi = () => {
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   
   // Usar o hook de autenticação para verificar se o usuário está logado
-  const { isLoggedIn, isAdminBypass } = useAuth();
+  const { isLoggedIn, isAdminBypass, getAccessToken } = useAuth();
 
   /**
    * Função para fazer chamadas à API LearnWorlds
@@ -42,9 +45,17 @@ export const useLearnWorldsApi = () => {
         throw new Error("Operando em modo offline");
       }
 
-      // Obter token de autenticação do usuário atual
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token || (isAdminBypass ? 'admin-bypass-token' : null);
+      // Obter token de autenticação
+      let token;
+      
+      if (isAdminBypass) {
+        // Se for admin bypass, usar o token especial
+        token = 'admin-bypass-token';
+        console.log("Usando admin-bypass-token para autenticação");
+      } else {
+        token = await getAccessToken();
+        console.log("Usando token de autenticação normal");
+      }
 
       if (!token) {
         console.warn("Usuário não autenticado - ativando modo offline");
@@ -53,12 +64,23 @@ export const useLearnWorldsApi = () => {
       }
 
       // Construir URL com parâmetros de query se fornecidos
+      // Sempre incluir client_id como parâmetro obrigatório
       let url = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/${endpoint}`;
-      if (params && Object.keys(params).length > 0) {
-        const queryString = new URLSearchParams(params).toString();
-        url = `${url}?${queryString}`;
+      
+      // Inicializar parâmetros com client_id
+      const queryParams = new URLSearchParams();
+      queryParams.append("client_id", CLIENT_ID);
+      
+      // Adicionar outros parâmetros se fornecidos
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          queryParams.append(key, value);
+        });
       }
-
+      
+      // Adicionar parâmetros à URL
+      url = `${url}?${queryParams.toString()}`;
+      
       console.log(`Chamando API LearnWorlds: ${method} ${url}`);
 
       // Preparar as opções para a requisição
@@ -72,7 +94,13 @@ export const useLearnWorldsApi = () => {
 
       // Adicionar corpo da requisição se for método POST, PUT ou PATCH
       if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
-        options.body = JSON.stringify(body);
+        // Garantir que o client_id está incluído no body
+        const bodyWithClientId = {
+          ...body,
+          client_id: CLIENT_ID
+        };
+        options.body = JSON.stringify(bodyWithClientId);
+        console.log("Body da requisição:", JSON.stringify(bodyWithClientId, null, 2));
       }
 
       // Fazer a chamada para a edge function

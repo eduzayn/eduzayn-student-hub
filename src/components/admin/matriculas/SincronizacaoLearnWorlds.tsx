@@ -26,7 +26,7 @@ const SincronizacaoLearnWorlds: React.FC = () => {
     alunos: { learnworlds: number, supabase: number, matching: number },
   } | null>(null);
   const [activeTab, setActiveTab] = useState<"api" | "dados">("api");
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, isAdminBypass } = useAuth();
 
   useEffect(() => {
     checkApiStatus();
@@ -38,15 +38,26 @@ const SincronizacaoLearnWorlds: React.FC = () => {
     setApiResponse("");
     
     try {
-      const token = await getAccessToken();
+      // Obter token de autenticação
+      let token;
+      
+      if (isAdminBypass) {
+        // Se for admin bypass, usar o token especial
+        token = 'admin-bypass-token';
+        console.log("Usando admin-bypass-token para autenticação");
+      } else {
+        token = await getAccessToken();
+        console.log("Usando token de autenticação normal");
+      }
+      
       if (!token) {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
       console.log("Iniciando verificação de status da API LearnWorlds");
       
-      // Usar a URL correta da função Supabase
-      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status`;
+      // Usar a URL correta da função Supabase com client_id como parâmetro de consulta
+      const functionUrl = `${SUPABASE_FUNCTION_BASE_URL}/learnworlds-api/status?client_id=zayn-lms-client`;
       console.log("Chamando função em:", functionUrl);
       
       const response = await fetch(functionUrl, {
