@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string()
@@ -59,6 +60,7 @@ const Login = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>("login");
   const navigate = useNavigate();
 
   const loginForm = useForm<LoginFormValues>({
@@ -88,6 +90,10 @@ const Login = () => {
       localStorage.setItem('adminBypassAuthenticated', 'true');
       localStorage.setItem('adminBypassEmail', ADMIN_BYPASS.email);
       
+      toast.success("Login realizado com sucesso!", {
+        description: "Bem-vindo(a) ao Portal Administrativo"
+      });
+      
       setTimeout(() => {
         setIsLoading(false);
         navigate("/admin");
@@ -103,16 +109,22 @@ const Login = () => {
       });
 
       if (error) {
-        // Verificar se o erro é de email não confirmado
+        console.error("Erro de login:", error.message);
+        
+        // Verificar diferentes tipos de erros
         if (error.message.includes("Email not confirmed") || 
-            error.message.toLowerCase().includes("email não confirmado")) {
+            error.message.toLowerCase().includes("email não confirmado") ||
+            error.message.includes("Invalid login credentials")) {
           setNeedsEmailConfirmation(true);
           setConfirmationEmail(values.email);
-          setAuthError("Seu email ainda não foi confirmado. Por favor, verifique sua caixa de entrada ou solicite um novo link de confirmação.");
+          setAuthError("Seu email ainda não foi confirmado ou as credenciais são inválidas. Por favor, verifique sua caixa de entrada ou solicite um novo link de confirmação.");
         } else {
           setAuthError(error.message);
         }
       } else {
+        toast.success("Login realizado com sucesso!", {
+          description: "Bem-vindo(a) ao Portal do Aluno"
+        });
         navigate("/dashboard");
       }
     } catch (error) {
@@ -147,13 +159,21 @@ const Login = () => {
         if (data?.user?.identities?.length === 0) {
           // Usuário já existe
           setAuthError("Este email já está cadastrado. Por favor, tente fazer login.");
+          setActiveTab("login");
         } else if (data?.user && !data.user.confirmed_at) {
           // Email precisa ser confirmado
           setNeedsEmailConfirmation(true);
+          toast.info("Verifique seu email!", {
+            description: "Enviamos um link de confirmação para seu email."
+          });
           setAuthError("Verifique seu email para confirmar seu cadastro!");
           registroForm.reset();
         } else {
+          toast.success("Cadastro realizado com sucesso!", {
+            description: "Você já pode fazer login."
+          });
           setAuthError("Usuário cadastrado com sucesso! Você já pode fazer login.");
+          setActiveTab("login");
           registroForm.reset();
         }
       }
@@ -177,8 +197,14 @@ const Login = () => {
       
       if (error) {
         setAuthError(`Erro ao reenviar email: ${error.message}`);
+        toast.error("Erro ao reenviar email", {
+          description: error.message
+        });
       } else {
         setAuthError("Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.");
+        toast.success("Email reenviado com sucesso!", {
+          description: "Verifique sua caixa de entrada e pasta de spam."
+        });
       }
     } catch (error) {
       setAuthError("Ocorreu um erro ao reenviar o email de confirmação.");
@@ -190,7 +216,7 @@ const Login = () => {
 
   return (
     <div className="container max-w-md mx-auto py-10">
-      <Tabs defaultValue="login" className="w-full">
+      <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="registro">Cadastro</TabsTrigger>
