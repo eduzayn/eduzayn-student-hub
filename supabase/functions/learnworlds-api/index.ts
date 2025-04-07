@@ -84,15 +84,77 @@ serve(async (req) => {
     if (path === 'status' || path === '/status') {
       console.log("🔄 Redirecionando para endpoint de status");
       
-      // Obter a URL base para construir a URL de status
-      const baseUrl = url.origin;
+      // Obter a URL base atual e criar URL para status
+      // Importante: NUNCA usar URL relativas para funções Supabase
+      const urlObj = new URL(req.url);
+      const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
       const statusUrl = `${baseUrl}/functions/v1/learnworlds-api/status`;
+      
       console.log(`🔄 Redirecionando para: ${statusUrl}`);
       
-      return await fetch(statusUrl, {
-        method: 'GET',
-        headers: req.headers
-      });
+      try {
+        const statusResponse = await fetch(statusUrl, {
+          method: 'GET',
+          headers: req.headers
+        });
+        
+        // Garantir que seja uma resposta JSON válida
+        const contentType = statusResponse.headers.get('content-type') || '';
+        console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
+        
+        // Sempre retornamos como JSON, independente do que recebemos
+        try {
+          const text = await statusResponse.text();
+          try {
+            // Tenta parsear como JSON
+            const data = JSON.parse(text);
+            return new Response(
+              JSON.stringify(data),
+              {
+                status: statusResponse.status,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          } catch (e) {
+            // Se não for JSON, wrap em um objeto JSON
+            return new Response(
+              JSON.stringify({ 
+                status: "offline",
+                error: "Resposta inválida do status endpoint", 
+                rawResponse: text.substring(0, 500)
+              }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        } catch (e) {
+          console.error("Erro ao ler texto da resposta:", e);
+          return new Response(
+            JSON.stringify({ 
+              status: "offline",
+              error: "Erro ao processar resposta do status endpoint" 
+            }),
+            {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      } catch (e) {
+        console.error("Erro ao chamar status endpoint:", e);
+        return new Response(
+          JSON.stringify({ 
+            status: "offline",
+            error: "Erro ao chamar status endpoint" 
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
     }
 
     if (!path) {
@@ -112,6 +174,8 @@ serve(async (req) => {
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
     
     console.log(`📚 Usando API LearnWorlds com escola: ${schoolId}`);
+    console.log(`🔑 Usando token da API: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 5)}`);
+    console.log(`🌐 URL base da API: ${apiBaseUrl}`);
 
     if (!apiKey || !schoolId) {
       console.error('❌ Configurações da API LearnWorlds ausentes');
@@ -159,63 +223,51 @@ serve(async (req) => {
     const fullApiUrl = queryParams ? `${apiUrl}${queryParams}` : apiUrl;
     console.log(`🌐 URL completa para API LearnWorlds: ${fullApiUrl}`);
 
-    // Fazer a solicitação à API LearnWorlds
-    const response = await fetch(fullApiUrl, {
-      method: req.method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    try {
+      // Fazer a solicitação à API LearnWorlds
+      const response = await fetch(fullApiUrl, {
+        method: req.method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
 
-    console.log(`📊 Status da resposta: ${response.status}`);
-    
-    // Verificar o tipo de conteúdo para determinar como processar a resposta
-    const contentType = response.headers.get('content-type') || '';
-    console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
-    
-    let responseData;
-
-    if (contentType.includes('application/json')) {
-      // Se for JSON, analisamos como JSON
-      const jsonText = await response.text();
-      console.log(`📄 Resposta JSON recebida: ${jsonText.substring(0, 200)}...`);
+      console.log(`📊 Status da resposta: ${response.status}`);
       
+      // Verificar o tipo de conteúdo para determinar como processar a resposta
+      const contentType = response.headers.get('content-type') || '';
+      console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
+      
+      let responseData;
+
       try {
-        responseData = JSON.parse(jsonText);
-      } catch (jsonError) {
-        console.error("❌ Erro ao parsear resposta como JSON:", jsonError);
-        responseData = {
-          error: "Erro ao processar resposta JSON",
-          textPreview: jsonText.substring(0, 500)
-        };
-      }
-    } else {
-      try {
-        // Tentar obter o texto e converter para JSON mesmo assim
+        // Primeiro tentamos obter o corpo como texto para evitar erros de parsing direto
         const responseText = await response.text();
-        console.log(`📄 Resposta texto recebida: ${responseText.substring(0, 200)}...`);
+        console.log(`📄 Resposta recebida (primeiros 200 caracteres): ${responseText.substring(0, 200)}...`);
         
         try {
+          // Tentamos parsear como JSON
           responseData = JSON.parse(responseText);
+          console.log("✅ Resposta JSON válida recebida");
         } catch (jsonError) {
           console.error("❌ Erro ao parsear resposta como JSON:", jsonError);
-          // Se não for JSON, tratamos como texto e informamos o tipo de conteúdo
-          responseData = {
-            text: responseText.substring(0, 500), // Limitamos para não sobrecarregar os logs
-            contentType: contentType,
-            statusCode: response.status,
-            message: 'Resposta não-JSON recebida da API'
-          };
           
-          console.error(`❌ Resposta não-JSON recebida: ${contentType}, status: ${response.status}`);
-          
-          // Se não estiver OK, tratamos como erro
-          if (!response.ok) {
+          // Se não é JSON mas o status é OK, empacotamos o texto em um objeto JSON
+          if (response.ok) {
+            console.log("Resposta não-JSON com status OK, encapsulando em objeto JSON");
+            responseData = {
+              success: true,
+              responseText: responseText.substring(0, 500),
+              contentType: contentType
+            };
+          } else {
+            // Se não é JSON e não está OK, tratamos como erro
             return new Response(
               JSON.stringify({
                 error: 'Erro na API LearnWorlds',
                 details: 'Resposta não-JSON recebida',
                 statusCode: response.status,
-                contentType: contentType
+                contentType: contentType,
+                responsePreview: responseText.substring(0, 500)
               }),
               {
                 status: response.status,
@@ -232,35 +284,47 @@ serve(async (req) => {
           details: textError instanceof Error ? textError.message : "Erro desconhecido"
         };
       }
-    }
 
-    // Registrar sucesso ou erro
-    if (!response.ok) {
-      console.error(`❌ Erro na API LearnWorlds: ${response.status} - ${JSON.stringify(responseData)}`);
+      // Registrar sucesso ou erro
+      if (!response.ok) {
+        console.error(`❌ Erro na API LearnWorlds: ${response.status} - ${JSON.stringify(responseData)}`);
+        return new Response(
+          JSON.stringify({
+            status: response.status,
+            error: responseData.error || 'Erro na API LearnWorlds',
+            details: responseData
+          }),
+          {
+            status: response.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log(`✅ Resposta bem-sucedida da LearnWorlds: ${response.status}`);
+
+      // Retornar os dados para o cliente
       return new Response(
-        JSON.stringify({
-          status: response.status,
-          error: responseData.error || 'Erro na API LearnWorlds',
-          details: responseData
-        }),
+        JSON.stringify(responseData),
         {
           status: response.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
+    } catch (fetchError) {
+      console.error('❌ Erro na requisição fetch para LearnWorlds:', fetchError);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erro ao chamar API LearnWorlds', 
+          details: fetchError instanceof Error ? fetchError.message : "Erro desconhecido"
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
-
-    console.log(`✅ Resposta bem-sucedida da LearnWorlds: ${response.status}`);
-
-    // Retornar os dados para o cliente
-    return new Response(
-      JSON.stringify(responseData),
-      {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-
   } catch (error) {
     // Lidar com erros gerais
     console.error('❌ Erro ao processar solicitação:', error);

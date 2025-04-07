@@ -96,6 +96,8 @@ serve(async (req) => {
       });
 
       console.log(`📊 Status da resposta: ${testResponse.status}`);
+      const contentType = testResponse.headers.get('content-type') || '';
+      console.log(`📄 Tipo de conteúdo da resposta: ${contentType}`);
       
       // Verificar código de status
       if (!testResponse.ok) {

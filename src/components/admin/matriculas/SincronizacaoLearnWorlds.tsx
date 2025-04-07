@@ -42,8 +42,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
       
       console.log("Iniciando verificação de status da API LearnWorlds");
       
-      // Usar a URL completa da função
-      const functionUrl = `${window.location.origin}/functions/v1/learnworlds-api/status`;
+      // Usar a URL completa da função - importante incluir o domínio completo
+      const functionUrl = new URL('/functions/v1/learnworlds-api/status', window.location.origin).toString();
       console.log("Chamando função em:", functionUrl);
       
       const response = await fetch(functionUrl, {
@@ -106,8 +106,8 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         throw new Error("Não foi possível obter token de autenticação");
       }
       
-      // Usar a URL completa da função
-      const apiStatusUrl = `${window.location.origin}/functions/v1/learnworlds-api/status`;
+      // Usar a URL completa da função - importante incluir o domínio completo
+      const apiStatusUrl = new URL('/functions/v1/learnworlds-api/status', window.location.origin).toString();
       console.log("Verificando status da API em:", apiStatusUrl);
       
       const apiStatusResponse = await fetch(apiStatusUrl, {
@@ -118,13 +118,20 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         }
       });
       
-      const apiStatusData = await apiStatusResponse.json();
+      let apiStatusData;
+      try {
+        const apiStatusText = await apiStatusResponse.text();
+        apiStatusData = JSON.parse(apiStatusText);
+      } catch (error) {
+        throw new Error("Falha ao interpretar resposta da API como JSON");
+      }
+      
       if (!apiStatusResponse.ok || apiStatusData.status !== "online") {
         throw new Error("API LearnWorlds não está online. Verifique a configuração primeiro.");
       }
       
       // Usar a URL completa da função para buscar usuários
-      const lwStudentsUrl = `${window.location.origin}/functions/v1/learnworlds-api/users?limit=1`;
+      const lwStudentsUrl = new URL('/functions/v1/learnworlds-api/users?limit=1', window.location.origin).toString();
       console.log("Buscando alunos em:", lwStudentsUrl);
       
       const lwStudentsResponse = await fetch(lwStudentsUrl, {
@@ -135,11 +142,19 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         }
       });
       
-      const lwStudentsData = await lwStudentsResponse.json();
+      let lwStudentsData;
+      try {
+        const lwStudentsText = await lwStudentsResponse.text();
+        lwStudentsData = JSON.parse(lwStudentsText);
+      } catch (error) {
+        console.error("Falha ao interpretar resposta de alunos como JSON:", error);
+        lwStudentsData = { total: 0 };
+      }
+      
       const lwStudentsCount = lwStudentsData.total || 0;
       
       // Usar a URL completa da função para buscar cursos
-      const lwCoursesUrl = `${window.location.origin}/functions/v1/learnworlds-api/courses?limit=1`;
+      const lwCoursesUrl = new URL('/functions/v1/learnworlds-api/courses?limit=1', window.location.origin).toString();
       console.log("Buscando cursos em:", lwCoursesUrl);
       
       const lwCoursesResponse = await fetch(lwCoursesUrl, {
@@ -150,7 +165,15 @@ const SincronizacaoLearnWorlds: React.FC = () => {
         }
       });
       
-      const lwCoursesData = await lwCoursesResponse.json();
+      let lwCoursesData;
+      try {
+        const lwCoursesText = await lwCoursesResponse.text();
+        lwCoursesData = JSON.parse(lwCoursesText);
+      } catch (error) {
+        console.error("Falha ao interpretar resposta de cursos como JSON:", error);
+        lwCoursesData = { total: 0 };
+      }
+      
       const lwCoursesCount = lwCoursesData.total || 0;
       
       const { count: sbStudentsCount } = await supabase
@@ -244,10 +267,18 @@ const SincronizacaoLearnWorlds: React.FC = () => {
           </TabsList>
 
           <TabsContent value="api" className="space-y-6">
-            <Alert variant={getAlertVariant()} 
+            <Alert variant={apiStatus === "success" ? "default" : apiStatus === "error" ? "destructive" : "default"} 
               className={apiStatus === "success" ? "border-green-500 bg-green-50 text-green-900" : undefined}>
               <div className="flex items-center gap-2">
-                {getStatusIcon()}
+                {apiStatus === "success" ? (
+                  <Check className="h-5 w-5 text-green-500" />
+                ) : apiStatus === "error" ? (
+                  <X className="h-5 w-5 text-red-500" />
+                ) : apiStatus === "testing" ? (
+                  <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
+                ) : (
+                  <AlarmClock className="h-5 w-5 text-gray-500" />
+                )}
                 <AlertTitle>Status da Integração</AlertTitle>
               </div>
               <AlertDescription>
