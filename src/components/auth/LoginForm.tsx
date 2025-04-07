@@ -40,8 +40,9 @@ export const ADMIN_EMAILS = [
   "admin@eduzayn.com.br"
 ];
 
+// Removendo o bypass específico para o usuário ana.diretoria
 export const ADMIN_BYPASS = {
-  email: "ana.diretoria@eduzayn.com.br",
+  email: "bypass.admin@eduzayn.com.br",
   password: "Zayn@2025"
 };
 

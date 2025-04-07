@@ -18,11 +18,16 @@ export const useAuthProvider = () => {
     setIsLoading(true);
     console.log("[useAuthProvider] Atualizando estado de autenticação...");
     
-    // Primeiro verificar bypass de admin
+    // Primeiro verificar bypass de admin (exceto para ana.diretoria@eduzayn.com.br)
     if (checkAdminBypass(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail)) {
-      console.log("[useAuthProvider] Bypass de admin confirmado durante refresh");
-      setIsLoading(false);
-      return true;
+      const email = getAdminBypassEmail();
+      if (email === "ana.diretoria@eduzayn.com.br") {
+        console.log("[useAuthProvider] Ignorando bypass para usuário administrador autenticado");
+      } else {
+        console.log("[useAuthProvider] Bypass de admin confirmado durante refresh");
+        setIsLoading(false);
+        return true;
+      }
     }
     
     // Verificar autenticação normal
@@ -71,10 +76,19 @@ export const useAuthProvider = () => {
       setLastCheck(now);
       console.log("[useAuthProvider] Verificando autenticação...");
       
-      // Primeiro verificar o bypass de admin (mais rápido, sem chamada assíncrona)
-      const adminBypassAuth = checkAdminBypass(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail);
+      // Verificar autenticação normal do Supabase primeiro para o usuário ana.diretoria
+      if (userEmail === "ana.diretoria@eduzayn.com.br") {
+        const supabaseAuth = await checkSupabaseAuth(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail);
+        if (supabaseAuth) {
+          console.log("[useAuthProvider] Usuário administrador autenticado diretamente pelo Supabase");
+          setIsLoading(false);
+          return true;
+        }
+      }
       
-      if (adminBypassAuth) {
+      // Verificar o bypass de admin para outros usuários
+      const adminBypassAuth = checkAdminBypass(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail);
+      if (adminBypassAuth && getAdminBypassEmail() !== "ana.diretoria@eduzayn.com.br") {
         console.log("[useAuthProvider] Admin bypass autenticado e confirmado");
         setIsLoading(false);
         return true;
@@ -97,8 +111,17 @@ export const useAuthProvider = () => {
   };
 
   const getAccessToken = async (): Promise<string | null> => {
-    if (isAdminBypass) {
-      // Para bypass admin, retornar o token JWT anônimo ao invés do token especial
+    // Para o usuário ana.diretoria, sempre tentar obter o token do Supabase
+    if (userEmail === "ana.diretoria@eduzayn.com.br") {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        console.log("[useAuthProvider] Retornando token de acesso Supabase para usuário admin autenticado");
+        return data.session.access_token;
+      }
+    }
+    
+    if (isAdminBypass && getAdminBypassEmail() !== "ana.diretoria@eduzayn.com.br") {
+      // Para bypass admin (exceto ana.diretoria), retornar o token JWT anônimo
       console.log("[useAuthProvider] Retornando token JWT anônimo para bypass admin");
       return ADMIN_BYPASS_JWT;
     }
@@ -117,24 +140,31 @@ export const useAuthProvider = () => {
     console.log("[useAuthProvider] Inicializando hook de autenticação");
     let isMounted = true;
     
-    // Verificar primeiro o bypass de admin (síncrono)
-    const adminBypass = checkAdminBypass(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail);
-    
-    if (adminBypass) {
-      console.log("[useAuthProvider] Inicializado com admin bypass");
-      if (isMounted) {
-        setIsLoading(false);
-      }
-      return;
-    }
-    
-    // Se não houver bypass, verificar sessão do Supabase
+    // Verificar primeiro autenticação normal para o usuário ana.diretoria
     const initializeAuthState = async () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session && isMounted) {
           const email = data.session.user?.email || null;
           console.log("[useAuthProvider] Sessão existente encontrada para:", email);
+          
+          // Se for o usuário ana.diretoria, ignorar qualquer bypass
+          if (email === "ana.diretoria@eduzayn.com.br") {
+            console.log("[useAuthProvider] Usuário administrador autenticado, ignorando bypass");
+            setIsLoggedIn(true);
+            setIsAdminBypass(false);
+            setUserEmail(email);
+            
+            // Verificar se é um email administrativo
+            const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+            setIsAdminUser(isAdmin);
+            
+            if (isMounted) {
+              setIsLoading(false);
+            }
+            return;
+          }
+          
           setIsLoggedIn(true);
           setUserEmail(email);
           
@@ -142,8 +172,15 @@ export const useAuthProvider = () => {
           const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
           setIsAdminUser(isAdmin);
           console.log("[useAuthProvider] Estado inicial: Usuário autenticado via Supabase, isAdmin:", isAdmin);
-        } else if (isMounted) {
-          console.log("[useAuthProvider] Estado inicial: Nenhuma sessão encontrada");
+        } else {
+          // Verificar bypass de admin se não houver sessão do Supabase
+          const adminBypass = checkAdminBypass(setIsLoggedIn, setIsAdminBypass, setIsAdminUser, setUserEmail);
+          
+          if (adminBypass && isMounted) {
+            console.log("[useAuthProvider] Inicializado com admin bypass");
+          } else if (isMounted) {
+            console.log("[useAuthProvider] Estado inicial: Nenhuma sessão encontrada");
+          }
         }
       } catch (error) {
         console.error("[useAuthProvider] Erro ao inicializar estado de autenticação:", error);
@@ -173,15 +210,25 @@ export const useAuthProvider = () => {
         setIsAdminUser(isAdmin);
       } else if (event === 'SIGNED_OUT' && isMounted) {
         console.log("[useAuthProvider] Evento SIGNED_OUT recebido");
-        // Primeiro verificar se há um bypass de admin ativo
-        const adminBypass = isAdminBypassAuthenticated();
         
-        if (adminBypass) {
+        // Para o usuário ana.diretoria, não verificar bypass
+        if (userEmail === "ana.diretoria@eduzayn.com.br") {
+          console.log("[useAuthProvider] Usuário admin autenticado deslogado completamente");
+          setIsLoggedIn(false);
+          setIsAdminUser(false);
+          setUserEmail(null);
+          return;
+        }
+        
+        // Verificar se há um bypass de admin ativo para outros usuários
+        const adminBypass = isAdminBypassAuthenticated();
+        const bypassEmail = getAdminBypassEmail();
+        
+        if (adminBypass && bypassEmail !== "ana.diretoria@eduzayn.com.br") {
           console.log("[useAuthProvider] Admin bypass permanece ativo após sign out");
           setIsLoggedIn(true);
           setIsAdminBypass(true);
-          const email = getAdminBypassEmail();
-          setUserEmail(email);
+          setUserEmail(bypassEmail);
           setIsAdminUser(true);
         } else {
           // Caso contrário, está realmente deslogado

@@ -61,6 +61,12 @@ export const isAdminBypassAuthenticated = () => {
 // Definir autenticação de bypass do administrador
 export const setAdminBypassAuthentication = (email: string) => {
   try {
+    // Não permitir bypass para o usuário administrador autenticado
+    if (email === "ana.diretoria@eduzayn.com.br") {
+      console.log("Bypass administrativo não permitido para este usuário");
+      return false;
+    }
+    
     localStorage.setItem(ADMIN_BYPASS_AUTH_KEY, 'true');
     localStorage.setItem(ADMIN_BYPASS_EMAIL_KEY, email);
     console.log("Admin bypass definido com sucesso para:", email);

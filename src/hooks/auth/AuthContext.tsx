@@ -1,34 +1,39 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { createContext, useContext, ReactNode } from "react";
 import { useAuthProvider } from "./useAuthProvider";
-import { AuthContextType, AuthProviderProps } from "./types";
 
-// Create the authentication context
-const AuthContext = createContext<AuthContextType>({
-  isLoggedIn: false,
-  isLoading: true,
-  isAdminBypass: false,
-  isAdminUser: false,
-  userEmail: null,
-  checkAuth: async () => false,
-  getAccessToken: async () => null,
-  getAuthToken: async () => null,
-  refreshAuth: async () => false,
-});
+// Interface para o contexto de autenticação
+interface AuthContextType {
+  isLoggedIn: boolean;
+  isLoading: boolean;
+  isAdminUser: boolean;
+  userEmail: string | null;
+  checkAuth: () => Promise<boolean>;
+  getAccessToken: () => Promise<string | null>;
+  getAuthToken: () => Promise<string | null>;
+  refreshAuth: () => Promise<boolean>;
+}
 
-// Provider component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+// Criação do contexto de autenticação
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Provider para o contexto de autenticação
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // Utilizando o hook useAuthProvider para gerenciar autenticação
   const auth = useAuthProvider();
-
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+  
+  return (
+    <AuthContext.Provider value={auth}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-// Hook for accessing auth context
+// Hook personalizado para acessar o contexto de autenticação
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+  if (context === undefined) {
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 };

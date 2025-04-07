@@ -25,6 +25,14 @@ export const checkSupabaseAuth = async (
       const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase()) : false;
       console.log("[supabaseAuth] Verificação de email admin:", isAdmin, email);
       setIsAdminUser(isAdmin);
+      
+      // Garantir que qualquer bypass para ana.diretoria seja removido
+      if (email === "ana.diretoria@eduzayn.com.br") {
+        localStorage.removeItem("adminBypassAuthenticated");
+        localStorage.removeItem("adminBypassEmail");
+        console.log("[supabaseAuth] Removendo qualquer bypass para usuário admin autenticado");
+      }
+      
       return true;
     }
     
