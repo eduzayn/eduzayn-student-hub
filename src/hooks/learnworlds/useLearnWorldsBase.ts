@@ -49,15 +49,48 @@ const useLearnWorldsBase = () => {
       console.log(`Fazendo requisição ${method} para ${url}`);
       
       const response = await fetch(url, options);
-
+      console.log(`Resposta HTTP status: ${response.status}`);
+      
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Erro ${response.status}: ${errorText}`);
+        console.error(`Erro na resposta: Status ${response.status}, Corpo:`, errorText);
+        
+        // Tentar analisar se é JSON
+        let errorDetails = errorText;
+        try {
+          if (errorText.startsWith('{') || errorText.startsWith('[')) {
+            const errorJson = JSON.parse(errorText);
+            errorDetails = JSON.stringify(errorJson, null, 2);
+          }
+        } catch (parseError) {
+          console.error('Erro ao analisar resposta como JSON:', parseError);
+          // Se não for JSON, usar o texto como está
+        }
+        
+        throw new Error(`Erro ${response.status}: ${errorDetails}`);
       }
 
-      const data = await response.json();
-      setOfflineMode(false);
-      return data;
+      // Verificar o tipo de conteúdo para melhor tratamento
+      const contentType = response.headers.get('content-type') || '';
+      console.log(`Tipo de conteúdo da resposta: ${contentType}`);
+      
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        setOfflineMode(false);
+        return data;
+      } else {
+        // Se não for JSON, podemos ter um problema
+        const textResponse = await response.text();
+        console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
+        
+        if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
+          throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API.');
+        }
+        
+        setOfflineMode(false);
+        // Tentar retornar algo útil
+        return { message: 'Resposta não-JSON recebida', text: textResponse.substring(0, 1000) };
+      }
     } catch (err: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, err);
       setOfflineMode(true);

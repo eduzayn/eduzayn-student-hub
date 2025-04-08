@@ -22,23 +22,55 @@ const SincronizacaoAlunos: React.FC<SincronizacaoAlunosProps> = () => {
   // Estados - mantenha todos juntos
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [detalhesErro, setDetalhesErro] = useState<string | null>(null);
   
   const handleSincronizar = async (todos: boolean = false) => {
     try {
+      console.log(`Iniciando sincronização de alunos. Todos: ${todos}`);
+      setDetalhesErro(null);
+      
       const result = await sincronizarAlunos(todos);
+      console.log("Resultado da sincronização:", result);
+      
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
       }
     } catch (error) {
       console.error("Erro ao sincronizar:", error);
-      toast.error("Erro ao sincronizar alunos com LearnWorlds");
+      
+      // Capturar mais detalhes sobre o erro
+      let mensagemErro = "Erro ao sincronizar alunos com LearnWorlds";
+      if (error instanceof Error) {
+        mensagemErro = error.message;
+        console.error("Stack trace:", error.stack);
+        setDetalhesErro(mensagemErro);
+      } else if (typeof error === 'object' && error !== null) {
+        try {
+          mensagemErro = JSON.stringify(error);
+          setDetalhesErro(mensagemErro);
+        } catch {
+          setDetalhesErro("Erro desconhecido durante a sincronização");
+        }
+      }
+      
+      toast.error(mensagemErro);
     }
   };
 
   return (
     <div className="p-4">
       {error && <LearnWorldsErrorAlert errorMessage={error} />}
+      
+      {detalhesErro && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Detalhes do Erro</AlertTitle>
+          <AlertDescription className="break-words whitespace-pre-wrap">
+            {detalhesErro}
+          </AlertDescription>
+        </Alert>
+      )}
       
       {offlineMode && (
         <Alert variant="destructive" className="mb-6">

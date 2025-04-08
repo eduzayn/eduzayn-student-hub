@@ -61,8 +61,11 @@ const useLearnWorldsAlunos = () => {
    */
   const sincronizarAlunos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
+      console.log(`Iniciando sincronização - sincronizarTodos=${sincronizarTodos}`);
+      
       // Usamos o endpoint correto para sincronização de alunos: learnworlds-sync
       const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}`);
+      console.log("Resposta da sincronização recebida:", result);
       
       if (result.imported > 0 || result.updated > 0) {
         toast.success(
@@ -76,8 +79,25 @@ const useLearnWorldsAlunos = () => {
       return result;
     } catch (error) {
       console.error('Erro ao sincronizar alunos:', error);
-      toast.error('Erro ao sincronizar alunos com o LearnWorlds');
-      return null;
+      
+      // Melhor tratamento de erros
+      let mensagemErro = "Erro ao sincronizar alunos com o LearnWorlds";
+      
+      if (error instanceof Error) {
+        console.error('Detalhes do erro:', error.message);
+        console.error('Stack trace:', error.stack);
+        mensagemErro = `Erro na sincronização: ${error.message}`;
+      } else if (typeof error === 'object' && error !== null) {
+        try {
+          console.error('Detalhes do erro:', JSON.stringify(error));
+          mensagemErro = "Erro na API de sincronização. Verifique os logs.";
+        } catch (e) {
+          console.error('Erro não serializável:', error);
+        }
+      }
+      
+      toast.error(mensagemErro);
+      throw error; // Propaga o erro para tratamento adicional
     }
   };
 
