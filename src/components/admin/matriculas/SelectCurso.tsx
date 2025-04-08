@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import BuscaCurso from "./cursos/BuscaCurso";
 import CursosLista from "./cursos/CursosLista";
 import ApiErrorDisplay from "./cursos/ApiErrorDisplay";
