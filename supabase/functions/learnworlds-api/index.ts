@@ -15,13 +15,68 @@ const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-202
 const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
 // Token público para operações do cliente
 const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "";
+// School ID do LearnWorlds
+const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "";
+// URL base da API do LearnWorlds
+const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_BASE_URL") || "https://api.learnworlds.com";
 
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token do ambiente configurado:", Deno.env.get("ADMIN_BYPASS_TOKEN") ? "Sim (✓)" : "Não (usando fallback)");
 console.log("API Key LearnWorlds configurada:", LEARNWORLDS_API_KEY ? "Sim (✓)" : "Não");
 console.log("Token público LearnWorlds configurado:", LEARNWORLDS_PUBLIC_TOKEN ? "Sim (✓)" : "Não");
-console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
-console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
+console.log("School ID LearnWorlds configurado:", LEARNWORLDS_SCHOOL_ID ? "Sim (✓)" : "Não");
+console.log("URL base da API LearnWorlds:", LEARNWORLDS_API_BASE_URL);
+
+// Chamada real para a API LearnWorlds
+const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Promise<any> => {
+  if (!LEARNWORLDS_API_KEY || !LEARNWORLDS_SCHOOL_ID) {
+    console.log("API Key ou School ID não configurados, usando dados simulados");
+    return null;
+  }
+
+  try {
+    const url = `${LEARNWORLDS_API_BASE_URL}/api/v2/${LEARNWORLDS_SCHOOL_ID}${path.startsWith('/') ? path : '/' + path}`;
+    
+    console.log(`Chamando API LearnWorlds: ${method} ${url}`);
+    
+    const options: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`,
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID
+      }
+    };
+
+    if (body && (method === 'POST' || method === 'PUT')) {
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+    
+    console.log(`Resposta da API LearnWorlds: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
+      throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
+    }
+    
+    // Verifica se a resposta tem conteúdo
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      const responseData = await response.json();
+      return responseData;
+    } else {
+      const textResponse = await response.text();
+      console.log(`Resposta não-JSON: ${textResponse.substring(0, 100)}...`);
+      return { text: textResponse };
+    }
+  } catch (error) {
+    console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);
+    throw error;
+  }
+};
 
 serve(async (req) => {
   const { method } = req;
@@ -62,9 +117,6 @@ serve(async (req) => {
   
   // Log detalhado dos tokens para diagnóstico
   console.log("Token recebido (primeiros 5 chars):", token.substring(0, 5) + "...");
-  console.log("Comprimento do token recebido:", token.length);
-  console.log("Token esperado (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
-  console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
   
   // Verificação do token - aceitamos tanto o token de administrador quanto o token público
   const isAdminToken = token === ADMIN_BYPASS_JWT;
@@ -72,26 +124,10 @@ serve(async (req) => {
   
   if (!isAdminToken && !isPublicToken) {
     console.log("Token inválido - nenhuma correspondência encontrada");
-    // Para diagnóstico - compare caractere por caractere
-    let firstMismatchPos = -1;
-    for (let i = 0; i < Math.min(token.length, ADMIN_BYPASS_JWT.length); i++) {
-      if (token[i] !== ADMIN_BYPASS_JWT[i]) {
-        firstMismatchPos = i;
-        break;
-      }
-    }
     
     return new Response(JSON.stringify({
       code: 401,
-      message: "Invalid JWT",
-      debug: {
-        tokenLength: token.length,
-        expectedLength: ADMIN_BYPASS_JWT.length,
-        tokenStart: token.substring(0, 5) + "...",
-        expectedStart: ADMIN_BYPASS_JWT.substring(0, 5) + "...",
-        firstMismatchAt: firstMismatchPos >= 0 ? firstMismatchPos : "Nenhum (tamanhos diferentes)",
-        usingEnvironmentToken: !!Deno.env.get("ADMIN_BYPASS_TOKEN")
-      }
+      message: "Invalid JWT"
     }), {
       headers: corsHeaders,
       status: 401
@@ -109,6 +145,7 @@ serve(async (req) => {
         message: "LearnWorlds API online",
         timestamp: new Date().toISOString(),
         apiKeyConfigured: !!LEARNWORLDS_API_KEY,
+        schoolIdConfigured: !!LEARNWORLDS_SCHOOL_ID,
         publicTokenConfigured: !!LEARNWORLDS_PUBLIC_TOKEN,
         authenticatedAs: isAdminToken ? 'admin' : 'public'
       }), {
@@ -117,132 +154,239 @@ serve(async (req) => {
       });
     }
 
-    // --- GET /users
-    // Requer privilégios de administrador
-    if (path === "users" && isAdminToken) {
-      const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "20");
-      const searchTerm = url.searchParams.get("q") || "";
+    try {
+      // --- GET /courses
+      // Permitir tanto para admin quanto para token público
+      if (path === "courses") {
+        const page = parseInt(url.searchParams.get("page") || "1");
+        const limit = parseInt(url.searchParams.get("limit") || "50");
+        const searchTerm = url.searchParams.get("q") || "";
+        const access = url.searchParams.get("access") || "";
+        const categories = url.searchParams.get("categories") || "";
 
-      // Se tivermos uma API Key configurada, poderíamos fazer uma chamada real aqui
-      // Por enquanto, ainda usamos dados mockados
-      const mockUsers = [
-        { id: "user-1", firstName: "Ana", lastName: "Silva", email: "ana@exemplo.com", customField1: "123.456.789-01", phoneNumber: "(11) 91234-5678" },
-        { id: "user-2", firstName: "Carlos", lastName: "Santos", email: "carlos@exemplo.com", customField1: "987.654.321-09", phoneNumber: "(11) 98765-4321" },
-        { id: "user-3", firstName: "Patricia", lastName: "Oliveira", email: "patricia@exemplo.com", customField1: "456.789.123-45", phoneNumber: "(11) 97654-3210" }
-      ];
-
-      const filteredUsers = searchTerm
-        ? mockUsers.filter(u =>
-            u.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            u.customField1.includes(searchTerm)
-          )
-        : mockUsers;
-
-      return new Response(JSON.stringify({
-        data: filteredUsers,
-        total: filteredUsers.length,
-        page,
-        pages: 1
-      }), {
-        headers: corsHeaders,
-        status: 200
-      });
-    }
-
-    // --- GET /courses
-    // Permitir tanto para admin quanto para token público
-    if (path === "courses") {
-      const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "20");
-      const searchTerm = url.searchParams.get("q") || "";
-
-      const mockCourses = [
-        { id: "course-1", title: "Desenvolvimento Web Frontend", description: "Aprenda HTML, CSS e JS", price: 1200.00, duration: "60 horas", image: "https://via.placeholder.com/300x200" },
-        { id: "course-2", title: "Python para Ciência de Dados", description: "Fundamentos de Python e análise", price: 1500.00, duration: "80 horas", image: "https://via.placeholder.com/300x200" },
-        { id: "course-3", title: "Marketing Digital Avançado", description: "Estratégias modernas de marketing", price: 1800.00, duration: "90 horas", image: "https://via.placeholder.com/300x200" },
-        { id: "course-4", title: "Design UX/UI", description: "Princípios de design e experiência", price: 1400.00, duration: "70 horas", image: "https://via.placeholder.com/300x200" }
-      ];
-
-      const filteredCourses = searchTerm
-        ? mockCourses.filter(c =>
-            c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.description.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        : mockCourses;
-
-      return new Response(JSON.stringify({
-        data: filteredCourses,
-        total: filteredCourses.length,
-        page,
-        pages: 1
-      }), {
-        headers: corsHeaders,
-        status: 200
-      });
-    }
-
-    // --- GET /courses/:id
-    // Permitir tanto para admin quanto para token público
-    if (path.startsWith("courses/")) {
-      const courseId = path.split("courses/")[1];
-
-      const mockCourseDetails = {
-        id: courseId,
-        title: `Curso ${courseId}`,
-        description: `Descrição detalhada do curso ${courseId}`,
-        price: 1500.00,
-        duration: "80 horas",
-        image: "https://via.placeholder.com/600x400",
-        modules: [
-          {
-            id: "module-1",
-            title: "Introdução",
-            description: "Fundamentos básicos",
-            lessons: [
-              { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
-              { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
-            ]
-          },
-          {
-            id: "module-2",
-            title: "Intermediário",
-            description: "Aprofundamento teórico",
-            lessons: [
-              { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
-              { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
-            ]
+        // Montar parâmetros para API LearnWorlds
+        const apiParams = new URLSearchParams();
+        apiParams.append("page", page.toString());
+        apiParams.append("limit", limit.toString());
+        
+        if (access) {
+          apiParams.append("access", access);
+        }
+        
+        if (categories) {
+          apiParams.append("categories", categories);
+        }
+        
+        let result;
+        
+        try {
+          result = await callLearnWorldsApi(`/courses?${apiParams.toString()}`);
+          console.log(`Resposta da API LearnWorlds (cursos):`, result);
+          
+          // Se tivermos pesquisa e dados reais, filtramos no servidor
+          if (searchTerm && result && Array.isArray(result.data)) {
+            result.data = result.data.filter((course: any) => 
+              course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+              course.description?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            // Ajustar contagem de meta se houver
+            if (result.meta) {
+              result.meta.totalItems = result.data.length;
+            }
           }
-        ]
-      };
+        } catch (error) {
+          console.error("Erro na chamada para API LearnWorlds:", error);
+          result = null;
+        }
+        
+        // Se não conseguimos dados reais, usamos simulados
+        if (!result) {
+          const mockCourses = [
+            { id: "course-1", title: "Desenvolvimento Web Frontend", description: "Aprenda HTML, CSS e JS", price: 1200.00, price_final: 1200.00, duration: "60 horas", image: "https://via.placeholder.com/300x200" },
+            { id: "course-2", title: "Python para Ciência de Dados", description: "Fundamentos de Python e análise", price: 1500.00, price_final: 1500.00, duration: "80 horas", image: "https://via.placeholder.com/300x200" },
+            { id: "course-3", title: "Marketing Digital Avançado", description: "Estratégias modernas de marketing", price: 1800.00, price_final: 1800.00, duration: "90 horas", image: "https://via.placeholder.com/300x200" },
+            { id: "course-4", title: "Design UX/UI", description: "Princípios de design e experiência", price: 1400.00, price_final: 1400.00, duration: "70 horas", image: "https://via.placeholder.com/300x200" }
+          ];
 
-      return new Response(JSON.stringify(mockCourseDetails), {
-        headers: corsHeaders,
-        status: 200
-      });
-    }
-    
-    // --- ROTAS ESPECÍFICAS QUE EXIGEM TOKEN DE ADMIN
-    if (!isAdminToken && (path === "users" || path.startsWith("admin/"))) {
+          const filteredCourses = searchTerm
+            ? mockCourses.filter(c =>
+                c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                c.description.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : mockCourses;
+
+          result = {
+            data: filteredCourses,
+            meta: {
+              page,
+              totalItems: filteredCourses.length,
+              totalPages: 1,
+              itemsPerPage: limit
+            }
+          };
+          
+          console.log("Retornando dados simulados para cursos:", result);
+        }
+
+        return new Response(JSON.stringify(result), {
+          headers: corsHeaders,
+          status: 200
+        });
+      }
+
+      // --- GET /courses/:id
+      // Permitir tanto para admin quanto para token público
+      if (path.startsWith("courses/")) {
+        const courseId = path.split("courses/")[1];
+        
+        let result;
+        
+        try {
+          result = await callLearnWorldsApi(`/courses/${courseId}`);
+          console.log(`Resposta da API LearnWorlds (detalhes do curso ${courseId}):`, result);
+        } catch (error) {
+          console.error(`Erro na chamada para API LearnWorlds (curso ${courseId}):`, error);
+          result = null;
+        }
+        
+        // Se não conseguimos dados reais, usamos simulados
+        if (!result) {
+          result = {
+            id: courseId,
+            title: `Curso ${courseId}`,
+            description: `Descrição detalhada do curso ${courseId}`,
+            price: 1500.00,
+            price_final: 1500.00,
+            duration: "80 horas",
+            image: "https://via.placeholder.com/600x400",
+            modules: [
+              {
+                id: "module-1",
+                title: "Introdução",
+                description: "Fundamentos básicos",
+                lessons: [
+                  { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
+                  { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
+                ]
+              },
+              {
+                id: "module-2",
+                title: "Intermediário",
+                description: "Aprofundamento teórico",
+                lessons: [
+                  { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
+                  { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
+                ]
+              }
+            ]
+          };
+          
+          console.log("Retornando dados simulados para detalhes do curso:", result);
+        }
+
+        return new Response(JSON.stringify(result), {
+          headers: corsHeaders,
+          status: 200
+        });
+      }
+      
+      // --- GET /users (somente admin)
+      if (path === "users" && isAdminToken) {
+        const page = parseInt(url.searchParams.get("page") || "1");
+        const limit = parseInt(url.searchParams.get("limit") || "20");
+        const searchTerm = url.searchParams.get("q") || "";
+
+        let result;
+        
+        try {
+          result = await callLearnWorldsApi(`/users?page=${page}&limit=${limit}`);
+          console.log("Resposta da API LearnWorlds (usuários):", result);
+          
+          // Se tivermos pesquisa e dados reais, filtramos no servidor
+          if (searchTerm && result && Array.isArray(result.data)) {
+            result.data = result.data.filter((user: any) => 
+              user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+              user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            // Ajustar contagem de meta se houver
+            if (result.meta) {
+              result.meta.totalItems = result.data.length;
+            }
+          }
+        } catch (error) {
+          console.error("Erro na chamada para API LearnWorlds (usuários):", error);
+          result = null;
+        }
+        
+        // Se não conseguimos dados reais, usamos simulados
+        if (!result) {
+          const mockUsers = [
+            { id: "user-1", firstName: "Ana", lastName: "Silva", email: "ana@exemplo.com", customField1: "123.456.789-01", phoneNumber: "(11) 91234-5678" },
+            { id: "user-2", firstName: "Carlos", lastName: "Santos", email: "carlos@exemplo.com", customField1: "987.654.321-09", phoneNumber: "(11) 98765-4321" },
+            { id: "user-3", firstName: "Patricia", lastName: "Oliveira", email: "patricia@exemplo.com", customField1: "456.789.123-45", phoneNumber: "(11) 97654-3210" }
+          ];
+
+          const filteredUsers = searchTerm
+            ? mockUsers.filter(u =>
+                u.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.customField1.includes(searchTerm)
+              )
+            : mockUsers;
+
+          result = {
+            data: filteredUsers,
+            meta: {
+              page,
+              totalItems: filteredUsers.length,
+              totalPages: 1,
+              itemsPerPage: limit
+            }
+          };
+          
+          console.log("Retornando dados simulados para usuários:", result);
+        }
+
+        return new Response(JSON.stringify(result), {
+          headers: corsHeaders,
+          status: 200
+        });
+      }
+      
+      // --- ROTAS ESPECÍFICAS QUE EXIGEM TOKEN DE ADMIN
+      if (!isAdminToken && (path === "users" || path.startsWith("admin/"))) {
+        return new Response(JSON.stringify({
+          code: 403,
+          message: "Esta operação requer token de administrador"
+        }), {
+          headers: corsHeaders,
+          status: 403
+        });
+      }
+
+      // Endpoint não encontrado
       return new Response(JSON.stringify({
-        code: 403,
-        message: "Esta operação requer token de administrador"
+        message: "Endpoint não implementado",
+        path
       }), {
         headers: corsHeaders,
-        status: 403
+        status: 404
+      });
+      
+    } catch (error) {
+      console.error("Erro ao processar requisição:", error);
+      return new Response(JSON.stringify({
+        error: "Erro ao processar requisição",
+        message: error.message
+      }), {
+        headers: corsHeaders,
+        status: 500
       });
     }
-
-    // Endpoint não encontrado
-    return new Response(JSON.stringify({
-      message: "Endpoint não implementado",
-      path
-    }), {
-      headers: corsHeaders,
-      status: 404
-    });
   }
 
   if (method === "POST") {
@@ -261,8 +405,33 @@ serve(async (req) => {
     
     try {
       const body = await req.json();
+      
+      // Tentativa de chamar API real se tivermos o ID da escola e API key
+      if (LEARNWORLDS_API_KEY && LEARNWORLDS_SCHOOL_ID) {
+        try {
+          const result = await callLearnWorldsApi(path, "POST", body);
+          
+          return new Response(JSON.stringify(result), {
+            headers: corsHeaders,
+            status: 200
+          });
+        } catch (apiError) {
+          console.error("Erro na chamada para API LearnWorlds:", apiError);
+          
+          return new Response(JSON.stringify({
+            error: "Erro na API do LearnWorlds",
+            message: apiError.message,
+            source: "LearnWorlds API"
+          }), {
+            headers: corsHeaders,
+            status: 500
+          });
+        }
+      }
+      
+      // Resposta simulada para POST
       return new Response(JSON.stringify({
-        message: "POST recebido com sucesso!",
+        message: "POST recebido com sucesso! (simulado)",
         data: body
       }), {
         headers: corsHeaders,

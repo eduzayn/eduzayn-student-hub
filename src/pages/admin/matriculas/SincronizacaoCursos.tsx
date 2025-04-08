@@ -47,6 +47,8 @@ const SincronizacaoCursos: React.FC = () => {
             "Problemas na sincronização", 
             { description: `${result.failed} cursos não puderam ser sincronizados.` }
           );
+        } else if (result.total === 0) {
+          toast.info("Nenhum curso encontrado para sincronização.");
         } else {
           toast.info("Nenhuma alteração foi necessária.");
         }

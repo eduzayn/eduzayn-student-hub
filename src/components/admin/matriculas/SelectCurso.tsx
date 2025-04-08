@@ -38,14 +38,17 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
         titulo: curso.title,
         codigo: curso.id.substring(0, 8).toUpperCase(),
         modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
-        carga_horaria: curso.duration || 0,
-        valor_total: curso.price || 0,
-        valor_mensalidade: curso.price ? curso.price / 12 : 0,
-        descricao: curso.description,
-        imagem_url: curso.image,
-        learning_worlds_id: curso.id
+        carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
+        valor_total: curso.price_final || curso.price_original || 0,
+        valor_mensalidade: (curso.price_final || curso.price_original || 0) / 12,
+        descricao: curso.description || curso.shortDescription || "",
+        imagem_url: curso.image || curso.courseImage || "",
+        categorias: curso.categories || [],
+        learning_worlds_id: curso.id,
+        acesso: curso.access || "pago"
       }));
       
+      console.log("Cursos formatados:", cursosFormatados);
       setCursos(cursosFormatados);
     } catch (error) {
       console.error("Erro ao carregar cursos:", error);
@@ -53,6 +56,35 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       
       // Em caso de falha, carrega dados simulados como fallback
       carregarCursosSimulados(termoBusca);
+    }
+  };
+  
+  // Função para converter duração em string para minutos
+  const obterCargaHorariaEmMinutos = (duration: string): number => {
+    if (!duration) return 0;
+    
+    try {
+      // Se for apenas um número, assume que são horas
+      if (/^\d+$/.test(duration)) {
+        return parseInt(duration) * 60; // Converte horas para minutos
+      }
+      
+      // Se for no formato "X horas" ou "X h"
+      const hoursMatch = duration.match(/(\d+)\s*(horas|hora|h)/i);
+      if (hoursMatch) {
+        return parseInt(hoursMatch[1]) * 60;
+      }
+      
+      // Se for no formato "X minutos" ou "X min"
+      const minutesMatch = duration.match(/(\d+)\s*(minutos|minuto|min)/i);
+      if (minutesMatch) {
+        return parseInt(minutesMatch[1]);
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error("Erro ao converter duração:", error);
+      return 0;
     }
   };
   
@@ -120,6 +152,14 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       style: 'currency',
       currency: 'BRL'
     }).format(valor);
+  };
+  
+  // Formata carga horária para exibição
+  const formatarCargaHoraria = (minutos: number) => {
+    if (minutos < 60) return `${minutos}min`;
+    const horas = Math.floor(minutos / 60);
+    const minutosRestantes = minutos % 60;
+    return minutosRestantes > 0 ? `${horas}h ${minutosRestantes}min` : `${horas}h`;
   };
   
   return (
@@ -193,11 +233,39 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
                               LearnWorlds
                             </Badge>
                           )}
+                          {curso.acesso && (
+                            <Badge 
+                              variant="outline" 
+                              className={`ml-1 ${
+                                curso.acesso === 'free' || curso.acesso === 'gratis' || curso.acesso === 'livre' ? 
+                                'bg-green-50 text-green-600 border-green-200' : 
+                                curso.acesso === 'pago' ? 
+                                'bg-amber-50 text-amber-600 border-amber-200' :
+                                'bg-gray-50 text-gray-600 border-gray-200'
+                              }`}
+                            >
+                              {curso.acesso === 'free' || curso.acesso === 'gratis' || curso.acesso === 'livre' ? 'Gratuito' :
+                               curso.acesso === 'pago' ? 'Pago' : curso.acesso}
+                            </Badge>
+                          )}
                         </div>
+                        
+                        {curso.categorias && curso.categorias.length > 0 && (
+                          <div className="flex gap-1 flex-wrap mt-1">
+                            {curso.categorias.slice(0, 3).map((categoria: string, i: number) => (
+                              <span key={i} className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
+                                {categoria}
+                              </span>
+                            ))}
+                            {curso.categorias.length > 3 && (
+                              <span className="text-xs text-gray-500">+{curso.categorias.length - 3}</span>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
                           <span>{curso.modalidade}</span>
-                          <span>{curso.carga_horaria}h</span>
+                          <span>{formatarCargaHoraria(curso.carga_horaria)}</span>
                         </div>
                         
                         <div className="mt-2">
