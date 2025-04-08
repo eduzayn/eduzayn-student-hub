@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
@@ -98,6 +97,7 @@ serve(async (req) => {
   // Verificação de token JWT
   const authHeader = req.headers.get("Authorization");
   console.log("Auth header recebido:", authHeader ? "Sim" : "Não");
+  console.log("Auth header:", authHeader?.substring(0, 15) + "...");
   
   if (!authHeader) {
     console.log("Token não fornecido");
@@ -119,9 +119,9 @@ serve(async (req) => {
   }
   
   // Log detalhado dos tokens para diagnóstico
-  console.log("Token recebido (primeiros 5 chars):", token.substring(0, 5) + "...");
-  console.log("Token público para comparação (primeiros 5 chars):", LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5) + "...");
-  console.log("Token admin para comparação (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
+  console.log("Token recebido (primeiros 10 chars):", token.substring(0, 10) + "...");
+  console.log("Token público para comparação (primeiros 10 chars):", LEARNWORLDS_PUBLIC_TOKEN.substring(0, 10) + "...");
+  console.log("Token admin para comparação (primeiros 10 chars):", ADMIN_BYPASS_JWT.substring(0, 10) + "...");
   
   // Verificação do token - aceitamos tanto o token de administrador quanto o token público
   const isAdminToken = token === ADMIN_BYPASS_JWT;

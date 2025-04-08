@@ -43,6 +43,7 @@ const useLearnWorldsBase = () => {
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
+      console.log(`Auth Header: ${authHeader.substring(0, 15)}...`); // Debug - mostra apenas parte do token
       
       // URL base específica para o projeto Supabase
       const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2FyemtmbWNvYmN0Ymx6enRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4OTYwMTksImV4cCI6MjA1OTQ3MjAxOX0.VJTJA5hKhVWFA4x-pM7jXetJsCz8-aMuJDOoVAlPeQc";
