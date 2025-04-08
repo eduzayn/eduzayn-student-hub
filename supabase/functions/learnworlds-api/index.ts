@@ -180,7 +180,7 @@ serve(async (req) => {
     try {
       // --- GET /courses
       // Permitir tanto para admin quanto para token público
-      if (path === "courses") {
+      if (path === "courses" || path.startsWith("courses?")) {
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "50");
         const searchTerm = url.searchParams.get("q") || "";

@@ -9,31 +9,39 @@ import useLearnWorldsMatriculas from './learnworlds/useLearnWorldsMatriculas';
  * Este hook combina a funcionalidade de vários hooks especializados
  */
 const useLearnWorldsApi = () => {
+  // Estado local para gerenciar erros e modo offline de forma consistente
+  const [internalError, setInternalError] = useState<string | null>(null);
+  const [internalOfflineMode, setInternalOfflineMode] = useState<boolean>(false);
+
   // Utilizamos os hooks especializados
   const alunosApi = useLearnWorldsAlunos();
   const cursosApi = useLearnWorldsCursos();
   const matriculasApi = useLearnWorldsMatriculas();
 
-  // Combinamos o status de carregamento e erro de todos os hooks
+  // Combinamos o status de carregamento
   const loading = alunosApi.loading || cursosApi.loading || matriculasApi.loading;
-  const [error, setError] = useState<string | null>(null);
-  const offlineMode = alunosApi.offlineMode || cursosApi.offlineMode || matriculasApi.offlineMode;
+  
+  // Verificamos o status de modo offline de todos os hooks e atualizamos o estado interno
+  useEffect(() => {
+    const anyOffline = alunosApi.offlineMode || cursosApi.offlineMode || matriculasApi.offlineMode;
+    if (anyOffline !== internalOfflineMode) {
+      setInternalOfflineMode(anyOffline);
+    }
+  }, [alunosApi.offlineMode, cursosApi.offlineMode, matriculasApi.offlineMode, internalOfflineMode]);
 
   // Atualizamos o estado de erro dentro de um useEffect para evitar atualizações durante a renderização
   useEffect(() => {
-    if (alunosApi.error || cursosApi.error || matriculasApi.error) {
-      setError(alunosApi.error || cursosApi.error || matriculasApi.error);
-    } else {
-      // Limpar o erro se nenhum dos hooks tem erro
-      setError(null);
+    const newError = alunosApi.error || cursosApi.error || matriculasApi.error;
+    if (newError !== internalError) {
+      setInternalError(newError);
     }
-  }, [alunosApi.error, cursosApi.error, matriculasApi.error]);
+  }, [alunosApi.error, cursosApi.error, matriculasApi.error, internalError]);
 
   // Retornamos todas as funções e estados dos hooks especializados
   return {
     loading,
-    error,
-    offlineMode,
+    error: internalError,
+    offlineMode: internalOfflineMode,
     
     // Funções de alunos
     getUsers: alunosApi.getUsers,

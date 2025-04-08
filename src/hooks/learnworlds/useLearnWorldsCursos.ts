@@ -53,7 +53,7 @@ const useLearnWorldsCursos = () => {
     searchTerm = "", 
     categories = ""
   ): Promise<CoursesResponse> => {
-    console.log(`Buscando cursos: página ${page}, limite ${limit}, termo "${searchTerm}"`);
+    console.log(`Buscando cursos LearnWorlds: página ${page}, limite ${limit}, parâmetros: page=${page}&limit=${limit}`);
     
     try {
       // Construir endpoint com parâmetros de consulta
@@ -242,7 +242,7 @@ const useLearnWorldsCursos = () => {
       ? cursos.filter(c =>
           c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.shortDescription.toLowerCase().includes(searchTerm.toLowerCase())
+          (c.shortDescription?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
         )
       : cursos;
 

@@ -45,9 +45,6 @@ const useLearnWorldsBase = () => {
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       console.log(`Auth Header: ${authHeader.substring(0, 15)}...`); // Debug - mostra apenas parte do token
       
-      // URL base específica para o projeto Supabase
-      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2FyemtmbWNvYmN0Ymx6enRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4OTYwMTksImV4cCI6MjA1OTQ3MjAxOX0.VJTJA5hKhVWFA4x-pM7jXetJsCz8-aMuJDOoVAlPeQc";
-
       const headers: HeadersInit = {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
@@ -194,6 +191,7 @@ const useLearnWorldsBase = () => {
    * Variante do makeRequest que sempre utiliza o token público
    */
   const makePublicRequest = async (endpoint: string, method = 'GET', body?: any): Promise<any> => {
+    console.log(`Fazendo requisição pública para: ${endpoint}`);
     return makeRequest(endpoint, method, body, true);
   };
 

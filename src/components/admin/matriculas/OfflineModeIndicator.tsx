@@ -7,6 +7,10 @@ interface OfflineModeIndicatorProps {
   message?: string;
 }
 
+/**
+ * Componente para exibir um indicador de modo offline 
+ * quando a API do LearnWorlds não está disponível
+ */
 const OfflineModeIndicator: React.FC<OfflineModeIndicatorProps> = ({
   message = "Operando em modo offline. Alguns recursos podem estar limitados."
 }) => {
