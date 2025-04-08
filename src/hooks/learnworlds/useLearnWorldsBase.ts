@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -56,6 +57,7 @@ const useLearnWorldsBase = () => {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
         'X-School-Id': LEARNWORLDS_SCHOOL_ID, // Adicionando ID da escola nos cabeçalhos para diagnóstico
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID // Adicionando o cabeçalho Lw-Client que é obrigatório
       };
 
       const options: RequestInit = {
@@ -76,72 +78,92 @@ const useLearnWorldsBase = () => {
       const url = `${baseUrl}/${endpoint}`;
       console.log(`Fazendo requisição ${method} para ${url}`);
       
-      const response = await fetch(url, options);
-      console.log(`Resposta HTTP status: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Erro na resposta: Status ${response.status}, Corpo:`, errorText);
+      try {
+        const response = await fetch(url, options);
+        console.log(`Resposta HTTP status: ${response.status}`);
         
-        // Tentar analisar se é JSON
-        let errorDetails = errorText;
-        try {
-          if (errorText.startsWith('{') || errorText.startsWith('[')) {
-            const errorJson = JSON.parse(errorText);
-            errorDetails = JSON.stringify(errorJson, null, 2);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Erro na resposta: Status ${response.status}, Corpo:`, errorText);
+          
+          // Tentar analisar se é JSON
+          let errorDetails = errorText;
+          try {
+            if (errorText.startsWith('{') || errorText.startsWith('[')) {
+              const errorJson = JSON.parse(errorText);
+              errorDetails = JSON.stringify(errorJson, null, 2);
+            }
+          } catch (parseError) {
+            console.error('Erro ao analisar resposta como JSON:', parseError);
+            // Se não for JSON, usar o texto como está
           }
-        } catch (parseError) {
-          console.error('Erro ao analisar resposta como JSON:', parseError);
-          // Se não for JSON, usar o texto como está
+          
+          throw new Error(`Erro ${response.status}: ${errorDetails}`);
         }
-        
-        throw new Error(`Erro ${response.status}: ${errorDetails}`);
-      }
 
-      // Verificar o tipo de conteúdo para melhor tratamento
-      const contentType = response.headers.get('content-type') || '';
-      console.log(`Tipo de conteúdo da resposta: ${contentType}`);
-      
-      if (contentType.includes('application/json')) {
-        // Análise de JSON com tratamento de erro aprimorado
-        try {
-          const responseText = await response.text();
-          // Verifica se a resposta não está vazia
-          if (!responseText.trim()) {
-            console.warn('Resposta vazia recebida');
+        // Verificar o tipo de conteúdo para melhor tratamento
+        const contentType = response.headers.get('content-type') || '';
+        console.log(`Tipo de conteúdo da resposta: ${contentType}`);
+        
+        if (contentType.includes('application/json')) {
+          // Análise de JSON com tratamento de erro aprimorado
+          try {
+            const responseText = await response.text();
+            // Verifica se a resposta não está vazia
+            if (!responseText.trim()) {
+              console.warn('Resposta vazia recebida');
+              setOfflineMode(false);
+              return null;
+            }
+            const data = JSON.parse(responseText);
             setOfflineMode(false);
-            return null;
+            return data;
+          } catch (parseError) {
+            console.error('Erro ao analisar resposta JSON:', parseError);
+            const responseText = await response.text();
+            throw new Error(`Erro ao analisar JSON: ${parseError.message}. Resposta: ${responseText.substring(0, 100)}...`);
           }
-          const data = JSON.parse(responseText);
+        } else {
+          // Se não for JSON, podemos ter um problema
+          const textResponse = await response.text();
+          console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
+          
+          if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
+            console.error('Resposta HTML detectada em vez de JSON', textResponse.substring(0, 500));
+            throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API ou configuração CORS.');
+          }
+          
           setOfflineMode(false);
-          return data;
-        } catch (parseError) {
-          console.error('Erro ao analisar resposta JSON:', parseError);
-          const responseText = await response.text();
-          throw new Error(`Erro ao analisar JSON: ${parseError.message}. Resposta: ${responseText.substring(0, 100)}...`);
+          // Tentar retornar algo útil
+          return { 
+            message: 'Resposta não-JSON recebida', 
+            text: textResponse.substring(0, 1000),
+            success: response.ok 
+          };
         }
-      } else {
-        // Se não for JSON, podemos ter um problema
-        const textResponse = await response.text();
-        console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
-        
-        if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
-          console.error('Resposta HTML detectada em vez de JSON', textResponse.substring(0, 500));
-          throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API ou configuração CORS.');
+      } catch (fetchError) {
+        // Tratamento específico para o erro de conexão "Failed to fetch"
+        if (fetchError.message === 'Failed to fetch') {
+          console.error('Erro de conexão: Failed to fetch. Possíveis causas: CORS, rede, função edge indisponível');
+          throw new Error(`Erro de conexão: Não foi possível acessar a função edge. Verifique se a função está ativa e configurada corretamente.`);
         }
-        
-        setOfflineMode(false);
-        // Tentar retornar algo útil
-        return { 
-          message: 'Resposta não-JSON recebida', 
-          text: textResponse.substring(0, 1000),
-          success: response.ok 
-        };
+        throw fetchError;
       }
     } catch (err: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, err);
       setOfflineMode(true);
-      setError(err.message || 'Erro ao comunicar com a API');
+      
+      // Mensagem de erro mais específica com base no tipo de erro
+      let errorMessage = err.message || 'Erro ao comunicar com a API';
+      if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Falha de conexão com a API. Verifique se a função edge está ativa e se não há bloqueios de rede ou CORS.';
+      } else if (errorMessage.includes('client_id')) {
+        errorMessage = 'Erro de configuração do LearnWorlds: client_id ausente ou incorreto. Verifique o valor de LEARNWORLDS_SCHOOL_ID.';
+      } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        errorMessage = 'Erro de autenticação na API LearnWorlds. Verifique se o token API tem permissões suficientes.';
+      }
+      
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -161,7 +183,8 @@ const useLearnWorldsBase = () => {
     offlineMode,
     makeRequest,
     makePublicRequest,
-    LEARNWORLDS_PUBLIC_TOKEN
+    LEARNWORLDS_PUBLIC_TOKEN,
+    LEARNWORLDS_SCHOOL_ID
   };
 };
 

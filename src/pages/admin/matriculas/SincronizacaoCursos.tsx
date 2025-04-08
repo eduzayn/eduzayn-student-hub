@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import SincronizacaoLogs from "@/components/admin/matriculas/sincronizacao/SincronizacaoLogs";
 import SincronizacaoAlertas from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlertas";
-
-const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
+import LearnWorldsStatusDetails from "@/components/admin/matriculas/LearnWorldsStatusDetails";
 
 const SincronizacaoCursos: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,22 @@ const SincronizacaoCursos: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [detalhesErro, setDetalhesErro] = useState<string | null>(null);
   const [sincronizando, setSincronizando] = useState<boolean>(false);
+  const [schoolId, setSchoolId] = useState<string>("grupozayneducacional");
+  
+  // Obter o school ID do hook base
+  useEffect(() => {
+    try {
+      // Importar dinamicamente para evitar problemas de dependência circular
+      import('@/hooks/learnworlds/useLearnWorldsBase').then(module => {
+        const useLearnWorldsBase = module.default;
+        const { LEARNWORLDS_SCHOOL_ID } = useLearnWorldsBase();
+        setSchoolId(LEARNWORLDS_SCHOOL_ID);
+      });
+    } catch (err) {
+      console.error('Erro ao obter School ID:', err);
+      setSchoolId("grupozayneducacional"); // Fallback
+    }
+  }, []);
   
   const handleSincronizar = async (todos: boolean = false) => {
     try {
@@ -94,6 +110,11 @@ const SincronizacaoCursos: React.FC = () => {
         toast.error("Erro de configuração da API", { 
           description: "ID do cliente LearnWorlds ausente ou incorreto nas configurações."
         });
+      } else if (error.message && error.message.includes("Failed to fetch")) {
+        setDetalhesErro("Erro de conexão com a função edge. Verifique se a função está ativa e se não há problemas de rede ou CORS.");
+        toast.error("Erro de conexão", {
+          description: "Não foi possível conectar à função edge do Supabase."
+        });
       } else {
         setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
         toast.error("Erro na sincronização", { description: error.message });
@@ -118,6 +139,13 @@ const SincronizacaoCursos: React.FC = () => {
         </div>
       </div>
 
+      {/* Status da integração com LearnWorlds */}
+      <LearnWorldsStatusDetails 
+        schoolId={schoolId}
+        offlineMode={offlineMode}
+        error={error}
+      />
+
       {/* Alertas de erro ou status */}
       <SincronizacaoAlertas 
         error={error}
@@ -133,12 +161,31 @@ const SincronizacaoCursos: React.FC = () => {
           <AlertDescription className="space-y-2">
             <p>A API do LearnWorlds está retornando um erro de "client_id". Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente. Valor atual: "{LEARNWORLDS_SCHOOL_ID}"</li>
+              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente. Valor atual: "{schoolId}"</li>
               <li>O cabeçalho 'Lw-Client' não está sendo enviado corretamente</li>
               <li>O token de API não tem permissões suficientes</li>
             </ul>
             <p className="mt-2 text-sm">
               <span className="font-medium">Solução:</span> Verifique se o valor de LEARNWORLDS_SCHOOL_ID está correto nas configurações de segredos da função edge.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alerta específico de erro de conexão */}
+      {detalhesErro && detalhesErro.includes("Failed to fetch") && (
+        <Alert variant="destructive" className="mb-4 border-amber-600">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de conexão com a função edge</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>Não foi possível conectar à função edge do Supabase. Isso geralmente significa que:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>A função edge "learnworlds-courses-sync" pode estar indisponível</li>
+              <li>Há um problema de rede ou CORS impedindo a conexão</li>
+              <li>A função edge precisa ser reimplementada</li>
+            </ul>
+            <p className="mt-2 text-sm">
+              <span className="font-medium">Solução:</span> Verifique os logs da função edge no painel do Supabase e certifique-se de que ela está implementada corretamente.
             </p>
           </AlertDescription>
         </Alert>
@@ -219,6 +266,7 @@ const SincronizacaoCursos: React.FC = () => {
             </Card>
           </div>
 
+          {/* Resultado da Sincronização */}
           {resultado && (
             <Card className="mt-6">
               <CardHeader>
