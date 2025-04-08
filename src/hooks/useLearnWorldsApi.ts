@@ -11,7 +11,7 @@ import useLearnWorldsMatriculas from './learnworlds/useLearnWorldsMatriculas';
 const useLearnWorldsApi = () => {
   // Estado local para gerenciar erros e modo offline de forma consistente
   const [internalError, setInternalError] = useState<string | null>(null);
-  const [internalOfflineMode, setInternalOfflineMode] = useState<boolean>(true); // Iniciando como true para garantir dados simulados caso falhe
+  const [internalOfflineMode, setInternalOfflineMode] = useState<boolean>(false); // Iniciando como false para tentar usar dados reais
 
   // Utilizamos os hooks especializados
   const alunosApi = useLearnWorldsAlunos();

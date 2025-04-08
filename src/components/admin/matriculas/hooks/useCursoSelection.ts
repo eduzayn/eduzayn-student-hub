@@ -32,6 +32,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   const carregarCursos = async (termoBusca = "") => {
     try {
       console.log("Iniciando busca de cursos com termo:", termoBusca);
+      
       // Busca cursos da API LearnWorlds com token atualizado
       const resultado = await getCourses(1, 20, termoBusca);
       
@@ -69,6 +70,14 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
       
       console.log("Cursos formatados:", cursosFormatados);
       setCursos(cursosFormatados);
+      
+      // Se estamos em modo offline, mostramos um aviso
+      if (offlineMode) {
+        toast.warning("Usando dados simulados do LearnWorlds", {
+          description: "A API do LearnWorlds está indisponível no momento."
+        });
+      }
+      
     } catch (error) {
       console.error("Erro ao carregar cursos:", error);
       toast.error("Erro ao carregar a lista de cursos. Usando dados simulados.");
@@ -153,6 +162,11 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
       ) : dadosSimulados;
     
     setCursos(filtrados);
+    
+    // Aviso sobre dados simulados
+    toast.warning("Usando dados simulados para cursos", {
+      description: "Não foi possível obter dados reais da API LearnWorlds."
+    });
   };
   
   // Handler para a busca de cursos

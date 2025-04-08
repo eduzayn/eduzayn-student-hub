@@ -35,6 +35,9 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, selecionado, onSelecionar 
       className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
         selecionado ? "border-2 border-primary" : ""
       }`}
+      data-testid="curso-card"
+      data-curso-id={curso.id}
+      data-lw-id={learnWorldsId}
     >
       <div className="flex justify-between">
         <div>
@@ -62,6 +65,7 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, selecionado, onSelecionar 
               onClick={abrirLearnWorlds}
               className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800"
               title="Abrir no LearnWorlds"
+              data-testid="ver-lw-btn"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Ver no LW
