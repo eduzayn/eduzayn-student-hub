@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { carregarCursos } from "./cursos/cursosLoader";
+import { toast } from "sonner";
 
 /**
  * Hook para seleção de cursos com suporte a paginação e busca
@@ -13,12 +14,13 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isBuscaAtiva, setIsBuscaAtiva] = useState(false);
+  const [forceReload, setForceReload] = useState(0); // Contador para forçar recargas
   const { getCourses, loading, error, offlineMode } = useLearnWorldsApi();
   
   // Cursos por página - podemos aumentar se necessário
   const cursosPerPage = 50;
   
-  // Carregar cursos quando o componente montar ou a página mudar
+  // Carregar cursos quando o componente montar, página mudar ou forçar recarga
   useEffect(() => {
     if (!isBuscaAtiva) {
       carregarCursos({ 
@@ -35,7 +37,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         offlineMode 
       }, busca, page, cursosPerPage);
     }
-  }, [page, offlineMode]);
+  }, [page, offlineMode, forceReload]);
   
   // Handler para a busca de cursos
   const handleBusca = () => {
@@ -44,11 +46,20 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     carregarCursos({ getCourses, setTotalPages, setCursos, offlineMode }, busca, 1, cursosPerPage);
   };
   
+  // Função para forçar a recarga dos cursos ignorando o cache
+  const recarregarCursos = () => {
+    toast.info("Recarregando cursos do servidor...");
+    setForceReload(prev => prev + 1); // Incrementa para forçar o useEffect
+  };
+  
   // Handler para selecionar um curso
   const handleSelecionar = (curso: any) => {
     // Prioriza o ID do LearnWorlds se disponível
     const cursoId = curso.learning_worlds_id || curso.id;
     setSelecionado(cursoId);
+    
+    // Imprimir dados completos do curso para diagnóstico
+    console.log("Curso selecionado (dados completos):", curso);
     
     onCursoSelecionado({
       ...curso,
@@ -78,7 +89,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     setPage,
     handleBusca,
     handleSelecionar,
-    limparBusca
+    limparBusca,
+    recarregarCursos
   };
 };
 

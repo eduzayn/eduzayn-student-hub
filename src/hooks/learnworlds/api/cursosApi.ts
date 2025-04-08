@@ -51,37 +51,47 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         return getDadosSimulados(page, limit, searchTerm);
       }
       
-      // Verificar se temos dados no formato esperado (array de objetos)
+      // DIAGNÓSTICO ADICIONAL: Verificar o formato exato da resposta para debug
+      console.log("Tipo da resposta:", typeof response);
+      console.log("Estrutura da resposta:", Object.keys(response));
+      console.log("Status da resposta:", response.status);
+      
       if (response.data !== undefined) {
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          // Verificar se os dados parecem ser simulados (IDs começando com "course-")
-          const todosCursosSimulados = response.data.every((item: any) => 
-            item.id && item.id.toString().startsWith('course-')
-          );
+        // Verificar se a resposta contém dados
+        if (Array.isArray(response.data)) {
+          console.log("Dados recebidos (primeiros 2 itens):", response.data.slice(0, 2));
           
-          if (todosCursosSimulados) {
-            console.warn("Todos os cursos recebidos parecem ser simulados (IDs começam com 'course-')");
-            console.log("Resposta completa para análise:", response);
+          // Verificar propriedades disponíveis nos cursos
+          if (response.data.length > 0) {
+            const firstCourse = response.data[0];
+            console.log("Propriedades disponíveis no primeiro curso:", Object.keys(firstCourse));
+            console.log("Tipo do ID no primeiro curso:", typeof firstCourse.id);
+            console.log("ID do primeiro curso:", firstCourse.id);
+            console.log("Título do primeiro curso:", firstCourse.title);
           }
           
-          // Verificar se os dados parecem ser cursos (com pelo menos title ou id)
-          const dadosValidos = response.data.some((item: any) => item.title || item.id);
+          // Registrar todos os IDs para diagnóstico
+          const allIds = response.data.map(c => c.id).join(", ");
+          console.log("Todos os IDs dos cursos:", allIds);
           
-          if (dadosValidos) {
-            console.log("Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");
+          // Verificar se parece ser uma resposta válida de cursos
+          const temPropriedadesEsperadas = response.data.some(item => 
+            (item.id !== undefined) && (item.title !== undefined || item.name !== undefined)
+          );
+          
+          if (temPropriedadesEsperadas) {
+            console.log("✅ Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");
             setOfflineMode(false);
             return response;
           } else {
-            console.error("Os objetos retornados não parecem ser cursos válidos:", response.data[0]);
+            console.error("⚠️ Os dados não têm as propriedades esperadas de cursos!");
           }
-        } else if (Array.isArray(response.data)) {
-          console.warn("API retornou array vazio de cursos");
-          setOfflineMode(false); // A API está funcionando, só não tem dados
-          return response;
+        } else {
+          console.warn("⚠️ API retornou dados em formato não-array:", typeof response.data);
         }
       }
       
-      // Se chegamos aqui, temos um formato de resposta inválido
+      // Se chegamos aqui, não conseguimos interpretar os dados
       console.error("Formato de resposta inválido da API de cursos:", response);
       setOfflineMode(true);
       return getDadosSimulados(page, limit, searchTerm);
@@ -97,6 +107,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
    */
   const getCourseDetails = async (courseId: string): Promise<any> => {
     try {
+      console.log(`Buscando detalhes do curso ID: ${courseId}`);
       const response = await makePublicRequest(`learnworlds-api/courses/${courseId}`);
       
       // Verificar se recebemos HTML (erro comum)
@@ -107,6 +118,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         return getDetalhesCursoSimulado(courseId);
       }
       
+      console.log(`Detalhes recebidos para curso ${courseId}:`, response);
       return response;
     } catch (error) {
       console.error(`Erro ao buscar detalhes do curso ${courseId}:`, error);
@@ -121,7 +133,9 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
   const sincronizarCursos = async (todos: boolean = false): Promise<SincronizacaoResult> => {
     try {
       // Esta função requer token de administrador
+      console.log(`Iniciando sincronização de cursos (todos=${todos})`);
       const response = await makeRequest(`learnworlds-sync?type=courses&syncAll=${todos}`, "POST");
+      console.log("Resposta da sincronização:", response);
       
       if (!response || response.error) {
         throw new Error(response?.message || "Erro na sincronização de cursos");

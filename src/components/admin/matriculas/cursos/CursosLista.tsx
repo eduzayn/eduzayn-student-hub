@@ -37,10 +37,11 @@ const CursosLista: React.FC<CursosListaProps> = ({
   console.log("Cursos simulados:", cursosSimulados.length);
   console.log("Cursos reais:", cursosReais.length);
   
-  // Mostrar detalhes do primeiro curso para diagnóstico
-  if (cursosExibir.length > 0) {
-    console.log("Detalhes do primeiro curso:", JSON.stringify(cursosExibir[0], null, 2));
-  }
+  // Listagem de todos os cursos para diagnóstico
+  console.log("Lista completa de cursos:");
+  cursosExibir.forEach((curso, index) => {
+    console.log(`${index+1}. "${curso.titulo}" - ID: ${curso.id} - LW ID: ${curso.learning_worlds_id} - Simulado: ${curso.simulado}`);
+  });
   
   if (cursosExibir.length === 0) {
     return <CursosEmptyState />;
@@ -80,6 +81,13 @@ const CursosLista: React.FC<CursosListaProps> = ({
         {!offlineMode && cursosSimulados.length > 0 && cursosReais.length > 0 && " (mistura de dados reais e simulados)"}
         {!offlineMode && cursosReais.length > 0 && cursosSimulados.length === 0 && " (dados reais)"}
       </div>
+      
+      {!offlineMode && cursosSimulados.length > 0 && cursosReais.length === 0 && (
+        <div className="p-3 bg-amber-50 border border-amber-300 rounded-md mb-3 text-amber-800 text-sm">
+          <p><strong>Importante:</strong> A API está online, mas todos os cursos foram identificados como simulados.</p>
+          <p>Isso pode indicar um problema de comunicação com o LearnWorlds ou um problema de formato nos dados recebidos.</p>
+        </div>
+      )}
       
       {cursosExibir.map(curso => (
         <CursoCard 
