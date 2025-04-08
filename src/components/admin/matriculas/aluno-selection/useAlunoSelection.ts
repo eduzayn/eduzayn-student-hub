@@ -43,8 +43,23 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
         throw new Error("Erro ao carregar alunos do LearnWorlds");
       }
       
-      const alunosFormatados = mapearAlunosDeAPI(resultado.data);
+      // Mapear alunos da API e marcar como não simulados
+      const alunosFormatados = mapearAlunosDeAPI(resultado.data)
+        .map(aluno => ({
+          ...aluno,
+          simulado: false,
+          simulatedResponse: false
+        }));
+        
       setAlunos(alunosFormatados);
+      
+      // Se estamos em modo offline, carregamos dados simulados em vez de misturar
+      if (offlineMode) {
+        setAlunos(carregarAlunosSimulados(termoBusca));
+        toast.warning("Usando dados simulados para alunos", {
+          description: "A API do LearnWorlds está indisponível."
+        });
+      }
     } catch (error) {
       tratarErroCarregamento(error);
       setAlunos(carregarAlunosSimulados(termoBusca));

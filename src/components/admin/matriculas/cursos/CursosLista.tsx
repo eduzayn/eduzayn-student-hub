@@ -22,7 +22,11 @@ const CursosLista: React.FC<CursosListaProps> = ({
   }
 
   // Filtrar para não mostrar cursos simulados na lista
-  const cursosExibir = cursos.filter(curso => !curso.simulado && !curso.simulatedResponse);
+  const cursosExibir = cursos.filter(curso => 
+    !curso.simulado && 
+    !curso.simulatedResponse && 
+    curso.titulo // Garantir que tenha um título
+  );
 
   if (cursosExibir.length === 0) {
     return <CursosEmptyState />;

@@ -3,67 +3,77 @@ import { toast } from "sonner";
 import { Aluno } from "./types";
 
 /**
- * Carrega alunos simulados quando o sistema está offline
+ * Função para carregar alunos simulados quando a API não estiver disponível
  */
 export const carregarAlunosSimulados = (termoBusca = ""): Aluno[] => {
-  const dadosSimulados = [
+  const alunosSimulados: Aluno[] = [
     {
-      id: "a1",
-      nome: "Ana Silva",
-      email: "ana@exemplo.com",
-      cpf: "12345678901",
-      telefone: "(11) 91234-5678"
+      id: "mock-user-1",
+      nome: "João Silva",
+      email: "joao@exemplo.com",
+      cpf: "12345678900",
+      telefone: "11999990000",
+      simulado: true,
+      learnworlds_id: "mock-user-1"
     },
     {
-      id: "a2",
-      nome: "Carlos Santos",
-      email: "carlos@exemplo.com",
-      cpf: "10987654321",
-      telefone: "(11) 98765-4321"
+      id: "mock-user-2",
+      nome: "Maria Oliveira",
+      email: "maria@exemplo.com",
+      cpf: "98765432100",
+      telefone: "11988880000",
+      simulado: true,
+      learnworlds_id: "mock-user-2"
     },
     {
-      id: "a3",
-      nome: "Patricia Oliveira",
-      email: "patricia@exemplo.com",
-      cpf: "45678912301",
-      telefone: "(11) 97654-3210"
+      id: "mock-user-3",
+      nome: "Pedro Santos",
+      email: "pedro@exemplo.com",
+      cpf: "45678912300",
+      telefone: "11977770000",
+      simulado: true,
+      learnworlds_id: "mock-user-3"
     }
   ];
-  
-  const filtrados = termoBusca ? 
-    dadosSimulados.filter(a => 
-      a.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
-      a.email.toLowerCase().includes(termoBusca.toLowerCase()) ||
-      a.cpf?.includes(termoBusca)
-    ) : dadosSimulados;
-  
-  return filtrados;
+
+  // Filtrar pelo termo de busca se fornecido
+  if (termoBusca) {
+    const termoBuscaLower = termoBusca.toLowerCase();
+    return alunosSimulados.filter(
+      aluno =>
+        aluno.nome.toLowerCase().includes(termoBuscaLower) ||
+        aluno.email.toLowerCase().includes(termoBuscaLower) ||
+        aluno.cpf.includes(termoBusca)
+    );
+  }
+
+  return alunosSimulados;
 };
 
 /**
- * Mapeia dados de alunos da API para o formato utilizado na aplicação
+ * Função para mapear alunos retornados da API para o formato da aplicação
  */
 export const mapearAlunosDeAPI = (alunosAPI: any[]): Aluno[] => {
-  if (!alunosAPI || !Array.isArray(alunosAPI)) {
-    return [];
-  }
-  
-  return alunosAPI.map((aluno: any) => ({
+  return alunosAPI.map(aluno => ({
     id: aluno.id,
-    nome: `${aluno.firstName || ''} ${aluno.lastName || ''}`.trim(),
-    email: aluno.email,
-    cpf: aluno.customField1 || '',
-    telefone: aluno.phoneNumber || '',
-    learnworlds_id: aluno.id
+    nome: `${aluno.firstName || ""} ${aluno.lastName || ""}`.trim(),
+    email: aluno.email || "",
+    cpf: aluno.cpf || aluno.cpfCnpj || "",
+    telefone: aluno.phoneNumber || aluno.phone || "",
+    learnworlds_id: aluno.id,
+    simulado: !!aluno.simulatedResponse, // Marca explicitamente como simulado se vier da API
+    simulatedResponse: !!aluno.simulatedResponse
   }));
 };
 
 /**
- * Trata erros ao carregar alunos
+ * Função para tratar erros de carregamento de alunos
  */
-export const tratarErroCarregamento = (error: any): void => {
+export const tratarErroCarregamento = (error: any) => {
   console.error("Erro ao carregar alunos:", error);
-  toast.error("Erro ao carregar a lista de alunos", {
-    description: "Usando dados em modo offline. Algumas funcionalidades podem estar limitadas."
+  
+  // Exibir mensagem de erro para o usuário
+  toast.error("Falha ao carregar alunos", {
+    description: "Usando dados simulados. Tente novamente mais tarde."
   });
 };

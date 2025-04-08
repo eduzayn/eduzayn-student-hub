@@ -44,40 +44,44 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
       console.log("Dados originais dos cursos:", resultado.data);
       
       // Mapeando os dados retornados para o formato necessário para exibição
-      const cursosFormatados = resultado.data.map((curso: any) => {
-        // Extrai o slug da URL se disponível
-        let slug = "";
-        if (curso.url) {
-          slug = extractSlugFromUrl(curso.url);
-        }
-        
-        return {
-          id: curso.id,
-          titulo: curso.title,
-          codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
-          modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
-          carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-          // Não usaremos mais os valores do LearnWorlds para preço, mas mantemos como referência
-          valor_total_learnworlds: curso.price_final || curso.price_original || curso.price || 0,
-          valor_total: 0, // Zerando para permitir personalização manual
-          valor_mensalidade: 0, // Zerando para permitir personalização manual
-          descricao: curso.description || curso.shortDescription || "",
-          imagem_url: curso.image || curso.courseImage || "",
-          categorias: curso.categories || [],
-          learning_worlds_id: curso.id,
-          acesso: curso.access || "pago",
-          url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`
-        };
-      });
+      const cursosFormatados = resultado.data
+        .filter(curso => curso.title && curso.id) // Filtra cursos sem título ou id
+        .map((curso: any) => {
+          // Extrai o slug da URL se disponível
+          let slug = "";
+          if (curso.url) {
+            slug = extractSlugFromUrl(curso.url);
+          }
+          
+          return {
+            id: curso.id,
+            titulo: curso.title,
+            codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
+            modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
+            carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
+            // Não usaremos mais os valores do LearnWorlds para preço
+            valor_total: 0, // Zerando para permitir personalização manual
+            valor_mensalidade: 0, // Zerando para permitir personalização manual
+            descricao: curso.description || curso.shortDescription || "",
+            imagem_url: curso.image || curso.courseImage || "",
+            categorias: curso.categories || [],
+            learning_worlds_id: curso.id,
+            acesso: curso.access || "pago",
+            url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
+            // Adicionado flag para identificar se é simulado - todos cursos da API não são simulados
+            simulado: false
+          };
+        });
       
       console.log("Cursos formatados:", cursosFormatados);
       setCursos(cursosFormatados);
       
-      // Se estamos em modo offline, mostramos um aviso
+      // Se estamos em modo offline, mostramos um aviso e carregamos dados simulados
       if (offlineMode) {
         toast.warning("Usando dados simulados do LearnWorlds", {
           description: "A API do LearnWorlds está indisponível no momento."
         });
+        carregarCursosSimulados(termoBusca);
       }
       
     } catch (error) {
@@ -131,7 +135,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         valor_mensalidade: 300.00,
         learning_worlds_id: "pos_graduacao_direito_tributario",
         url: "https://grupozayneducacional.com.br/course/pos-graduacao-direito-tributario",
-        simulado: true // Adicionando flag para identificar cursos simulados
+        simulado: true // Identificador explícito para cursos simulados
       },
       {
         id: "pos_graduacao_em_direito_do_agronegocio",
@@ -167,7 +171,11 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
       ) : dadosSimulados;
     
     console.log(`Filtrando dados simulados por "${termoBusca}", encontrados: ${filtrados.length}`);
-    setCursos(filtrados);
+    
+    // Em modo offline, substituímos os cursos completamente
+    if (offlineMode) {
+      setCursos(filtrados);
+    }
     
     // Aviso sobre dados simulados
     toast.warning("Usando dados simulados para cursos", {

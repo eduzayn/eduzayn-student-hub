@@ -15,7 +15,14 @@ const AlunosList: React.FC<AlunosListProps> = ({ alunos, selecionado, onSelecion
     return null; // O componente de loading é tratado pelo componente pai
   }
   
-  if (alunos.length === 0) {
+  // Filtrar alunos simulados
+  const alunosExibir = alunos.filter(aluno => 
+    !aluno.simulado && 
+    !aluno.simulatedResponse && 
+    aluno.nome // Garantir que tenha um nome
+  );
+  
+  if (alunosExibir.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         <User className="mx-auto h-12 w-12 opacity-20 mb-2" />
@@ -26,7 +33,7 @@ const AlunosList: React.FC<AlunosListProps> = ({ alunos, selecionado, onSelecion
   
   return (
     <div className="space-y-3">
-      {alunos.map(aluno => (
+      {alunosExibir.map(aluno => (
         <AlunoCard 
           key={aluno.id}
           aluno={aluno}
