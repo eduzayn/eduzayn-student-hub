@@ -9,9 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
-// Token de bypass para admins - usando um nome padronizado
-const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
-
 // Interface para dados do curso da LearnWorlds
 interface LearnWorldsCourse {
   id: string;
@@ -70,7 +67,7 @@ serve(async (req) => {
       console.log("Nenhum header de autorização fornecido");
     }
 
-    // Agora a autenticação é considerada sempre bem-sucedida
+    // Autenticação é considerada sempre bem-sucedida
     const isAuthenticated = true;
     console.log("Autenticação bem-sucedida (verificação JWT desativada)");
 
@@ -83,11 +80,11 @@ serve(async (req) => {
     // Obter chaves da API e configurações da LearnWorlds
     const apiKey = Deno.env.get('LEARNWORLDS_API_KEY');
     const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID');
-    const apiBaseUrl = Deno.env.get('LEARNWORLDS_API_URL') || 'https://api.learnworlds.com';
+    const apiBaseUrl = Deno.env.get('LEARNWORLDS_BASE_URL') || 'https://api.learnworlds.com';
     
     console.log(`LEARNWORLDS_API_KEY: ${apiKey ? "definido (primeiros 5 chars): " + apiKey.substring(0, 5) + "..." : "indefinido"}`);
     console.log(`LEARNWORLDS_SCHOOL_ID: ${schoolId || "indefinido"}`);
-    console.log(`LEARNWORLDS_API_URL: ${apiBaseUrl}`);
+    console.log(`LEARNWORLDS_BASE_URL: ${apiBaseUrl}`);
 
     if (!apiKey || !schoolId) {
       console.error('Configurações da API LearnWorlds ausentes');
@@ -110,7 +107,7 @@ serve(async (req) => {
 
     // Função para buscar cursos da LearnWorlds
     const fetchCourses = async (page: number, limit: number): Promise<{ data: LearnWorldsCourse[], total: number, pages: number }> => {
-      const apiUrl = `${apiBaseUrl}/${schoolId}/courses?page=${page}&limit=${limit}`;
+      const apiUrl = `${apiBaseUrl}/api/v2/${schoolId}/courses?page=${page}&limit=${limit}`;
       console.log(`Buscando cursos da LearnWorlds: ${apiUrl}`);
       
       try {
@@ -167,44 +164,6 @@ serve(async (req) => {
       }
     };
 
-    // Como estamos tendo problemas com a API real, vamos usar dados mockados para testes
-    // Enquanto a integração com a API LearnWorlds é ajustada
-    const mockCourses = [
-      {
-        id: "course1",
-        title: "Desenvolvimento Web Full Stack",
-        description: "Aprenda as tecnologias essenciais para se tornar um desenvolvedor web completo",
-        shortDescription: "Curso completo de desenvolvimento web",
-        price: 1990,
-        duration: "80 horas",
-        image: "https://example.com/course1.jpg",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: "course2",
-        title: "JavaScript Avançado",
-        description: "Domine os conceitos avançados de JavaScript para desenvolvimento profissional",
-        shortDescription: "JavaScript para desenvolvedores experientes",
-        price: 990,
-        duration: "40 horas",
-        image: "https://example.com/course2.jpg",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: "course3",
-        title: "React Native para Iniciantes",
-        description: "Crie aplicativos móveis para iOS e Android com React Native",
-        shortDescription: "Desenvolvimento mobile com React Native",
-        price: 1490,
-        duration: "60 horas",
-        image: "https://example.com/course3.jpg",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-
     // Função para processar e sincronizar cursos
     const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
       for (const course of courses) {
@@ -229,7 +188,7 @@ serve(async (req) => {
             descricao: course.description || course.shortDescription || '',
             learning_worlds_id: course.id,
             valor_total: course.price || 0,
-            valor_mensalidade: course.price ? course.price / 12 : 0, // Exemplo simples, ajuste conforme necessário
+            valor_mensalidade: course.price ? course.price / 12 : 0,
             carga_horaria: parseDuration(course.duration || '0'),
             imagem_url: course.image || '',
             codigo: `LW-${course.id.substring(0, 6).toUpperCase()}`,
@@ -312,43 +271,37 @@ serve(async (req) => {
       console.log(message);
     }
 
-    // Iniciar a sincronização - usando dados mockados para teste
+    // Iniciar a sincronização com a API real
     try {
-      addLog(results, `MODO DE TESTE: Usando dados mockados para resolver o problema de parsing JSON`);
-      results.total = mockCourses.length;
-      
-      // Usar os dados mockados em vez de chamar a API real
-      await processCourses(mockCourses);
-      
-      addLog(results, "Sincronização simulada concluída com sucesso");
-      
-      // Comentado por enquanto - código original que chama a API LearnWorlds
-      // Será reativado quando resolvermos os problemas de integração
-      /*
       if (isSyncAll) {
         // Buscar cursos pela primeira vez para descobrir o total de páginas
         const firstPage = await fetchCourses(1, pageSize);
-        results.total = firstPage.total;
+        results.total = firstPage.total || firstPage.data.length;
         
-        addLog(results, `Total de ${firstPage.total} cursos encontrados em ${firstPage.pages} páginas`);
-        
-        // Processar primeira página
-        await processCourses(firstPage.data);
-        
-        // Processar páginas adicionais (se houver)
-        for (let page = 2; page <= firstPage.pages; page++) {
-          addLog(results, `Processando página ${page} de ${firstPage.pages}`);
-          const pageData = await fetchCourses(page, pageSize);
-          await processCourses(pageData.data);
+        if (firstPage.data.length > 0) {
+          addLog(results, `Total de ${results.total} cursos encontrados em ${firstPage.pages || 1} páginas`);
+          
+          // Processar primeira página
+          await processCourses(firstPage.data);
+          
+          // Processar páginas adicionais (se houver)
+          if (firstPage.pages && firstPage.pages > 1) {
+            for (let page = 2; page <= firstPage.pages; page++) {
+              addLog(results, `Processando página ${page} de ${firstPage.pages}`);
+              const pageData = await fetchCourses(page, pageSize);
+              await processCourses(pageData.data);
+            }
+          }
+        } else {
+          addLog(results, `Nenhum curso encontrado na API do LearnWorlds`);
         }
       } else {
         // Buscar apenas uma página específica
         const pageData = await fetchCourses(pageNumber, pageSize);
         results.total = pageData.data.length;
-        addLog(results, `Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages})`);
+        addLog(results, `Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages || 1})`);
         await processCourses(pageData.data);
       }
-      */
     } catch (syncError) {
       console.error("Erro durante sincronização:", syncError);
       addLog(results, `Erro na sincronização: ${syncError.message}`);

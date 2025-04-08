@@ -8,22 +8,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import { Badge } from "@/components/ui/badge";
+import SincronizacaoLogs from "@/components/admin/matriculas/sincronizacao/SincronizacaoLogs";
+import SincronizacaoAlertas from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlertas";
 
 const SincronizacaoCursos: React.FC = () => {
   const navigate = useNavigate();
-  const { sincronizarCursos, loading } = useLearnWorldsApi();
+  const { sincronizarCursos, loading, error, offlineMode } = useLearnWorldsApi();
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [detalhesErro, setDetalhesErro] = useState<string | null>(null);
+  const [sincronizando, setSincronizando] = useState<boolean>(false);
   
   const handleSincronizar = async (todos: boolean = false) => {
     try {
+      setSincronizando(true);
+      setDetalhesErro(null);
+      
       const result = await sincronizarCursos(todos);
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
+      setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
+    } finally {
+      setSincronizando(false);
     }
   };
   
@@ -41,6 +52,13 @@ const SincronizacaoCursos: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Alertas de erro ou status */}
+      <SincronizacaoAlertas 
+        error={error}
+        detalhesErro={detalhesErro}
+        offlineMode={offlineMode}
+      />
 
       <Tabs defaultValue="sincronizacao">
         <TabsList>
@@ -61,14 +79,14 @@ const SincronizacaoCursos: React.FC = () => {
                 <Button 
                   className="w-full" 
                   onClick={() => handleSincronizar(false)}
-                  disabled={loading}
+                  disabled={loading || sincronizando}
                 >
-                  {loading ? (
+                  {(loading || sincronizando) ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="mr-2 h-4 w-4" />
                   )}
-                  {loading ? "Sincronizando..." : "Sincronizar Novos Cursos"}
+                  {(loading || sincronizando) ? "Sincronizando..." : "Sincronizar Novos Cursos"}
                 </Button>
               </CardContent>
             </Card>
@@ -85,14 +103,14 @@ const SincronizacaoCursos: React.FC = () => {
                   variant="secondary" 
                   className="w-full" 
                   onClick={() => handleSincronizar(true)}
-                  disabled={loading}
+                  disabled={loading || sincronizando}
                 >
-                  {loading ? (
+                  {(loading || sincronizando) ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="mr-2 h-4 w-4" />
                   )}
-                  {loading ? "Sincronizando..." : "Sincronizar Todos os Cursos"}
+                  {(loading || sincronizando) ? "Sincronizando..." : "Sincronizar Todos os Cursos"}
                 </Button>
               </CardContent>
             </Card>
@@ -123,8 +141,11 @@ const SincronizacaoCursos: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4">
-                    <div className="text-sm font-medium mb-1">Total processado: {resultado.total}</div>
+                  <div className="mt-4 flex justify-between items-center">
+                    <div className="text-sm font-medium">Total processado: {resultado.total}</div>
+                    <Badge variant={offlineMode ? "destructive" : "outline"}>
+                      {offlineMode ? "Modo Offline" : "Online"}
+                    </Badge>
                   </div>
 
                   {resultado.failed > 0 && (
@@ -154,29 +175,7 @@ const SincronizacaoCursos: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="logs">
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Logs de Sincronização</CardTitle>
-              <CardDescription>
-                Registro detalhado do processo de sincronização
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {logs.length > 0 ? (
-                <ScrollArea className="h-[400px] rounded border p-4">
-                  {logs.map((log, index) => (
-                    <div key={index} className="pb-2 text-xs font-mono">
-                      {log}
-                    </div>
-                  ))}
-                </ScrollArea>
-              ) : (
-                <div className="text-center p-6 text-gray-500">
-                  Nenhum log disponível. Execute uma sincronização para ver os logs.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SincronizacaoLogs logs={logs} />
         </TabsContent>
       </Tabs>
     </div>
