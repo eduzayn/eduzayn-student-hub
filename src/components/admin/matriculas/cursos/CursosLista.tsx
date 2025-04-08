@@ -22,14 +22,15 @@ const CursosLista: React.FC<CursosListaProps> = ({
   if (loading) {
     return <CursosLoadingSkeleton />;
   }
-
-  // CORREÇÃO: Simplesmente mostrar todos os cursos disponíveis, sem filtragem por simulado
-  // Isso garante que todos os cursos da API sejam mostrados
-  const cursosExibir = cursos.filter(curso => curso.titulo); // Apenas filtra cursos sem título
+  
+  // Mostrar todos os cursos que têm título válido
+  const cursosExibir = cursos.filter(curso => curso.titulo); 
   
   console.log("Exibindo cursos:", cursosExibir);
   console.log("Total de cursos para exibição:", cursosExibir.length);
   console.log("Modo offline?", offlineMode);
+  console.log("Cursos simulados:", cursosExibir.filter(c => c.simulado).length);
+  console.log("Cursos reais:", cursosExibir.filter(c => !c.simulado).length);
   
   if (cursosExibir.length === 0) {
     return <CursosEmptyState />;
@@ -65,6 +66,7 @@ const CursosLista: React.FC<CursosListaProps> = ({
       <div className="text-sm text-muted-foreground mb-2">
         Mostrando {cursosExibir.length} cursos
         {offlineMode && " (usando dados simulados)"}
+        {!offlineMode && cursosExibir.some(c => c.simulado) && " (inclui dados simulados)"}
       </div>
       
       {cursosExibir.map(curso => (

@@ -54,6 +54,13 @@ export const obterCargaHorariaEmMinutos = (duration: string): number => {
  * Formata os cursos retornados da API para o formato utilizado pelo app
  */
 export const formatarCursos = (cursosData: any[]) => {
+  if (!Array.isArray(cursosData)) {
+    console.error("formatarCursos recebeu dados não-array:", cursosData);
+    return [];
+  }
+  
+  console.log(`Formatando ${cursosData.length} cursos da API`);
+  
   return cursosData
     .filter(curso => curso.title && curso.id) // Filtra cursos sem título ou id
     .map((curso: any) => {
@@ -63,13 +70,14 @@ export const formatarCursos = (cursosData: any[]) => {
         slug = extractSlugFromUrl(curso.url);
       }
       
-      return {
+      // Formatar o curso com os dados da API
+      const cursoFormatado = {
         id: curso.id,
         titulo: curso.title,
         codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
         modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
         carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-        valor_total: 0, // Zerando para permitir personalização manual
+        valor_total: parseFloat(curso.price || "0") || 0,
         valor_mensalidade: 0, // Zerando para permitir personalização manual
         descricao: curso.description || curso.shortDescription || "",
         imagem_url: curso.image || curso.courseImage || "",
@@ -77,7 +85,9 @@ export const formatarCursos = (cursosData: any[]) => {
         learning_worlds_id: curso.id,
         acesso: curso.access || "pago",
         url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
-        simulado: false
+        simulado: false // IMPORTANTE: Cursos da API NÃO são simulados
       };
+      
+      return cursoFormatado;
     });
 };

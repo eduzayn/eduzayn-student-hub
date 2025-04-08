@@ -51,17 +51,30 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         return getDadosSimulados(page, limit, searchTerm);
       }
       
-      // Verificar se temos dados no formato esperado
-      if (response.data !== undefined && Array.isArray(response.data) && response.data.length > 0) {
-        // CORREÇÃO: Verificar se os dados são válidos antes de usar
-        console.log("Usando dados reais de cursos da API LearnWorlds");
-        setOfflineMode(false);
-        return response;
-      } else {
-        console.error("Formato de resposta inválido ou sem dados da API de cursos:", response);
-        setOfflineMode(true);
-        return getDadosSimulados(page, limit, searchTerm);
+      // Verificar se temos dados no formato esperado (array de objetos)
+      if (response.data !== undefined) {
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          // Verificar se os dados parecem ser cursos (com pelo menos title ou id)
+          const dadosValidos = response.data.some(item => item.title || item.id);
+          
+          if (dadosValidos) {
+            console.log("Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");
+            setOfflineMode(false);
+            return response;
+          } else {
+            console.error("Os objetos retornados não parecem ser cursos válidos:", response.data[0]);
+          }
+        } else if (Array.isArray(response.data)) {
+          console.warn("API retornou array vazio de cursos");
+          setOfflineMode(false); // A API está funcionando, só não tem dados
+          return response;
+        }
       }
+      
+      // Se chegamos aqui, temos um formato de resposta inválido
+      console.error("Formato de resposta inválido da API de cursos:", response);
+      setOfflineMode(true);
+      return getDadosSimulados(page, limit, searchTerm);
     } catch (error) {
       console.error("Erro ao buscar cursos:", error);
       setOfflineMode(true);

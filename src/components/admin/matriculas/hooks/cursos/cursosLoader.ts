@@ -25,6 +25,13 @@ export const carregarCursos = async (
   try {
     console.log(`Iniciando busca de cursos com termo: "${termoBusca}", página: ${pagina}`);
     
+    // Se estamos em modo offline, carregamos dados simulados diretamente
+    if (offlineMode) {
+      console.log("Modo offline ativo, carregando dados simulados");
+      handleFallbackData(setCursos, setTotalPages, termoBusca);
+      return;
+    }
+    
     // Busca cursos da API LearnWorlds com token atualizado
     const resultado = await getCourses(pagina, cursosPerPage, termoBusca);
     
@@ -36,20 +43,23 @@ export const carregarCursos = async (
     console.log("Dados originais dos cursos:", resultado.data);
     console.log("Metadados da paginação:", resultado.meta);
     
-    // Atualizar o total de páginas baseado na resposta da API
-    if (resultado.meta && resultado.meta.totalPages) {
-      setTotalPages(resultado.meta.totalPages);
+    // Verificar se os dados da API são válidos e não estão vazios
+    if (Array.isArray(resultado.data) && resultado.data.length > 0) {
+      // Atualizar o total de páginas baseado na resposta da API
+      if (resultado.meta && resultado.meta.totalPages) {
+        setTotalPages(resultado.meta.totalPages);
+      }
+      
+      // Mapeando os dados retornados para o formato necessário para exibição
+      const cursosFormatados = formatarCursos(resultado.data);
+      
+      console.log("Cursos formatados:", cursosFormatados);
+      console.log("Total de cursos da API:", cursosFormatados.length);
+      setCursos(cursosFormatados);
+    } else {
+      console.warn("API retornou um array vazio de cursos ou formato inesperado");
+      handleFallbackData(setCursos, setTotalPages, termoBusca);
     }
-    
-    // Mapeando os dados retornados para o formato necessário para exibição
-    const cursosFormatados = formatarCursos(resultado.data);
-    
-    console.log("Cursos formatados:", cursosFormatados);
-    setCursos(cursosFormatados);
-    
-    // CORREÇÃO: Removido o carregamento de dados simulados quando temos dados reais
-    // Se a API retornou dados válidos, não devemos carregar dados simulados
-    
   } catch (error) {
     console.error("Erro ao carregar cursos:", error);
     toast.error("Erro ao carregar a lista de cursos. Usando dados simulados.");
@@ -70,4 +80,6 @@ const handleFallbackData = (
   const cursos = carregarCursosSimulados(termoBusca);
   setCursos(cursos);
   setTotalPages(1); // Com dados simulados, temos apenas uma página
+  
+  console.log("Usando dados simulados como fallback, total:", cursos.length);
 };

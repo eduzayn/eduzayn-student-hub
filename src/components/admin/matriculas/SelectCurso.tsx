@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import BuscaCurso from "./cursos/BuscaCurso";
 import CursosLista from "./cursos/CursosLista";
 import ApiErrorDisplay from "./cursos/ApiErrorDisplay";
@@ -32,7 +32,15 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   } = useCursoSelection(onCursoSelecionado);
   
   // Verificar se todos os cursos são simulados
-  const todosCursosSimulados = cursos.length > 0 && cursos.every(curso => curso.simulado);
+  const [todosCursosSimulados, setTodosCursosSimulados] = useState<boolean>(false);
+  
+  // Verificar quando os cursos são carregados
+  useEffect(() => {
+    if (!loading && cursos.length > 0) {
+      const todosSimulados = cursos.every(curso => curso.simulado);
+      setTodosCursosSimulados(todosSimulados);
+    }
+  }, [cursos, loading]);
   
   return (
     <div className="space-y-4">
@@ -42,7 +50,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
         <OfflineModeIndicator message="API do LearnWorlds indisponível. Usando dados simulados para cursos." />
       )}
       
-      {!offlineMode && todosCursosSimulados && !loading && (
+      {!offlineMode && todosCursosSimulados && cursos.length > 0 && !loading && (
         <Alert variant="warning" className="bg-amber-50 border-amber-200">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
