@@ -29,9 +29,10 @@ const CursosLista: React.FC<CursosListaProps> = ({
   // Logs para diagnóstico
   console.log("Exibindo cursos:", cursosExibir.length);
   console.log("Modo offline?", offlineMode);
+  console.log("Exemplo de curso:", cursosExibir[0]);
   
   // Verificações específicas de origem de dados
-  // CORREÇÃO: Identificação correta de cursos simulados
+  // CORREÇÃO: Identificação correta de cursos simulados - procurando explicitamente pelo flag
   const cursosSimulados = cursosExibir.filter(c => c.simulado === true).length;
   const cursosReais = cursosExibir.length - cursosSimulados;
   console.log("Cursos simulados:", cursosSimulados);
@@ -66,35 +67,22 @@ const CursosLista: React.FC<CursosListaProps> = ({
            selecionado === curso.id;
   };
 
-  // Verificar se os cursos têm formato de ID suspeito (começando com "course-")
-  const idsSuspeitosComCourse = cursosExibir.filter(curso => 
-    curso.id && curso.id.toString().startsWith('course-')
-  ).length;
-  
-  const percentIdsSuspeitos = idsSuspeitosComCourse / cursosExibir.length * 100;
-  const mostrarAlertaIds = idsSuspeitosComCourse > 0 && percentIdsSuspeitos > 75;
-
   return (
     <div className="space-y-3">
       <div className="text-sm text-muted-foreground mb-2">
         Mostrando {cursosExibir.length} cursos
-        {offlineMode && " (usando dados simulados)"}
+        {offlineMode ? " (usando dados simulados)" : " da API LearnWorlds"}
+        {!offlineMode && cursosSimulados > 0 && (
+          <span className="text-amber-600"> ({cursosSimulados} simulados, {cursosReais} reais)</span>
+        )}
       </div>
-      
-      {mostrarAlertaIds && !offlineMode && (
-        <div className="p-3 bg-blue-50 border border-blue-300 rounded-md mb-3 text-gray-700 text-sm">
-          <p className="font-medium">Observação sobre formato de IDs</p>
-          <p>Os IDs dos cursos seguem o padrão "course-X", o que é normal se a instalação do LearnWorlds estiver configurada dessa forma.</p>
-          <p className="mt-1 text-xs text-gray-500">Isso não indica necessariamente que sejam dados simulados.</p>
-        </div>
-      )}
       
       {cursosExibir.map(curso => (
         <CursoCard 
           key={getLearnWorldsId(curso)}
           curso={{
             ...curso,
-            // CORREÇÃO: Garantir que simulado seja um booleano explícito
+            // CORREÇÃO: Garantir que simulado seja um booleano explícito usando o valor existente
             simulado: curso.simulado === true
           }} 
           selecionado={isCursoSelecionado(curso)}
