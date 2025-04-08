@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import SincronizacaoAlunosHeader from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlunosHeader";

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useLearnWorldsAlunos, { AlunoParams } from './learnworlds/useLearnWorldsAlunos';
 import useLearnWorldsCursos from './learnworlds/useLearnWorldsCursos';
 import useLearnWorldsMatriculas from './learnworlds/useLearnWorldsMatriculas';
@@ -19,10 +19,15 @@ const useLearnWorldsApi = () => {
   const [error, setError] = useState<string | null>(null);
   const offlineMode = alunosApi.offlineMode || cursosApi.offlineMode || matriculasApi.offlineMode;
 
-  // Atualizamos o estado de erro sempre que qualquer hook reportar um erro
-  if (alunosApi.error) setError(alunosApi.error);
-  if (cursosApi.error) setError(cursosApi.error);
-  if (matriculasApi.error) setError(matriculasApi.error);
+  // Atualizamos o estado de erro dentro de um useEffect para evitar atualizações durante a renderização
+  useEffect(() => {
+    if (alunosApi.error || cursosApi.error || matriculasApi.error) {
+      setError(alunosApi.error || cursosApi.error || matriculasApi.error);
+    } else {
+      // Limpar o erro se nenhum dos hooks tem erro
+      setError(null);
+    }
+  }, [alunosApi.error, cursosApi.error, matriculasApi.error]);
 
   // Retornamos todas as funções e estados dos hooks especializados
   return {
