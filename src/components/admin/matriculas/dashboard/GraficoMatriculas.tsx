@@ -27,7 +27,15 @@ const GraficoMatriculas: React.FC<GraficoMatriculasProps> = ({ data }) => {
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="mes" />
-              <YAxis width={40} tickFormatter={(value) => `${value}`} />
+              {/* Usando parâmetros padrões ao invés de defaultProps */}
+              <YAxis 
+                width={40} 
+                tickFormatter={(value) => `${value}`}
+                // Definir propriedades explicitamente ao invés de usar defaultProps
+                allowDecimals={false}
+                allowDataOverflow={false}
+                domain={['auto', 'auto']}
+              />
               <ChartTooltip
                 content={<ChartTooltipContent />}
               />
