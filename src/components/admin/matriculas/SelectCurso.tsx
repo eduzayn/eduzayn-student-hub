@@ -17,7 +17,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   const [busca, setBusca] = useState("");
   const [cursos, setCursos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<string | null>(null);
-  const { getCourses, loading, error } = useLearnWorldsApi();
+  const { getCourses, loading, error, offlineMode } = useLearnWorldsApi();
   
   useEffect(() => {
     carregarCursos();
@@ -25,6 +25,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   
   const carregarCursos = async (termoBusca = "") => {
     try {
+      console.log("Iniciando busca de cursos com termo:", termoBusca);
       // Busca cursos da API LearnWorlds
       const resultado = await getCourses(1, 20, termoBusca);
       

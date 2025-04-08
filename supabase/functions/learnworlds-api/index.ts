@@ -129,9 +129,9 @@ serve(async (req) => {
   
   if (!isAdminToken && !isPublicToken) {
     console.log("Token inválido - nenhuma correspondência encontrada");
-    console.log(`Token recebido: ${token}`);
-    console.log(`Token público esperado: ${LEARNWORLDS_PUBLIC_TOKEN}`);
-    console.log(`Token admin esperado: ${ADMIN_BYPASS_JWT}`);
+    console.log(`Token recebido: ${token.substring(0, 10)}...`);
+    console.log(`Token público esperado: ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 10)}...`);
+    console.log(`Token admin esperado: ${ADMIN_BYPASS_JWT.substring(0, 10)}...`);
     
     return new Response(JSON.stringify({
       code: 401,
@@ -147,21 +147,21 @@ serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname.split("/learnworlds-api/")[1];
 
-  if (method === "GET") {
-    if (!path || path === "") {
-      return new Response(JSON.stringify({
-        message: "LearnWorlds API online",
-        timestamp: new Date().toISOString(),
-        apiKeyConfigured: !!LEARNWORLDS_API_KEY,
-        schoolIdConfigured: !!LEARNWORLDS_SCHOOL_ID,
-        publicTokenConfigured: !!LEARNWORLDS_PUBLIC_TOKEN,
-        authenticatedAs: isAdminToken ? 'admin' : 'public'
-      }), {
-        headers: corsHeaders,
-        status: 200
-      });
-    }
+  if (!path || path === "") {
+    return new Response(JSON.stringify({
+      message: "LearnWorlds API online",
+      timestamp: new Date().toISOString(),
+      apiKeyConfigured: !!LEARNWORLDS_API_KEY,
+      schoolIdConfigured: !!LEARNWORLDS_SCHOOL_ID,
+      publicTokenConfigured: !!LEARNWORLDS_PUBLIC_TOKEN,
+      authenticatedAs: isAdminToken ? 'admin' : 'public'
+    }), {
+      headers: corsHeaders,
+      status: 200
+    });
+  }
 
+  if (method === "GET") {
     try {
       // --- GET /courses
       // Permitir tanto para admin quanto para token público

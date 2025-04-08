@@ -14,6 +14,7 @@ const useLearnWorldsCursos = () => {
    * 
    * @param page Número da página (padrão: 1)
    * @param limit Limite de cursos por página (padrão: 50)
+   * @param searchTerm Termo de busca opcional
    * @param options Opções adicionais de filtro (access, categories)
    */
   const getCourses = async (page: number = 1, limit: number = 50, searchTerm: string = '', options: any = {}): Promise<any> => {
