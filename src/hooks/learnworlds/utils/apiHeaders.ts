@@ -8,7 +8,7 @@ export const getPublicAuthorizationHeader = (publicToken: string): string => {
   return `Bearer ${publicToken}`;
 };
 
-export const getRequestHeaders = (usePublicToken: boolean, publicToken: string): HeadersInit => {
+export const getRequestHeaders = (usePublicToken: boolean, publicToken: string, schoolId: string): HeadersInit => {
   // IMPORTANTE: Usar o token administrativo para todas as requisições
   // A API está rejeitando o token público, então usaremos o token admin para todas requisições
   const finalAuthHeader = getAuthorizationHeader();
@@ -16,5 +16,6 @@ export const getRequestHeaders = (usePublicToken: boolean, publicToken: string):
   return {
     'Authorization': finalAuthHeader,
     'Content-Type': 'application/json',
+    'Lw-Client': schoolId // Adicionado cabeçalho Lw-Client obrigatório
   };
 };

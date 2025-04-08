@@ -42,6 +42,16 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
   loading,
   offlineMode,
 }) => {
+  // Função para validar o email
+  const isEmailValid = (email: string): boolean => {
+    return /\S+@\S+\.\S+/.test(email);
+  };
+
+  // Verificar se o formulário tem os campos mínimos preenchidos corretamente
+  const isFormValid = (): boolean => {
+    return !!formData.nome && isEmailValid(formData.email);
+  };
+
   return (
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogContent className="sm:max-w-[500px]">
@@ -69,7 +79,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-1">
               <Label htmlFor="nome" className="text-right">
-                Nome
+                Nome*
               </Label>
               <Input
                 id="nome"
@@ -78,6 +88,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
                 onChange={handleInputChange}
                 className="mt-1"
                 required
+                placeholder="Nome"
               />
             </div>
             <div className="col-span-1">
@@ -90,13 +101,14 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
                 value={formData.sobrenome}
                 onChange={handleInputChange}
                 className="mt-1"
+                placeholder="Sobrenome"
               />
             </div>
           </div>
           
           <div>
             <Label htmlFor="email" className="text-right">
-              E-mail
+              E-mail*
             </Label>
             <Input
               id="email"
@@ -104,9 +116,13 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               type="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="mt-1"
+              className={`mt-1 ${formData.email && !isEmailValid(formData.email) ? 'border-red-500' : ''}`}
               required
+              placeholder="aluno@exemplo.com"
             />
+            {formData.email && !isEmailValid(formData.email) && (
+              <p className="text-red-500 text-sm mt-1">Email inválido</p>
+            )}
           </div>
           
           <div>
@@ -121,6 +137,9 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               className="mt-1"
               placeholder="000.000.000-00"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              O CPF será armazenado no campo customField1 do LearnWorlds
+            </p>
           </div>
           
           <div>
@@ -138,6 +157,13 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
           </div>
         </div>
         
+        <Alert className="mt-2">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            Nome e e-mail são campos obrigatórios para o cadastro na plataforma LearnWorlds.
+          </AlertDescription>
+        </Alert>
+        
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">
@@ -147,7 +173,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
           <Button 
             type="button" 
             onClick={handleCriarNovoAluno}
-            disabled={loading || !formData.nome || !formData.email}
+            disabled={loading || !isFormValid()}
           >
             {loading ? "Cadastrando..." : offlineMode ? "Cadastrar Offline" : "Cadastrar Aluno"}
           </Button>

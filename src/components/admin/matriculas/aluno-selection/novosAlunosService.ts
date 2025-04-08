@@ -81,15 +81,34 @@ export const criarAlunoOffline = (formulario: NovoAlunoForm): Aluno => {
 
 /**
  * Prepara dados do aluno para envio à API
+ * 
+ * Formato exigido pela LearnWorlds:
+ * - firstName e lastName: obrigatórios
+ * - email: obrigatório
+ * - phoneNumber: opcional
+ * - customField1: usado para armazenar o CPF
  */
 export const prepararDadosParaAPI = (formulario: NovoAlunoForm): any => {
-  return {
-    firstName: formulario.nome,
-    lastName: formulario.sobrenome,
-    email: formulario.email,
-    cpf: formulario.cpf,
-    phoneNumber: formulario.telefone
+  // Certifique-se de que firstName e lastName não são vazios
+  const firstName = formulario.nome || "Sem nome";
+  const lastName = formulario.sobrenome || " ";
+  
+  const dadosAluno = {
+    firstName,
+    lastName,
+    email: formulario.email
   };
+  
+  // Adicionar campos opcionais apenas se estiverem preenchidos
+  if (formulario.telefone) {
+    Object.assign(dadosAluno, { phoneNumber: formulario.telefone });
+  }
+  
+  if (formulario.cpf) {
+    Object.assign(dadosAluno, { customField1: formulario.cpf });
+  }
+  
+  return dadosAluno;
 };
 
 /**
@@ -102,12 +121,27 @@ export const exibirErroAoCadastrar = (error: any): void => {
       error.message.includes("Failed to fetch") || 
       error.message.includes("Erro de conexão") ||
       error.message.includes("função edge") ||
-      error.message.includes("API retornou conteúdo não-JSON")
+      error.message.includes("API retornou conteúdo não-JSON") ||
+      error.message.includes("HTML recebida")
   )) {
     toast.error("Erro de conexão com a API", {
       description: "A API está retornando dados no formato incorreto. Ativando modo offline."
     });
     
+    return;
+  }
+  
+  if (error.message && error.message.includes("500")) {
+    toast.error("Erro no servidor", {
+      description: "Erro no servidor LearnWorlds. Verifique os dados enviados ou tente novamente mais tarde."
+    });
+    return;
+  }
+  
+  if (error.message && error.message.includes("Lw-Client")) {
+    toast.error("Erro de configuração", {
+      description: "Cabeçalho Lw-Client ausente ou incorreto. Entre em contato com o suporte."
+    });
     return;
   }
   

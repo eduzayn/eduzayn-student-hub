@@ -46,8 +46,8 @@ const useLearnWorldsBase = () => {
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       console.log(`Auth Header: ${authHeader.substring(0, 15)}...`); // Debug - mostra apenas parte do token
       
-      // Obter headers adequados para a requisição
-      const headers = getRequestHeaders(usePublicToken, LEARNWORLDS_PUBLIC_TOKEN);
+      // Obter headers adequados para a requisição com o ID da escola
+      const headers = getRequestHeaders(usePublicToken, LEARNWORLDS_PUBLIC_TOKEN, LEARNWORLDS_SCHOOL_ID);
       
       // Log para diagnóstico dos cabeçalhos
       console.log("Headers para requisição:", JSON.stringify(headers, null, 2));

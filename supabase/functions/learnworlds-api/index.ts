@@ -1,10 +1,5 @@
-
-// Vamos manter o código existente, modificando apenas as partes necessárias
-// para lidar melhor com respostas HTML ao invés de JSON
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-// Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -12,15 +7,10 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Token de bypass para admins - usando nome padronizado
 const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
-// Obtendo a chave API LearnWorlds do ambiente
 const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
-// Token público para operações do cliente
 const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "YEmshZGseUQgbCuLyb9WeYUnHrpq91yuUk3Dx4nN";
-// School ID do LearnWorlds
 const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-// URL base da API do LearnWorlds
 const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
 
 console.log("Inicializando função edge learnworlds-api");
@@ -30,7 +20,6 @@ console.log("Token público LearnWorlds:", LEARNWORLDS_PUBLIC_TOKEN ? "Configura
 console.log("School ID LearnWorlds:", LEARNWORLDS_SCHOOL_ID ? "Configurado ✓" : "Não configurado ✗");
 console.log("URL base da API LearnWorlds:", LEARNWORLDS_API_BASE_URL);
 
-// Verificar se a resposta é HTML em vez de JSON
 const isHtmlResponse = (text: string): boolean => {
   return (
     text.includes("<!DOCTYPE html>") || 
@@ -41,7 +30,6 @@ const isHtmlResponse = (text: string): boolean => {
   );
 };
 
-// Chamada real para a API LearnWorlds
 const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Promise<any> => {
   if (!LEARNWORLDS_API_KEY || !LEARNWORLDS_SCHOOL_ID) {
     console.log("API Key ou School ID não configurados, usando dados simulados");
@@ -60,15 +48,15 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`,
-        'Lw-Client': LEARNWORLDS_SCHOOL_ID  // Adicionando o cabeçalho Lw-Client exigido pela API
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID
       }
     };
 
     if (body && (method === 'POST' || method === 'PUT')) {
       options.body = JSON.stringify(body);
+      console.log(`Corpo da requisição: ${options.body}`);
     }
 
-    // Adicionando um timeout para a requisição
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     options.signal = controller.signal;
@@ -85,19 +73,15 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
         throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
       }
       
-      // Verificar se a resposta é texto ou JSON
       const contentType = response.headers.get('content-type');
       
-      // Sempre obter o texto da resposta primeiro
       const responseText = await response.text();
       
-      // Verificar se o texto é HTML
       if (isHtmlResponse(responseText)) {
         console.error("API retornou HTML em vez de JSON:", responseText.substring(0, 200));
         throw new Error("API retornou conteúdo não-JSON. Verifique as configurações da API.");
       }
       
-      // Se não for HTML, tentamos converter para JSON se o content type for application/json
       if (contentType?.includes('application/json')) {
         try {
           return JSON.parse(responseText);
@@ -106,7 +90,6 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
           throw new Error("Erro ao processar resposta da API. Formato JSON inválido.");
         }
       } else {
-        // Se não for JSON, mas também não for HTML (texto plano, etc)
         console.log(`Resposta não-JSON: ${responseText.substring(0, 100)}...`);
         return { text: responseText, status: response.status };
       }
@@ -123,9 +106,6 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
   }
 };
 
-// ... resto do código se mantém o mesmo
-
-// Dados simulados para quando a API não estiver disponível
 const mockData = {
   getCourses: (page = 1, limit = 20, searchTerm = "") => {
     const mockCourses = [
@@ -227,10 +207,8 @@ const mockData = {
 serve(async (req) => {
   const { method } = req;
 
-  // Logging para depuração
   console.log(`Requisição recebida: ${method} ${new URL(req.url).pathname}`);
 
-  // Pré-flight CORS - MELHORADO
   if (method === "OPTIONS") {
     console.log("Respondendo requisição OPTIONS com CORS headers");
     return new Response(null, {
@@ -239,7 +217,6 @@ serve(async (req) => {
     });
   }
 
-  // Verificação de token JWT
   const authHeader = req.headers.get("Authorization");
   console.log("Auth header recebido:", authHeader ? "Sim" : "Não");
   
@@ -254,7 +231,6 @@ serve(async (req) => {
     });
   }
 
-  // Extrair o token do cabeçalho - agora padronizado para formato Bearer
   let token = "";
   if (authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7).trim();
@@ -262,12 +238,10 @@ serve(async (req) => {
     token = authHeader.trim();
   }
   
-  // Log detalhado dos tokens para diagnóstico
   console.log("Token recebido (primeiros 10 chars):", token.substring(0, 10) + "...");
   console.log("Token público para comparação (primeiros 10 chars):", LEARNWORLDS_PUBLIC_TOKEN.substring(0, 10) + "...");
   console.log("Token admin para comparação (primeiros 10 chars):", ADMIN_BYPASS_JWT.substring(0, 10) + "...");
   
-  // Verificação do token - aceitamos tanto o token de administrador quanto o token público
   const isAdminToken = token === ADMIN_BYPASS_JWT;
   const isPublicToken = token === LEARNWORLDS_PUBLIC_TOKEN;
   
@@ -307,8 +281,6 @@ serve(async (req) => {
 
   if (method === "GET") {
     try {
-      // --- GET /courses
-      // Permitir tanto para admin quanto para token público
       if (path === "courses" || path.startsWith("courses?")) {
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "50");
@@ -316,7 +288,6 @@ serve(async (req) => {
         const access = url.searchParams.get("access") || "";
         const categories = url.searchParams.get("categories") || "";
 
-        // Montar parâmetros para API LearnWorlds
         const apiParams = new URLSearchParams();
         apiParams.append("page", page.toString());
         apiParams.append("limit", limit.toString());
@@ -332,18 +303,15 @@ serve(async (req) => {
         let result;
         
         try {
-          // Tentativa de chamada real à API
           result = await callLearnWorldsApi(`/courses?${apiParams.toString()}`);
           console.log(`Resposta da API LearnWorlds (cursos):`, result);
           
-          // Se tivermos pesquisa e dados reais, filtramos no servidor
           if (searchTerm && result && Array.isArray(result.data)) {
             result.data = result.data.filter((course: any) => 
               course.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
               course.description?.toLowerCase().includes(searchTerm.toLowerCase())
             );
             
-            // Ajustar contagem de meta se houver
             if (result.meta) {
               result.meta.totalItems = result.data.length;
             }
@@ -354,7 +322,6 @@ serve(async (req) => {
           result = mockData.getCourses(page, limit, searchTerm);
         }
         
-        // Se não conseguimos dados reais ou o resultado não é no formato esperado
         if (!result || !Array.isArray(result.data)) {
           console.warn("Formato inválido de resultado ou sem dados, usando dados simulados");
           result = mockData.getCourses(page, limit, searchTerm);
@@ -366,8 +333,6 @@ serve(async (req) => {
         });
       }
 
-      // --- GET /courses/:id
-      // Permitir tanto para admin quanto para token público
       if (path.startsWith("courses/")) {
         const courseId = path.split("courses/")[1];
         
@@ -382,7 +347,6 @@ serve(async (req) => {
           result = mockData.getCourseDetails(courseId);
         }
         
-        // Se não conseguimos dados reais ou o resultado não tem formato esperado
         if (!result || !result.id) {
           console.warn("Formato inválido de resultado para detalhes do curso, usando dados simulados");
           result = mockData.getCourseDetails(courseId);
@@ -394,7 +358,6 @@ serve(async (req) => {
         });
       }
       
-      // --- GET /users (somente admin)
       if (path === "users" || path.startsWith("users?")) {
         if (!isAdminToken) {
           return new Response(JSON.stringify({
@@ -416,7 +379,6 @@ serve(async (req) => {
           result = await callLearnWorldsApi(`/users?page=${page}&limit=${limit}`);
           console.log("Resposta da API LearnWorlds (usuários):", result);
           
-          // Se tivermos pesquisa e dados reais, filtramos no servidor
           if (searchTerm && result && Array.isArray(result.data)) {
             result.data = result.data.filter((user: any) => 
               user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -424,7 +386,6 @@ serve(async (req) => {
               user.email?.toLowerCase().includes(searchTerm.toLowerCase())
             );
             
-            // Ajustar contagem de meta se houver
             if (result.meta) {
               result.meta.totalItems = result.data.length;
             }
@@ -435,7 +396,6 @@ serve(async (req) => {
           result = mockData.getUsers(page, limit, searchTerm);
         }
         
-        // Se não conseguimos dados reais, usamos simulados
         if (!result || !Array.isArray(result.data)) {
           const mockResult = mockData.getUsers(page, limit, searchTerm);
           console.log("Retornando dados simulados para usuários:", mockResult);
@@ -451,7 +411,6 @@ serve(async (req) => {
         });
       }
       
-      // Endpoint não encontrado
       return new Response(JSON.stringify({
         message: "Endpoint não implementado",
         path
@@ -473,7 +432,6 @@ serve(async (req) => {
   }
 
   if (method === "POST") {
-    // Para operações POST, exigir token de administrador para operações sensíveis
     const requiresAdmin = path === "users" || path.startsWith("admin/");
     
     if (requiresAdmin && !isAdminToken) {
@@ -491,38 +449,32 @@ serve(async (req) => {
       
       console.log(`Recebido POST para ${path} com corpo:`, JSON.stringify(body).substring(0, 200) + "...");
       
-      // Implementação específica para criação de usuários
       if (path === "users") {
         console.log("Processando criação de usuário na API LearnWorlds");
         
         try {
-          // Preparar os dados para a API LearnWorlds
           const userData = {
             firstName: body.firstName || "",
             lastName: body.lastName || "",
             email: body.email,
-            phoneNumber: body.phoneNumber || "",
-            customField1: body.cpf || "" // CPF como campo customizado
+            ...(body.phoneNumber && { phoneNumber: body.phoneNumber }),
+            ...(body.cpf && { customField1: body.cpf })
           };
           
           console.log("Dados de usuário para LearnWorlds:", userData);
           
-          // Tentar chamar a API do LearnWorlds
           try {
             const result = await callLearnWorldsApi("/users", "POST", userData);
             console.log("Resposta da criação de usuário:", result);
             
-            // Se temos uma resposta válida
             if (result && result.id) {
               return new Response(JSON.stringify(result), {
                 headers: corsHeaders,
                 status: 200
               });
             } else {
-              // Caso a API não retorne dados no formato esperado
               console.warn("API do LearnWorlds não retornou dados no formato esperado para criação de usuário");
               
-              // Retornamos dados simulados para permitir continuar o fluxo
               const mockResult = mockData.createUser(userData);
               console.log("Retornando resposta simulada:", mockResult);
               
@@ -532,10 +484,8 @@ serve(async (req) => {
               });
             }
           } catch (apiError) {
-            // Se a API retornou um erro, tentamos usar dados simulados
             console.error("Erro na API LearnWorlds:", apiError.message);
             
-            // Verificar se o erro é sobre formato de dados (HTML vs JSON)
             if (apiError.message && (
               apiError.message.includes("HTML") || 
               apiError.message.includes("não-JSON") ||
@@ -552,13 +502,11 @@ serve(async (req) => {
               });
             }
             
-            // Se for outro tipo de erro, propagamos
             throw apiError;
           }
         } catch (learnWorldsError) {
           console.error("Erro ao chamar API LearnWorlds para criar usuário:", learnWorldsError);
           
-          // Alternativa de resposta em caso de erro
           return new Response(JSON.stringify({
             error: "Erro ao criar usuário no LearnWorlds",
             message: learnWorldsError.message,
@@ -572,7 +520,6 @@ serve(async (req) => {
         }
       }
       
-      // Tentativa de chamar API real para outros endpoints
       if (LEARNWORLDS_API_KEY && LEARNWORLDS_SCHOOL_ID) {
         try {
           const result = await callLearnWorldsApi(path, "POST", body);
@@ -595,7 +542,6 @@ serve(async (req) => {
         }
       }
       
-      // Resposta simulada para POST
       return new Response(JSON.stringify({
         message: "POST recebido com sucesso! (simulado)",
         data: body,
