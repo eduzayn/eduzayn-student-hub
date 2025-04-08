@@ -87,25 +87,25 @@ export const useSincronizacaoCursos = () => {
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       
+      // Tratar os erros mais comuns de forma clara
+      let mensagemDetalhada = "";
+      
       if (error.message && error.message.includes("API")) {
-        setDetalhesErro("Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique a API key.");
-        toast.error("Erro de autenticação da API", { 
-          description: "Falha na autenticação. Verifique a API key."
-        });
+        mensagemDetalhada = "Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique a API key.";
       } else if (error.message && error.message.includes("client_id")) {
-        setDetalhesErro("Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.");
-        toast.error("Erro de configuração da API", { 
-          description: "ID do cliente LearnWorlds ausente ou incorreto nas configurações."
-        });
+        mensagemDetalhada = "Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.";
       } else if (error.message && error.message.includes("Failed to fetch")) {
-        setDetalhesErro("Erro de conexão com a função edge. Verifique se a função está ativa e se não há problemas de rede ou CORS.");
-        toast.error("Erro de conexão", {
-          description: "Não foi possível conectar à função edge do Supabase."
-        });
+        mensagemDetalhada = "Erro de conexão com a função edge. Verifique se a função está ativa e se não há problemas de rede ou CORS.";
+      } else if (error.message && error.message.includes("<!doctype")) {
+        mensagemDetalhada = "A API do LearnWorlds retornou HTML em vez de JSON. Verifique se a URL da API está correta. Isso geralmente acontece quando a URL da API está incorreta.";
+      } else if (error.message && error.message.includes("status 401") || error.message.includes("status 403")) {
+        mensagemDetalhada = "Erro de autorização: a API rejeitou o token de autenticação. Verifique se a API key tem permissões suficientes e está correta.";
       } else {
-        setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
-        toast.error("Erro na sincronização", { description: error.message });
+        mensagemDetalhada = error.message || "Erro desconhecido durante a sincronização";
       }
+      
+      setDetalhesErro(mensagemDetalhada);
+      toast.error("Erro na sincronização", { description: mensagemDetalhada });
     } finally {
       setSincronizando(false);
     }

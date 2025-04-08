@@ -154,8 +154,9 @@ const useLearnWorldsCursos = () => {
         { description: "Este processo pode levar alguns instantes." }
       );
       
-      // Usar a função unificada com parâmetro type=courses
-      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}&type=courses`);
+      // Usar a função correta e adicionar timestamp para evitar cache
+      const timestamp = new Date().getTime();
+      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}&type=courses&ts=${timestamp}`);
       
       console.log("Resultado da sincronização:", result);
       

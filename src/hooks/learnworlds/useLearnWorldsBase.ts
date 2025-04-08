@@ -52,6 +52,9 @@ const useLearnWorldsBase = () => {
         'Content-Type': 'application/json',
         'apikey': supabaseKey // Adicionando a chave de API do Supabase
       };
+      
+      // Log para diagnóstico dos cabeçalhos
+      console.log("Headers para requisição:", JSON.stringify(headers, null, 2));
 
       const options: RequestInit = {
         method,
@@ -76,15 +79,26 @@ const useLearnWorldsBase = () => {
         console.log(`Resposta HTTP status: ${response.status}`);
         
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Erro na resposta: Status ${response.status}, Corpo:`, errorText);
+          let errorText = "";
+          try {
+            errorText = await response.text();
+            console.error(`Erro na resposta: Status ${response.status}, Corpo:`, errorText);
+          } catch (textError) {
+            console.error('Erro ao ler corpo da resposta:', textError);
+            errorText = 'Não foi possível ler o corpo da resposta';
+          }
           
           // Tentar analisar se é JSON
           let errorDetails = errorText;
           try {
-            if (errorText.startsWith('{') || errorText.startsWith('[')) {
+            if (errorText && (errorText.startsWith('{') || errorText.startsWith('['))) {
               const errorJson = JSON.parse(errorText);
               errorDetails = JSON.stringify(errorJson, null, 2);
+              
+              // Se a resposta de erro contiver logs, os apresentamos para depuração
+              if (errorJson.results && errorJson.results.logs) {
+                console.log("Logs da função edge:", errorJson.results.logs);
+              }
             }
           } catch (parseError) {
             console.error('Erro ao analisar resposta como JSON:', parseError);
@@ -100,7 +114,7 @@ const useLearnWorldsBase = () => {
         if (contentType.includes('application/json')) {
           try {
             const responseText = await response.text();
-            if (!responseText.trim()) {
+            if (!responseText || !responseText.trim()) {
               console.warn('Resposta vazia recebida');
               setOfflineMode(false);
               return null;

@@ -10,6 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
 };
 
+// Constantes para tokens fixos de emergência caso os secrets falhem
 const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 
@@ -54,27 +55,55 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, anonKey);
 
     // Usando os tokens corretos da API LearnWorlds
-    const apiKey = Deno.env.get("LEARNWORLDS_API_KEY") || LEARNWORLDS_PUBLIC_TOKEN;
+    const learnworldsApiKey = Deno.env.get("LEARNWORLDS_API_KEY") || LEARNWORLDS_PUBLIC_TOKEN;
     const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
+    const apiBaseUrl = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
     
     // URL BASE CORRETA DA API LEARNWORLDS
-    const apiBaseUrl = "https://api.learnworlds.com";
-    // Formato correto para a API da LearnWorlds
     const fullApiUrl = `${apiBaseUrl}/api/v2/${schoolId}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
     addLog(`Usando School ID: ${schoolId}`);
-    addLog(`API Key encontrada: ${apiKey ? 'Sim' : 'Não'}`);
+    addLog(`API Key encontrada: ${learnworldsApiKey ? 'Sim' : 'Não'}`);
     addLog(`URL da API: ${fullApiUrl}`);
+    
+    // Função para testar a API antes de tentar usar
+    const testApiConnection = async () => {
+      try {
+        addLog(`Testando conexão com API LearnWorlds: ${fullApiUrl}`);
+        const testRes = await fetch(`${fullApiUrl}/courses?page=1&limit=1`, {
+          method: "GET",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${learnworldsApiKey}`,
+            'Lw-Client': schoolId
+          }
+        });
+        
+        if (!testRes.ok) {
+          const errorText = await testRes.text();
+          addLog(`⚠️ Teste de API falhou: ${testRes.status} - ${errorText}`);
+          throw new Error(`Teste de API falhou: ${testRes.status} - ${errorText}`);
+        }
+        
+        const testJson = await testRes.json();
+        addLog(`✅ Teste de API bem-sucedido. Recebeu ${testJson?.data?.length || 0} itens.`);
+        return true;
+      } catch (error) {
+        addLog(`❌ ERRO no teste de API: ${error.message}`);
+        throw error;
+      }
+    };
 
     const fetchUsers = async (page, limit) => {
-      addLog(`Buscando usuários da API LearnWorlds: ${fullApiUrl}/users?page=${page}&limit=${limit}`);
+      const endpoint = `${fullApiUrl}/users?page=${page}&limit=${limit}`;
+      addLog(`Buscando usuários da API LearnWorlds: ${endpoint}`);
       
-      const res = await fetch(`${fullApiUrl}/users?page=${page}&limit=${limit}`, {
+      const res = await fetch(endpoint, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${learnworldsApiKey}`,
           'Lw-Client': schoolId
         }
       });
@@ -85,7 +114,15 @@ serve(async (req) => {
         throw new Error(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
       }
 
-      return res.json();
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        addLog(`Resposta da API LearnWorlds usuários: ${data.data ? data.data.length : 0} itens recebidos`);
+        return data;
+      } catch (err) {
+        addLog(`Erro ao analisar JSON (usuários): ${err.message}. Resposta: ${text.substring(0, 100)}...`);
+        throw new Error(`Erro ao analisar JSON (usuários): ${err.message}`);
+      }
     };
 
     const fetchCourses = async (page, limit) => {
@@ -96,7 +133,7 @@ serve(async (req) => {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${learnworldsApiKey}`,
           'Lw-Client': schoolId
         }
       });
@@ -107,9 +144,15 @@ serve(async (req) => {
         throw new Error(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
       }
 
-      const data = await res.json();
-      addLog(`Resposta da API LearnWorlds cursos: ${data.data ? data.data.length : 0} itens recebidos`);
-      return data;
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        addLog(`Resposta da API LearnWorlds cursos: ${data.data ? data.data.length : 0} itens recebidos`);
+        return data;
+      } catch (err) {
+        addLog(`Erro ao analisar JSON (cursos): ${err.message}. Resposta: ${text.substring(0, 100)}...`);
+        throw new Error(`Erro ao analisar JSON (cursos): ${err.message}`);
+      }
     };
 
     const supabaseService = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
@@ -190,6 +233,9 @@ serve(async (req) => {
       }
     };
 
+    // Testar a conexão com a API antes de prosseguir
+    await testApiConnection();
+
     const handler = type === "courses" ? fetchCourses : fetchUsers;
     const processor = type === "courses" ? processCourses : processUsers;
 
@@ -197,10 +243,16 @@ serve(async (req) => {
     
     try {
       const firstPage = await handler(pageNumber, pageSize);
-      results.total = firstPage.total || firstPage.data?.length || 0;
+      
+      if (!firstPage || !firstPage.data || !Array.isArray(firstPage.data)) {
+        addLog(`⚠️ Formato de resposta inválido da API: ${JSON.stringify(firstPage).substring(0, 200)}`);
+        throw new Error("Formato de resposta da API inválido ou vazio");
+      }
+      
+      results.total = firstPage.total || firstPage.data.length || 0;
       addLog(`Total de itens encontrados: ${results.total}, Páginas: ${firstPage.pages || 1}`);
       
-      if (!firstPage.data || firstPage.data.length === 0) {
+      if (firstPage.data.length === 0) {
         addLog("Nenhum dado encontrado na API LearnWorlds");
       } else {
         await processor(firstPage.data);
@@ -209,7 +261,12 @@ serve(async (req) => {
           for (let page = 2; page <= firstPage.pages; page++) {
             addLog(`Processando página ${page} de ${firstPage.pages}...`);
             const nextPage = await handler(page, pageSize);
-            await processor(nextPage.data);
+            
+            if (nextPage && nextPage.data && Array.isArray(nextPage.data)) {
+              await processor(nextPage.data);
+            } else {
+              addLog(`⚠️ Erro ao buscar página ${page}: formato de resposta inválido`);
+            }
           }
         }
       }
@@ -235,7 +292,7 @@ serve(async (req) => {
   } catch (e) {
     addLog(`ERRO GERAL: ${e.message}`);
     console.error('Erro completo:', e);
-    return new Response(JSON.stringify({ error: e.message, results }), {
+    return new Response(JSON.stringify({ error: e.message, details: "Erro ao chamar API LearnWorlds. Verifique suas credenciais.", results }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
