@@ -9,6 +9,7 @@ export interface AlunoParams {
   password?: string;
   phoneNumber?: string;
   customField1?: string; // CPF
+  cpf?: string; // Adicionamos este campo para compatibilidade
 }
 
 /**
@@ -19,10 +20,20 @@ const useLearnWorldsAlunos = () => {
 
   /**
    * Busca usuários (alunos) da API LearnWorlds
+   * @param page Número da página (padrão: 1)
+   * @param limit Limite de registros por página (padrão: 50)
+   * @param query Termo de busca opcional
    */
-  const getUsers = async (page: number = 1, limit: number = 50): Promise<any> => {
+  const getUsers = async (page: number = 1, limit: number = 50, query?: string): Promise<any> => {
     try {
-      const response = await makePublicRequest(`learnworlds-api/users?page=${page}&limit=${limit}`);
+      let url = `learnworlds-api/users?page=${page}&limit=${limit}`;
+      
+      // Adiciona o parâmetro de busca se fornecido
+      if (query) {
+        url += `&query=${encodeURIComponent(query)}`;
+      }
+      
+      const response = await makePublicRequest(url);
       return response;
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -35,6 +46,11 @@ const useLearnWorldsAlunos = () => {
    */
   const cadastrarAluno = async (params: AlunoParams): Promise<any> => {
     try {
+      // Se for fornecido o campo cpf, transfere para customField1
+      if (params.cpf && !params.customField1) {
+        params.customField1 = params.cpf;
+      }
+      
       const response = await makeRequest('learnworlds-api/users', 'POST', params);
       return response;
     } catch (error) {

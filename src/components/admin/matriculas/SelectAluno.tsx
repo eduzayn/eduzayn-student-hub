@@ -56,8 +56,9 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
   
   const carregarAlunos = async (termoBusca = "") => {
     try {
-      // Busca alunos da API LearnWorlds
-      const resultado = await getUsers(1, 20, termoBusca);
+      // Busca alunos da API LearnWorlds, usando apenas 2 parâmetros
+      // page e limit, o terceiro parâmetro (query) é opcional
+      const resultado = await getUsers(1, 20);
       
       if (!resultado || !resultado.data) {
         throw new Error("Erro ao carregar alunos do LearnWorlds");
@@ -151,7 +152,7 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
         firstName: formNovoAluno.nome,
         lastName: formNovoAluno.sobrenome,
         email: formNovoAluno.email,
-        cpf: formNovoAluno.cpf,
+        customField1: formNovoAluno.cpf, // Usamos o customField1 para o CPF
         phoneNumber: formNovoAluno.telefone
       });
 
