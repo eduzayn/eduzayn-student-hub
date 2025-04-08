@@ -14,6 +14,20 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     carregarCursos();
   }, []);
   
+  // Função para extrair o slug da URL do curso do LearnWorlds
+  const extractSlugFromUrl = (url: string): string => {
+    if (!url) return "";
+    
+    try {
+      // Extrai o último segmento da URL que geralmente é o slug do curso
+      const segments = url.split("/");
+      return segments[segments.length - 1] || "";
+    } catch (error) {
+      console.error("Erro ao extrair slug da URL:", error);
+      return "";
+    }
+  };
+  
   // Função para buscar cursos na API
   const carregarCursos = async (termoBusca = "") => {
     try {
@@ -29,20 +43,29 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
       console.log("Dados originais dos cursos:", resultado.data);
       
       // Mapeando os dados retornados para o formato necessário para exibição
-      const cursosFormatados = resultado.data.map((curso: any) => ({
-        id: curso.id,
-        titulo: curso.title,
-        codigo: curso.id.substring(0, 8).toUpperCase(),
-        modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
-        carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-        valor_total: curso.price_final || curso.price_original || curso.price || 0,
-        valor_mensalidade: (curso.price_final || curso.price_original || curso.price || 0) / 12,
-        descricao: curso.description || curso.shortDescription || "",
-        imagem_url: curso.image || curso.courseImage || "",
-        categorias: curso.categories || [],
-        learning_worlds_id: curso.id,
-        acesso: curso.access || "pago"
-      }));
+      const cursosFormatados = resultado.data.map((curso: any) => {
+        // Extrai o slug da URL se disponível
+        let slug = "";
+        if (curso.url) {
+          slug = extractSlugFromUrl(curso.url);
+        }
+        
+        return {
+          id: curso.id,
+          titulo: curso.title,
+          codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
+          modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
+          carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
+          valor_total: curso.price_final || curso.price_original || curso.price || 0,
+          valor_mensalidade: (curso.price_final || curso.price_original || curso.price || 0) / 12,
+          descricao: curso.description || curso.shortDescription || "",
+          imagem_url: curso.image || curso.courseImage || "",
+          categorias: curso.categories || [],
+          learning_worlds_id: curso.id,
+          acesso: curso.access || "pago",
+          url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`
+        };
+      });
       
       console.log("Cursos formatados:", cursosFormatados);
       setCursos(cursosFormatados);
@@ -88,34 +111,37 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   const carregarCursosSimulados = (termoBusca = "") => {
     const dadosSimulados = [
       {
-        id: "c1",
-        titulo: "Análise de Sistemas",
-        codigo: "AS-2023",
+        id: "pos_graduacao_direito_tributario",
+        titulo: "Pós-Graduação em Direito Tributário",
+        codigo: "DIR-TRIB",
         modalidade: "EAD",
         carga_horaria: 360,
         valor_total: 3600.00,
         valor_mensalidade: 300.00,
-        learning_worlds_id: "lw12345"
+        learning_worlds_id: "pos_graduacao_direito_tributario",
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-direito-tributario"
       },
       {
-        id: "c2",
-        titulo: "Engenharia de Software",
-        codigo: "ES-2023",
+        id: "pos_graduacao_em_direito_do_agronegocio",
+        titulo: "Pós-Graduação em Direito do Agronegócio",
+        codigo: "DIR-AGRO",
         modalidade: "EAD",
         carga_horaria: 420,
         valor_total: 5400.00,
         valor_mensalidade: 450.00,
-        learning_worlds_id: "lw67890"
+        learning_worlds_id: "pos_graduacao_em_direito_do_agronegocio",
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-do-agronegocio"
       },
       {
-        id: "c3",
-        titulo: "Ciência da Computação",
-        codigo: "CC-2023",
+        id: "pos_graduacao_em_direito_civil",
+        titulo: "Pós-Graduação em Direito Civil",
+        codigo: "DIR-CIVIL",
         modalidade: "EAD",
         carga_horaria: 480,
         valor_total: 6000.00,
         valor_mensalidade: 500.00,
-        learning_worlds_id: "lw24680"
+        learning_worlds_id: "pos_graduacao_em_direito_civil",
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-civil"
       }
     ];
     
@@ -136,7 +162,10 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   
   // Handler para selecionar um curso
   const handleSelecionar = (curso: any) => {
-    setSelecionado(curso.id || curso.learning_worlds_id);
+    // Prioriza o ID do LearnWorlds se disponível
+    const cursoId = curso.learning_worlds_id || curso.id;
+    setSelecionado(cursoId);
+    
     onCursoSelecionado({
       ...curso,
       // Garantindo que temos o ID do LearnWorlds

@@ -1,9 +1,8 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { formatarMoeda, formatarCargaHoraria } from "../utils/formatadores";
+import { Card } from "@/components/ui/card";
+import { formatarMoeda } from "@/utils/formatarMoeda";
+import { ExternalLink } from "lucide-react";
 
 interface CursoCardProps {
   curso: any;
@@ -11,80 +10,65 @@ interface CursoCardProps {
   onSelecionar: (curso: any) => void;
 }
 
-const CursoCard: React.FC<CursoCardProps> = ({ 
-  curso, 
-  selecionado, 
-  onSelecionar 
-}) => {
+const CursoCard: React.FC<CursoCardProps> = ({ curso, selecionado, onSelecionar }) => {
+  // Extrai o ID do LearnWorlds, garantindo que está disponível
+  const learnWorldsId = curso.learning_worlds_id || curso.id || "";
+  
+  // Função auxiliar para abrir o curso no LearnWorlds em uma nova aba
+  const abrirLearnWorlds = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que o card seja selecionado
+    
+    // Verifica se temos a URL completa ou precisamos construí-la
+    let url = curso.url;
+    if (!url && learnWorldsId) {
+      url = `https://grupozayneducacional.com.br/course/${learnWorldsId}`;
+    }
+    
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <Card 
-      key={curso.id} 
-      className={`cursor-pointer transition-colors ${selecionado ? 'border-primary bg-primary/5' : 'hover:bg-gray-50'}`}
       onClick={() => onSelecionar(curso)}
+      className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
+        selecionado ? "border-2 border-primary" : ""
+      }`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex gap-3 items-center">
-              <p className="font-medium text-lg">{curso.titulo}</p>
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
-                {curso.codigo}
-              </span>
-              {curso.learning_worlds_id && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                  LearnWorlds
-                </Badge>
-              )}
-              {curso.acesso && (
-                <Badge 
-                  variant="outline" 
-                  className={`ml-1 ${
-                    curso.acesso === 'free' || curso.acesso === 'gratis' || curso.acesso === 'livre' ? 
-                    'bg-green-50 text-green-600 border-green-200' : 
-                    curso.acesso === 'pago' ? 
-                    'bg-amber-50 text-amber-600 border-amber-200' :
-                    'bg-gray-50 text-gray-600 border-gray-200'
-                  }`}
-                >
-                  {curso.acesso === 'free' || curso.acesso === 'gratis' || curso.acesso === 'livre' ? 'Gratuito' :
-                   curso.acesso === 'pago' ? 'Pago' : curso.acesso}
-                </Badge>
-              )}
-            </div>
-            
-            {curso.categorias && curso.categorias.length > 0 && (
-              <div className="flex gap-1 flex-wrap mt-1">
-                {curso.categorias.slice(0, 3).map((categoria: string, i: number) => (
-                  <span key={i} className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
-                    {categoria}
-                  </span>
-                ))}
-                {curso.categorias.length > 3 && (
-                  <span className="text-xs text-gray-500">+{curso.categorias.length - 3}</span>
-                )}
-              </div>
-            )}
-            
-            <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
-              <span>{curso.modalidade}</span>
-              <span>{formatarCargaHoraria(curso.carga_horaria)}</span>
-            </div>
-            
-            <div className="mt-2">
-              <span className="text-sm font-medium text-green-600">
-                Mensalidade: {formatarMoeda(curso.valor_mensalidade)}
-              </span>
-              <span className="text-sm text-muted-foreground ml-3">
-                Total: {formatarMoeda(curso.valor_total)}
-              </span>
-            </div>
+      <div className="flex justify-between">
+        <div>
+          <h3 className="font-medium text-lg">{curso.titulo}</h3>
+          <p className="text-sm text-muted-foreground">
+            Código: {curso.codigo} {learnWorldsId && `| ID LearnWorlds: ${learnWorldsId}`}
+          </p>
+          <div className="mt-2 flex items-center gap-4">
+            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              {curso.modalidade}
+            </span>
+            <span className="text-sm">
+              {curso.carga_horaria} min
+            </span>
           </div>
+        </div>
+        <div className="text-right">
+          <p className="font-medium">{formatarMoeda(curso.valor_total)}</p>
+          <p className="text-sm text-muted-foreground">
+            ou {formatarMoeda(curso.valor_mensalidade)}/mês
+          </p>
           
-          {selecionado && (
-            <CheckCircle className="h-5 w-5 text-primary" />
+          {(curso.url || learnWorldsId) && (
+            <button 
+              onClick={abrirLearnWorlds}
+              className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-800"
+              title="Abrir no LearnWorlds"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Ver no LW
+            </button>
           )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
