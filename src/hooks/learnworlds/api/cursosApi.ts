@@ -54,8 +54,18 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       // Verificar se temos dados no formato esperado (array de objetos)
       if (response.data !== undefined) {
         if (Array.isArray(response.data) && response.data.length > 0) {
+          // Verificar se os dados parecem ser simulados (IDs começando com "course-")
+          const todosCursosSimulados = response.data.every((item: any) => 
+            item.id && item.id.toString().startsWith('course-')
+          );
+          
+          if (todosCursosSimulados) {
+            console.warn("Todos os cursos recebidos parecem ser simulados (IDs começam com 'course-')");
+            console.log("Resposta completa para análise:", response);
+          }
+          
           // Verificar se os dados parecem ser cursos (com pelo menos title ou id)
-          const dadosValidos = response.data.some(item => item.title || item.id);
+          const dadosValidos = response.data.some((item: any) => item.title || item.id);
           
           if (dadosValidos) {
             console.log("Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");

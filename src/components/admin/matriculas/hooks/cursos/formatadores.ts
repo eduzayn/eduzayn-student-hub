@@ -60,10 +60,19 @@ export const formatarCursos = (cursosData: any[]) => {
   }
   
   console.log(`Formatando ${cursosData.length} cursos da API`);
+  console.log("Primeiros dados recebidos:", cursosData.slice(0, 2));
   
   return cursosData
-    .filter(curso => curso.title && curso.id) // Filtra cursos sem título ou id
+    .filter(curso => curso.title || curso.titulo) // Aceitar ambos os campos de título
     .map((curso: any) => {
+      // Verifica se este é um curso simulado (geralmente os dados simulados têm IDs que começam com "course-")
+      // Observe que estamos usando uma verificação explícita, não uma inferência
+      const isSimulado = curso.id?.toString().startsWith('course-') || false;
+      
+      if (isSimulado) {
+        console.log(`O curso ${curso.title || curso.titulo} parece ser simulado (ID: ${curso.id})`);
+      }
+      
       // Extrai o slug da URL se disponível
       let slug = "";
       if (curso.url) {
@@ -73,11 +82,11 @@ export const formatarCursos = (cursosData: any[]) => {
       // Formatar o curso com os dados da API
       const cursoFormatado = {
         id: curso.id,
-        titulo: curso.title,
-        codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
+        titulo: curso.title || curso.titulo,
+        codigo: curso.id || slug || ((curso.title || curso.titulo) ? (curso.title || curso.titulo).substring(0, 8).toUpperCase() : "SEM-COD"),
         modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
         carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-        valor_total: parseFloat(curso.price || "0") || 0,
+        valor_total: parseFloat(curso.price || curso.price_final || "0") || 0,
         valor_mensalidade: 0, // Zerando para permitir personalização manual
         descricao: curso.description || curso.shortDescription || "",
         imagem_url: curso.image || curso.courseImage || "",
@@ -85,7 +94,7 @@ export const formatarCursos = (cursosData: any[]) => {
         learning_worlds_id: curso.id,
         acesso: curso.access || "pago",
         url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
-        simulado: false // IMPORTANTE: Cursos da API NÃO são simulados
+        simulado: isSimulado // Marca claramente se é um curso simulado baseado no ID
       };
       
       return cursoFormatado;
