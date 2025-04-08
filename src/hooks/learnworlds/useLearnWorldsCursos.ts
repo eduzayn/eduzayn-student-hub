@@ -64,24 +64,19 @@ const useLearnWorldsCursos = () => {
    */
   const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
+      console.log(`Iniciando sincronização de cursos. sincronizarTodos=${sincronizarTodos}`);
+      
       // Usamos o endpoint correto para sincronização de cursos: learnworlds-courses-sync
       // Como é operação administrativa, usamos makeRequest padrão (com token admin)
       const result = await makeRequest(`learnworlds-courses-sync?syncAll=${sincronizarTodos}`);
       
-      if (result.imported > 0 || result.updated > 0) {
-        toast.success(
-          `Sincronização concluída com sucesso!`, 
-          { description: `${result.imported} novos cursos importados e ${result.updated} atualizados.` }
-        );
-      } else {
-        toast.info('Nenhuma alteração foi necessária.');
-      }
+      console.log("Resultado da sincronização:", result);
       
       return result;
     } catch (error) {
       console.error('Erro ao sincronizar cursos:', error);
       toast.error('Erro ao sincronizar cursos com o LearnWorlds');
-      return null;
+      throw error;
     }
   };
 

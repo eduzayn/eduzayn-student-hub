@@ -53,24 +53,6 @@ serve(async (req) => {
   };
 
   try {
-    // Log para indicar verificação JWT desativada
-    console.log("Verificação JWT desativada. Processando solicitação sem verificação de token.");
-    
-    // Ainda pegamos o token se foi fornecido, para compatibilidade
-    const authHeader = req.headers.get("Authorization");
-    
-    // Log para depuração
-    if (authHeader) {
-      console.log("Header de autorização recebido, mas verificação JWT está desativada");
-      console.log(`Token recebido (primeiros 5 chars): ${authHeader.substring(7, 12)}...`);
-    } else {
-      console.log("Nenhum header de autorização fornecido");
-    }
-
-    // Autenticação é considerada sempre bem-sucedida
-    const isAuthenticated = true;
-    console.log("Autenticação bem-sucedida (verificação JWT desativada)");
-
     // Obter parâmetros da solicitação
     const url = new URL(req.url);
     const isSyncAll = url.searchParams.get('syncAll') === 'true';
@@ -88,8 +70,12 @@ serve(async (req) => {
 
     if (!apiKey || !schoolId) {
       console.error('Configurações da API LearnWorlds ausentes');
+      addLog(results, "Erro: Configurações da API LearnWorlds ausentes (API_KEY ou SCHOOL_ID)");
       return new Response(
-        JSON.stringify({ error: 'Configurações da API ausentes' }),
+        JSON.stringify({ 
+          error: 'Configurações da API ausentes',
+          results
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -105,10 +91,43 @@ serve(async (req) => {
     console.log(`Iniciando sincronização de cursos da LearnWorlds${isSyncAll ? ' (todos os cursos)' : ''}`);
     addLog(results, `Iniciando sincronização de cursos - Página ${pageNumber}, Tamanho ${pageSize}`);
 
+    // Implementação de cursos simulados para desenvolvimento e diagnóstico
+    const useMockCourses = false; // Definir como true para testes locais sem API
+    
     // Função para buscar cursos da LearnWorlds
     const fetchCourses = async (page: number, limit: number): Promise<{ data: LearnWorldsCourse[], total: number, pages: number }> => {
+      if (useMockCourses) {
+        // Dados simulados para desenvolvimento e diagnóstico
+        console.log("Usando dados simulados para teste");
+        addLog(results, "MODO DE TESTE: Usando dados simulados");
+        
+        // Gerar 5 cursos simulados
+        const mockCourses: LearnWorldsCourse[] = [];
+        for (let i = 1; i <= 5; i++) {
+          mockCourses.push({
+            id: `mock-course-${i}`,
+            title: `Curso Simulado ${i}`,
+            description: `Descrição do curso simulado ${i} para testes`,
+            shortDescription: `Resumo do curso ${i}`,
+            price: 100.00 * i,
+            duration: `${i * 10} horas`,
+            image: `https://example.com/course-${i}.jpg`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+        }
+        
+        return {
+          data: mockCourses,
+          total: mockCourses.length,
+          pages: 1
+        };
+      }
+      
+      // Construir a URL da API com os parâmetros de paginação
       const apiUrl = `${apiBaseUrl}/api/v2/${schoolId}/courses?page=${page}&limit=${limit}`;
       console.log(`Buscando cursos da LearnWorlds: ${apiUrl}`);
+      addLog(results, `Buscando cursos da página ${page} (limite ${limit})`);
       
       try {
         const response = await fetch(apiUrl, {
@@ -124,6 +143,7 @@ serve(async (req) => {
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
+          addLog(results, `Erro na API LearnWorlds: ${response.status} - ${errorText}`);
           throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
         }
         
@@ -131,47 +151,77 @@ serve(async (req) => {
         const contentType = response.headers.get('content-type') || '';
         console.log(`Tipo de conteúdo da resposta: ${contentType}`);
         
-        if (!contentType.includes('application/json')) {
-          const textResponse = await response.text();
-          console.error('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
+        let responseText = '';
+        let responseData;
+        
+        try {
+          responseText = await response.text();
           
-          if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
-            throw new Error('Resposta HTML recebida ao invés de JSON. Verifique a URL da API.');
+          // Verificar se a resposta não está vazia
+          if (!responseText) {
+            const errorMsg = "Resposta vazia recebida da API LearnWorlds";
+            console.error(errorMsg);
+            addLog(results, errorMsg);
+            return { data: [], total: 0, pages: 0 };
           }
           
-          throw new Error(`Resposta não-JSON recebida da API LearnWorlds: ${contentType}`);
-        }
-
-        // Tentar fazer o parse do JSON com tratamento de erro aprimorado
-        let responseData;
-        try {
-          const responseText = await response.text();
-          responseData = JSON.parse(responseText);
+          // Tentar analisar o JSON
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (jsonError) {
+            console.error("Erro ao analisar JSON:", jsonError);
+            console.error("Resposta recebida:", responseText.substring(0, 500));
+            addLog(results, `Erro ao analisar JSON da resposta: ${jsonError.message}`);
+            addLog(results, `Primeiros 100 caracteres da resposta: ${responseText.substring(0, 100)}...`);
+            throw new Error(`Falha ao analisar resposta JSON: ${jsonError.message}`);
+          }
+          
+          // Validar a estrutura da resposta
+          if (!responseData || !Array.isArray(responseData.data)) {
+            console.error("Resposta inválida da API:", responseData);
+            addLog(results, `Estrutura de resposta inválida: ${JSON.stringify(responseData).substring(0, 100)}...`);
+            return { data: [], total: 0, pages: 0 };
+          }
+          
+          console.log(`Recebidos ${responseData.data.length} cursos da API LearnWorlds`);
+          addLog(results, `Recebidos ${responseData.data.length} cursos da API`);
+          
+          return responseData;
         } catch (parseError) {
-          console.error('Erro ao fazer parse da resposta JSON:', parseError);
-          throw new Error(`Erro ao fazer parse da resposta JSON: ${parseError.message}`);
+          console.error('Erro ao processar resposta:', parseError);
+          addLog(results, `Erro ao processar resposta: ${parseError.message}`);
+          throw parseError;
         }
-        
-        return responseData;
       } catch (error) {
         console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);
-        
-        // Adicionamos mais detalhes ao erro para diagnóstico
         addLog(results, `Falha ao buscar cursos: ${error.message}`);
-        
-        // Retornar dados vazios em caso de falha
         return { data: [], total: 0, pages: 0 };
       }
     };
 
     // Função para processar e sincronizar cursos
     const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
+      if (!courses || courses.length === 0) {
+        addLog(results, "Nenhum curso para processar");
+        return;
+      }
+      
+      addLog(results, `Processando ${courses.length} cursos`);
+      
       for (const course of courses) {
         try {
+          // Verificar dados obrigatórios do curso
+          if (!course.id || !course.title) {
+            console.error(`Curso com dados incompletos: ${JSON.stringify(course)}`);
+            results.failed++;
+            addLog(results, `Falha: Curso com dados incompletos (ID: ${course.id || 'desconhecido'})`);
+            continue;
+          }
+
           // Verificar se o curso já existe no Supabase
           const { data: existingCourse, error: queryError } = await supabase
             .from('cursos')
-            .select('id, titulo')
+            .select('id, titulo, data_atualizacao')
             .eq('learning_worlds_id', course.id)
             .maybeSingle();
           
@@ -271,7 +321,7 @@ serve(async (req) => {
       console.log(message);
     }
 
-    // Iniciar a sincronização com a API real
+    // Iniciar a sincronização com a API
     try {
       if (isSyncAll) {
         // Buscar cursos pela primeira vez para descobrir o total de páginas
@@ -299,8 +349,13 @@ serve(async (req) => {
         // Buscar apenas uma página específica
         const pageData = await fetchCourses(pageNumber, pageSize);
         results.total = pageData.data.length;
-        addLog(results, `Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages || 1})`);
-        await processCourses(pageData.data);
+        
+        if (pageData.data.length > 0) {
+          addLog(results, `Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages || 1})`);
+          await processCourses(pageData.data);
+        } else {
+          addLog(results, `Nenhum curso encontrado na página ${pageNumber}`);
+        }
       }
     } catch (syncError) {
       console.error("Erro durante sincronização:", syncError);

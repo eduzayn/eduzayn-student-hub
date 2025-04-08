@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import SincronizacaoLogs from "@/components/admin/matriculas/sincronizacao/SincronizacaoLogs";
 import SincronizacaoAlertas from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlertas";
 
@@ -25,14 +26,40 @@ const SincronizacaoCursos: React.FC = () => {
       setSincronizando(true);
       setDetalhesErro(null);
       
+      toast.info(
+        todos ? "Iniciando sincronização completa..." : "Iniciando sincronização incremental...", 
+        { description: "Este processo pode demorar alguns instantes." }
+      );
+      
       const result = await sincronizarCursos(todos);
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
+        
+        // Notificar o usuário sobre o resultado
+        if (result.imported > 0 || result.updated > 0) {
+          toast.success(
+            "Sincronização concluída com sucesso!", 
+            { description: `${result.imported} novos cursos e ${result.updated} atualizados.` }
+          );
+        } else if (result.failed > 0) {
+          toast.error(
+            "Problemas na sincronização", 
+            { description: `${result.failed} cursos não puderam ser sincronizados.` }
+          );
+        } else {
+          toast.info("Nenhuma alteração foi necessária.");
+        }
+      } else {
+        setDetalhesErro("Não foi possível obter resultados da sincronização");
+        toast.error("Falha na sincronização", { 
+          description: "Não foi possível obter resultados da sincronização" 
+        });
       }
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
+      toast.error("Erro na sincronização", { description: error.message });
     } finally {
       setSincronizando(false);
     }
@@ -161,10 +188,11 @@ const SincronizacaoCursos: React.FC = () => {
 
                   {resultado.imported === 0 && resultado.updated === 0 && resultado.failed === 0 && (
                     <Alert className="mt-4">
-                      <CheckCircle className="h-4 w-4" />
-                      <AlertTitle>Tudo em dia</AlertTitle>
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Verificação concluída</AlertTitle>
                       <AlertDescription>
-                        Nenhuma alteração foi necessária. Todos os cursos já estão sincronizados.
+                        A API do LearnWorlds foi consultada, mas nenhum curso foi encontrado para sincronizar.
+                        Verifique as credenciais da API e se há cursos disponíveis na plataforma.
                       </AlertDescription>
                     </Alert>
                   )}
