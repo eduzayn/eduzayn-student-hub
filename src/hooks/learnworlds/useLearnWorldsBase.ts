@@ -1,12 +1,22 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminBypass';
-
-// Constantes para tokens do LearnWorlds
-const LEARNWORLDS_PUBLIC_TOKEN = "YEmshZGseUQgbCuLyb9WeYUnHrpq91yuUk3Dx4nN";
-const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
+import { getAuthorizationHeader } from '@/hooks/auth/adminBypass';
+import { 
+  LEARNWORLDS_PUBLIC_TOKEN, 
+  LEARNWORLDS_SCHOOL_ID 
+} from './utils/apiConstants';
+import { 
+  getPublicAuthorizationHeader, 
+  getRequestHeaders 
+} from './utils/apiHeaders';
+import { 
+  buildRequestOptions, 
+  parseResponse 
+} from './utils/requestManager';
+import { 
+  handleLearnWorldsApiError 
+} from './utils/apiErrorHandler';
 
 /**
  * Hook base para interagir com a API do LearnWorlds
@@ -19,18 +29,7 @@ const useLearnWorldsBase = () => {
   const { getAccessToken } = useAuth();
 
   /**
-   * Obtém o cabeçalho de autorização para requisições públicas (não administrativas)
-   */
-  const getPublicAuthorizationHeader = (): string => {
-    return `Bearer ${LEARNWORLDS_PUBLIC_TOKEN}`;
-  };
-
-  /**
    * Função auxiliar para fazer requisições para as funções edge
-   * @param endpoint Endpoint da API
-   * @param method Método HTTP (GET, POST, etc.)
-   * @param body Corpo da requisição (opcional)
-   * @param usePublicToken Se verdadeiro, usa o token público em vez do token de administrador
    */
   const makeRequest = async (endpoint: string, method = 'GET', body?: any, usePublicToken = false): Promise<any> => {
     try {
@@ -39,7 +38,7 @@ const useLearnWorldsBase = () => {
 
       // Determinar qual token usar com base no parâmetro usePublicToken
       const authHeader = usePublicToken 
-        ? getPublicAuthorizationHeader() 
+        ? getPublicAuthorizationHeader(LEARNWORLDS_PUBLIC_TOKEN) 
         : getAuthorizationHeader();
       
       // Log para diagnóstico
@@ -47,30 +46,14 @@ const useLearnWorldsBase = () => {
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       console.log(`Auth Header: ${authHeader.substring(0, 15)}...`); // Debug - mostra apenas parte do token
       
-      // IMPORTANTE: Usar o token administrativo para todas as requisições
-      // A API está rejeitando o token público, então usaremos o token admin para todas requisições
-      const finalAuthHeader = getAuthorizationHeader();
-      
-      const headers: HeadersInit = {
-        'Authorization': finalAuthHeader,
-        'Content-Type': 'application/json',
-      };
+      // Obter headers adequados para a requisição
+      const headers = getRequestHeaders(usePublicToken, LEARNWORLDS_PUBLIC_TOKEN);
       
       // Log para diagnóstico dos cabeçalhos
       console.log("Headers para requisição:", JSON.stringify(headers, null, 2));
 
-      const options: RequestInit = {
-        method,
-        headers,
-        // Adicionando configurações para evitar problemas de CORS e cache em produção
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-      };
-
-      if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-        options.body = JSON.stringify(body);
-      }
+      // Construir as opções da requisição
+      const options = buildRequestOptions(method, headers, body);
 
       // URL base específica para o projeto Supabase
       const baseUrl = 'https://bioarzkfmcobctblzztm.supabase.co/functions/v1';
@@ -118,43 +101,10 @@ const useLearnWorldsBase = () => {
           throw new Error(`Erro ${response.status}: ${errorDetails}`);
         }
 
-        // Verificar o tipo de conteúdo para melhor tratamento
-        const contentType = response.headers.get('content-type') || '';
-        
-        if (contentType.includes('application/json')) {
-          try {
-            const responseText = await response.text();
-            if (!responseText || !responseText.trim()) {
-              console.warn('Resposta vazia recebida');
-              setOfflineMode(false);
-              return null;
-            }
-            const data = JSON.parse(responseText);
-            setOfflineMode(false);
-            return data;
-          } catch (parseError) {
-            console.error('Erro ao analisar resposta JSON:', parseError);
-            const responseText = await response.text();
-            throw new Error(`Erro ao analisar JSON: ${parseError.message}. Resposta: ${responseText.substring(0, 100)}...`);
-          }
-        } else {
-          const textResponse = await response.text();
-          console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
-          
-          if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
-            console.error('Resposta HTML detectada em vez de JSON', textResponse.substring(0, 500));
-            // Ativamos o modo offline em vez de lançar erro, para usar dados simulados
-            setOfflineMode(true);
-            throw new Error('Resposta HTML recebida ao invés de JSON. Ativando modo offline.');
-          }
-          
-          setOfflineMode(false);
-          return { 
-            message: 'Resposta não-JSON recebida', 
-            text: textResponse.substring(0, 1000),
-            success: response.ok 
-          };
-        }
+        // Processar a resposta
+        const data = await parseResponse(response);
+        setOfflineMode(false);
+        return data;
       } catch (fetchError: any) {
         console.error(`Erro na requisição: ${fetchError.message}`);
         
@@ -170,22 +120,8 @@ const useLearnWorldsBase = () => {
         throw fetchError;
       }
     } catch (err: any) {
-      console.error(`Erro na API LearnWorlds (${endpoint}):`, err);
+      const errorMessage = handleLearnWorldsApiError(err, endpoint);
       setOfflineMode(true);
-      
-      let errorMessage = err.message || 'Erro ao comunicar com a API';
-      if (errorMessage.includes('Failed to fetch')) {
-        errorMessage = 'Falha de conexão com a API. Verifique se a função edge está ativa e se não há bloqueios de rede ou CORS.';
-      } else if (errorMessage.includes('client_id')) {
-        errorMessage = 'Erro de configuração do LearnWorlds: client_id ausente ou incorreto. Verifique o valor de LEARNWORLDS_SCHOOL_ID.';
-      } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
-        errorMessage = 'Erro de autenticação na API LearnWorlds. Verifique se o token API tem permissões suficientes.';
-      } else if (errorMessage.includes('No API key found')) {
-        errorMessage = 'Chave de API do Supabase não encontrada na requisição. Verifique a configuração do cliente Supabase.';
-      } else if (errorMessage.includes('HTML recebida')) {
-        errorMessage = 'A API retornou HTML em vez de JSON. Ativando modo offline para usar dados simulados.';
-      }
-      
       setError(errorMessage);
       throw err;
     } finally {
