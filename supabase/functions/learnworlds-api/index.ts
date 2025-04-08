@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
@@ -112,7 +111,6 @@ serve(async (req) => {
   // Verificação de token JWT
   const authHeader = req.headers.get("Authorization");
   console.log("Auth header recebido:", authHeader ? "Sim" : "Não");
-  console.log("Auth header:", authHeader?.substring(0, 15) + "...");
   
   if (!authHeader) {
     console.log("Token não fornecido");
