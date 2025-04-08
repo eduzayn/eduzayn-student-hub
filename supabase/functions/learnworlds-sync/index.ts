@@ -57,10 +57,12 @@ serve(async (req) => {
     // Usando os tokens corretos da API LearnWorlds
     const learnworldsApiKey = Deno.env.get("LEARNWORLDS_API_KEY") || LEARNWORLDS_PUBLIC_TOKEN;
     const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-    const apiBaseUrl = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
+    
+    // CORREÇÃO CRÍTICA: Modificar a URL base da API para usar a URL correta da API LearnWorlds
+    const apiBaseUrl = "https://api.learnworlds.com";
     
     // URL BASE CORRETA DA API LEARNWORLDS
-    const fullApiUrl = `${apiBaseUrl}/api/v2/${schoolId}`;
+    const fullApiUrl = `${apiBaseUrl}/v2/${schoolId}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
     addLog(`Usando School ID: ${schoolId}`);
@@ -75,8 +77,7 @@ serve(async (req) => {
           method: "GET",
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${learnworldsApiKey}`,
-            'Lw-Client': schoolId
+            'Authorization': `Bearer ${learnworldsApiKey}`
           }
         });
         
@@ -103,8 +104,7 @@ serve(async (req) => {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${learnworldsApiKey}`,
-          'Lw-Client': schoolId
+          'Authorization': `Bearer ${learnworldsApiKey}`
         }
       });
 
@@ -133,8 +133,7 @@ serve(async (req) => {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${learnworldsApiKey}`,
-          'Lw-Client': schoolId
+          'Authorization': `Bearer ${learnworldsApiKey}`
         }
       });
 
