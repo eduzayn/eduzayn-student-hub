@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   const carregarCursos = async (termoBusca = "") => {
     try {
       console.log("Iniciando busca de cursos com termo:", termoBusca);
-      // Busca cursos da API LearnWorlds
+      // Busca cursos da API LearnWorlds com token atualizado
       const resultado = await getCourses(1, 20, termoBusca);
       
       if (!resultado || !resultado.data) {

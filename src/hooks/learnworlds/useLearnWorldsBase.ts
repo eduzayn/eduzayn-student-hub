@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminBypass';
 
 // Constantes para tokens do LearnWorlds
-const LEARNWORLDS_PUBLIC_TOKEN = "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
+const LEARNWORLDS_PUBLIC_TOKEN = "YEmshZGseUQgbCuLyb9WeYUnHrpq91yuUk3Dx4nN";
 const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
 
 /**

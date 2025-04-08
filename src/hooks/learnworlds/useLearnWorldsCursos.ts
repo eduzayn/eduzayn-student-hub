@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import useLearnWorldsBase from './useLearnWorldsBase';
 
@@ -27,7 +26,6 @@ interface CoursesResponse {
   };
 }
 
-// Interface para resultado da sincronização
 export interface SincronizacaoResult {
   success: boolean;
   message: string;
@@ -79,7 +77,7 @@ const useLearnWorldsCursos = () => {
         endpoint += `&categories=${encodeURIComponent(categories)}`;
       }
       
-      // Usar token público para esta operação
+      // Usar token público para esta operação - garantindo que usamos o token atualizado
       const response = await makePublicRequest(endpoint);
       console.log("Resposta de cursos do LearnWorlds:", response);
       
@@ -219,7 +217,6 @@ const useLearnWorldsCursos = () => {
     }
   };
   
-  // Função auxiliar para retornar dados simulados
   const getDadosSimulados = (page: number, limit: number, searchTerm: string): CoursesResponse => {
     const cursos = [
       {
@@ -260,7 +257,6 @@ const useLearnWorldsCursos = () => {
       }
     ];
 
-    // Filtrar cursos se houver termo de busca
     const filteredCourses = searchTerm
       ? cursos.filter(c =>
           c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -269,7 +265,6 @@ const useLearnWorldsCursos = () => {
         )
       : cursos;
 
-    // Aplicar paginação
     const startIndex = (page - 1) * limit;
     const paginatedCourses = filteredCourses.slice(startIndex, startIndex + limit);
     
@@ -283,8 +278,7 @@ const useLearnWorldsCursos = () => {
       }
     };
   };
-  
-  // Função auxiliar para retornar detalhes simulados de um curso
+
   const getDetalhesCursoSimulado = (courseId: string): any => {
     return {
       id: courseId,
