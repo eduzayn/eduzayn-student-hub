@@ -8,6 +8,7 @@ interface CursosListaProps {
   cursos: any[];
   selecionado: string | null;
   loading: boolean;
+  offlineMode?: boolean;
   onSelecionar: (curso: any) => void;
 }
 
@@ -15,18 +16,21 @@ const CursosLista: React.FC<CursosListaProps> = ({
   cursos, 
   selecionado, 
   loading, 
-  onSelecionar 
+  onSelecionar,
+  offlineMode = false
 }) => {
   if (loading) {
     return <CursosLoadingSkeleton />;
   }
 
-  // Filtrar para não mostrar cursos simulados na lista
-  const cursosExibir = cursos.filter(curso => 
-    !curso.simulado && 
-    !curso.simulatedResponse && 
-    curso.titulo // Garantir que tenha um título
-  );
+  // Filtrar para não mostrar cursos simulados na lista, exceto em modo offline
+  const cursosExibir = offlineMode 
+    ? cursos.filter(curso => curso.titulo) // Em modo offline, mostramos os simulados também, mas filtramos os sem título
+    : cursos.filter(curso => 
+        !curso.simulado && 
+        !curso.simulatedResponse && 
+        curso.titulo // Garantir que tenha um título
+      );
 
   if (cursosExibir.length === 0) {
     return <CursosEmptyState />;

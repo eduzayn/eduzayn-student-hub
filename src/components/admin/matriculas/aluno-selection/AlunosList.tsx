@@ -2,25 +2,29 @@
 import React from "react";
 import { User } from "lucide-react";
 import AlunoCard from "./AlunoCard";
+import { Aluno } from "./types";
 
 interface AlunosListProps {
-  alunos: any[];
+  alunos: Aluno[];
   selecionado: string | null;
-  onSelecionar: (aluno: any) => void;
+  onSelecionar: (aluno: Aluno) => void;
   loading: boolean;
+  offlineMode?: boolean;
 }
 
-const AlunosList: React.FC<AlunosListProps> = ({ alunos, selecionado, onSelecionar, loading }) => {
+const AlunosList: React.FC<AlunosListProps> = ({ alunos, selecionado, onSelecionar, loading, offlineMode }) => {
   if (loading) {
     return null; // O componente de loading é tratado pelo componente pai
   }
   
-  // Filtrar alunos simulados
-  const alunosExibir = alunos.filter(aluno => 
-    !aluno.simulado && 
-    !aluno.simulatedResponse && 
-    aluno.nome // Garantir que tenha um nome
-  );
+  // Filtrar alunos simulados - apenas se não estiver em modo offline
+  const alunosExibir = offlineMode 
+    ? alunos.filter(aluno => aluno.nome) // Em modo offline, mostramos os simulados também, mas filtramos os sem nome
+    : alunos.filter(aluno => 
+        !aluno.simulado && 
+        !aluno.simulatedResponse && 
+        aluno.nome // Garantir que tenha um nome
+      );
   
   if (alunosExibir.length === 0) {
     return (

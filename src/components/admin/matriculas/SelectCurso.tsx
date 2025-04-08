@@ -46,6 +46,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
           cursos={cursos}
           selecionado={selecionado}
           loading={loading}
+          offlineMode={offlineMode}
           onSelecionar={handleSelecionar}
         />
       </div>

@@ -61,7 +61,7 @@ export const mapearAlunosDeAPI = (alunosAPI: any[]): Aluno[] => {
     cpf: aluno.cpf || aluno.cpfCnpj || "",
     telefone: aluno.phoneNumber || aluno.phone || "",
     learnworlds_id: aluno.id,
-    simulado: !!aluno.simulatedResponse, // Marca explicitamente como simulado se vier da API
+    simulado: false, // Marca explicitamente como não simulado se vier da API
     simulatedResponse: !!aluno.simulatedResponse
   }));
 };
