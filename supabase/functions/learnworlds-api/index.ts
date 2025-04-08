@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS
@@ -8,11 +9,14 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Token de bypass para admins - usando um nome padronizado
+// Token de bypass para admins - usando nome padronizado
 const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
+// Obtendo a chave API LearnWorlds do ambiente
+const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
 
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token do ambiente configurado:", Deno.env.get("ADMIN_BYPASS_TOKEN") ? "Sim (✓)" : "Não (usando fallback)");
+console.log("API Key LearnWorlds configurada:", LEARNWORLDS_API_KEY ? "Sim (✓)" : "Não");
 console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
 console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
 
@@ -62,7 +66,7 @@ serve(async (req) => {
   // Verificação com o token padronizado
   if (token !== ADMIN_BYPASS_JWT) {
     console.log("Token inválido - nenhuma correspondência encontrada");
-    // TEMPORARIAMENTE para diagnóstico - compare caractere por caractere
+    // Para diagnóstico - compare caractere por caractere
     let firstMismatchPos = -1;
     for (let i = 0; i < Math.min(token.length, ADMIN_BYPASS_JWT.length); i++) {
       if (token[i] !== ADMIN_BYPASS_JWT[i]) {
@@ -97,7 +101,8 @@ serve(async (req) => {
     if (!path || path === "") {
       return new Response(JSON.stringify({
         message: "LearnWorlds API online",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        apiKeyConfigured: !!LEARNWORLDS_API_KEY
       }), {
         headers: corsHeaders,
         status: 200
@@ -110,6 +115,8 @@ serve(async (req) => {
       const limit = parseInt(url.searchParams.get("limit") || "20");
       const searchTerm = url.searchParams.get("q") || "";
 
+      // Se tivermos uma API Key configurada, poderíamos fazer uma chamada real aqui
+      // Por enquanto, ainda usamos dados mockados
       const mockUsers = [
         { id: "user-1", firstName: "Ana", lastName: "Silva", email: "ana@exemplo.com", customField1: "123.456.789-01", phoneNumber: "(11) 91234-5678" },
         { id: "user-2", firstName: "Carlos", lastName: "Santos", email: "carlos@exemplo.com", customField1: "987.654.321-09", phoneNumber: "(11) 98765-4321" },

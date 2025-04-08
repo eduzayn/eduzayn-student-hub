@@ -22,13 +22,12 @@ const useLearnWorldsBase = () => {
       setLoading(true);
       setError(null);
 
-      // Usar o token JWT de bypass diretamente para chamadas das funções edge
-      // Agora usando a função centralizada para obter o token de autorização
+      // Usar o token JWT de bypass para autorização nas chamadas das funções edge
       const authHeader = getAuthorizationHeader();
       
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
-      console.log(`Token de autenticação (formato): Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+      console.log(`Token de autenticação formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
 
       const headers: HeadersInit = {
         'Authorization': authHeader,
