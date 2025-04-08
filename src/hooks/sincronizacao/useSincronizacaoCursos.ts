@@ -38,16 +38,25 @@ export const useSincronizacaoCursos = () => {
       const result = await sincronizarCursos(todos);
       console.log("Resposta da sincronização:", result);
       
-      if (result) {
-        setResultado(result);
-        setLogs(result.logs || []);
+      if (result && result.success) {
+        // Converter o resultado para o formato esperado
+        const sincResult: SincronizacaoResultado = {
+          imported: result.imported || 0,
+          updated: result.updated || 0,
+          failed: result.failed || 0,
+          total: result.total || 0,
+          logs: result.logs || []
+        };
         
-        const apiErrorLog = result.logs?.find(log => 
+        setResultado(sincResult);
+        setLogs(sincResult.logs);
+        
+        const apiErrorLog = sincResult.logs?.find(log => 
           log.includes("API") && 
           log.includes("Erro")
         );
         
-        const accessDeniedLog = result.logs?.find(log =>
+        const accessDeniedLog = sincResult.logs?.find(log =>
           log.includes("access_denied") || log.includes("401") || log.includes("403")
         );
         
@@ -63,17 +72,17 @@ export const useSincronizacaoCursos = () => {
           });
         }
         
-        if (result.imported > 0 || result.updated > 0) {
+        if (sincResult.imported > 0 || sincResult.updated > 0) {
           toast.success(
             "Sincronização concluída com sucesso!", 
-            { description: `${result.imported} novos cursos e ${result.updated} atualizados.` }
+            { description: `${sincResult.imported} novos cursos e ${sincResult.updated} atualizados.` }
           );
-        } else if (result.failed > 0) {
+        } else if (sincResult.failed > 0) {
           toast.error(
             "Problemas na sincronização", 
-            { description: `${result.failed} cursos não puderam ser sincronizados.` }
+            { description: `${sincResult.failed} cursos não puderam ser sincronizados.` }
           );
-        } else if (result.total === 0) {
+        } else if (sincResult.total === 0) {
           toast.info("Nenhum curso encontrado para sincronização.");
         } else {
           toast.info("Nenhuma alteração foi necessária.");

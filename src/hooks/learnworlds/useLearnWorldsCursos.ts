@@ -27,6 +27,18 @@ interface CoursesResponse {
   };
 }
 
+// Interface para resultado da sincronização
+export interface SincronizacaoResult {
+  success: boolean;
+  message: string;
+  syncedItems?: number;
+  imported?: number;
+  updated?: number;
+  failed?: number;
+  total?: number;
+  logs?: string[];
+}
+
 const useLearnWorldsCursos = () => {
   const { 
     makeRequest, 
@@ -170,12 +182,13 @@ const useLearnWorldsCursos = () => {
   
   /**
    * Sincroniza cursos do LearnWorlds com o banco de dados local
+   * @param todos Indica se deve sincronizar todos os cursos ou apenas os novos
    * @returns Status da sincronização
    */
-  const sincronizarCursos = async (): Promise<{ success: boolean, message: string, syncedItems?: number }> => {
+  const sincronizarCursos = async (todos: boolean = false): Promise<SincronizacaoResult> => {
     try {
       // Esta função requer token de administrador
-      const response = await makeRequest("learnworlds-sync/courses", "POST");
+      const response = await makeRequest(`learnworlds-sync?type=courses&syncAll=${todos}`, "POST");
       
       if (!response || response.error) {
         throw new Error(response?.message || "Erro na sincronização de cursos");
@@ -184,14 +197,24 @@ const useLearnWorldsCursos = () => {
       return {
         success: true,
         message: "Cursos sincronizados com sucesso",
-        syncedItems: response.syncedCount || 0
+        imported: response.imported || 0,
+        updated: response.updated || 0,
+        failed: response.failed || 0,
+        total: response.total || 0,
+        logs: response.logs || [],
+        syncedItems: response.imported + response.updated || 0
       };
     } catch (error: any) {
       console.error("Erro ao sincronizar cursos:", error);
       
       return {
         success: false,
-        message: error.message || "Erro ao sincronizar cursos"
+        message: error.message || "Erro ao sincronizar cursos",
+        imported: 0,
+        updated: 0,
+        failed: 0,
+        total: 0,
+        logs: [error.message || "Erro desconhecido"]
       };
     }
   };
@@ -307,3 +330,4 @@ const useLearnWorldsCursos = () => {
 };
 
 export default useLearnWorldsCursos;
+export type { Course };

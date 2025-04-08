@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,8 +5,23 @@ import { AlertCircle, BookOpen, Grid3X3, ListFilter } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
 import { getUserCourses, getCurrentUserId, type LearnWorldsCourse } from "@/services/learnworlds-api";
-import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import useLearnWorldsApi, { Course } from "@/hooks/useLearnWorldsApi";
 import { toast } from "sonner";
+
+const mapCourseToLearnWorldsCourse = (curso: Course): LearnWorldsCourse => {
+  return {
+    id: curso.id,
+    title: curso.title,
+    description: curso.description || curso.shortDescription || "",
+    image: curso.image || curso.courseImage || "",
+    price: curso.price || curso.price_final || 0, 
+    modalidade: "EAD",
+    access: curso.access || "paid",
+    duration: curso.duration || "60 horas",
+    progress: 0,
+    thumbnail: curso.image || curso.courseImage || ""
+  };
+};
 
 const CursosAluno: React.FC = () => {
   const [cursos, setCursos] = useState<LearnWorldsCourse[]>([]);
@@ -18,7 +32,6 @@ const CursosAluno: React.FC = () => {
   
   const { getAllCourses } = useLearnWorldsApi();
   
-  // Busca o ID do usuário atual
   useEffect(() => {
     const fetchUserId = async () => {
       try {
@@ -36,7 +49,6 @@ const CursosAluno: React.FC = () => {
     fetchUserId();
   }, []);
   
-  // Busca os cursos do usuário quando o ID estiver disponível
   useEffect(() => {
     const fetchCursos = async () => {
       if (!userId) return;
@@ -44,14 +56,12 @@ const CursosAluno: React.FC = () => {
       try {
         setLoading(true);
         
-        // Tentativa de usar a API LearnWorlds através do hook
-        const cursosApi = await getAllCourses(1, 20);
+        const cursosApi = await getAllCourses();
         
-        // Se conseguir dados da API, use-os
         if (cursosApi && Array.isArray(cursosApi)) {
-          setCursos(cursosApi);
+          const cursosFormatados = cursosApi.map(mapCourseToLearnWorldsCourse);
+          setCursos(cursosFormatados);
         } else {
-          // Caso contrário, use a função anterior como fallback
           const data = await getUserCourses(userId);
           setCursos(data);
         }
@@ -61,7 +71,6 @@ const CursosAluno: React.FC = () => {
         console.error("Erro ao buscar cursos:", err);
         setError("Não foi possível carregar seus cursos. Por favor, tente novamente mais tarde.");
         
-        // Tenta usar o método fallback se o principal falhar
         try {
           const fallbackData = await getUserCourses(userId);
           if (fallbackData && fallbackData.length > 0) {
@@ -80,12 +89,10 @@ const CursosAluno: React.FC = () => {
     fetchCursos();
   }, [userId, getAllCourses]);
   
-  // Filtra cursos por progresso
   const cursosEmAndamento = cursos.filter(curso => curso.progress > 0 && curso.progress < 100);
   const cursosNaoIniciados = cursos.filter(curso => curso.progress === 0);
   const cursosConcluidos = cursos.filter(curso => curso.progress === 100);
   
-  // Renderização de carregamento
   if (loading) {
     return (
       <div>
@@ -106,7 +113,6 @@ const CursosAluno: React.FC = () => {
     );
   }
   
-  // Exibição de erro
   if (error && cursos.length === 0) {
     return (
       <div>

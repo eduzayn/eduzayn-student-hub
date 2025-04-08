@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import useLearnWorldsAlunos, { AlunoParams } from './learnworlds/useLearnWorldsAlunos';
-import useLearnWorldsCursos from './learnworlds/useLearnWorldsCursos';
+import useLearnWorldsCursos, { Course } from './learnworlds/useLearnWorldsCursos';
 import useLearnWorldsMatriculas from './learnworlds/useLearnWorldsMatriculas';
 
 /**
@@ -60,4 +60,4 @@ const useLearnWorldsApi = () => {
 };
 
 export default useLearnWorldsApi;
-export type { AlunoParams };
+export type { AlunoParams, Course };
