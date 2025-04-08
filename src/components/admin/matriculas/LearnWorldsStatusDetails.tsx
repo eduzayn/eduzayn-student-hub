@@ -5,24 +5,60 @@ import { AlertTriangle, Code, ExternalLink, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LearnWorldsStatusDetailsProps {
-  schoolId: string;
-  offlineMode: boolean;
-  error: string | null;
+  schoolId?: string;
+  offlineMode?: boolean;
+  error?: string | null;
+  status?: 'sucesso' | 'pendente' | 'simulado' | 'erro';
+  matriculaInfo?: any;
 }
 
-const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ schoolId, offlineMode, error }) => {
+const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ 
+  schoolId = "escoladigital", 
+  offlineMode = false, 
+  error = null,
+  status,
+  matriculaInfo 
+}) => {
+  // Determinar cor e mensagem com base no status
+  let statusColor = "text-green-500";
+  let statusBgColor = "bg-green-50";
+  let statusBorderColor = "border-green-500";
+  let statusMessage = "Conexão ativa";
+  
+  if (status === 'erro') {
+    statusColor = "text-red-500";
+    statusBgColor = "bg-red-50";
+    statusBorderColor = "border-red-500";
+    statusMessage = "Erro na sincronização";
+  } else if (status === 'pendente') {
+    statusColor = "text-amber-500";
+    statusBgColor = "bg-amber-50";
+    statusBorderColor = "border-amber-500";
+    statusMessage = "Sincronização pendente";
+  } else if (status === 'simulado') {
+    statusColor = "text-blue-500";
+    statusBgColor = "bg-blue-50";
+    statusBorderColor = "border-blue-500";
+    statusMessage = "Resposta simulada (modo offline)";
+  } else if (offlineMode) {
+    statusColor = "text-amber-500";
+    statusBgColor = "bg-amber-50";
+    statusBorderColor = "border-amber-500";
+    statusMessage = "Modo offline";
+  }
+
   return (
     <div className="space-y-4">
-      <Alert className={offlineMode ? "border-amber-500 bg-amber-50" : "border-green-500 bg-green-50"}>
-        <AlertTriangle className={`h-4 w-4 ${offlineMode ? "text-amber-500" : "text-green-500"}`} />
+      <Alert className={`${statusBgColor} ${statusBorderColor}`}>
+        <AlertTriangle className={`h-4 w-4 ${statusColor}`} />
         <AlertTitle>Status da Integração com LearnWorlds</AlertTitle>
         <AlertDescription>
           <div className="text-sm space-y-2 mt-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="flex items-center space-x-2">
                 <span className="font-semibold">Status:</span>
-                <span className={offlineMode ? "text-amber-600" : "text-green-600"}>
-                  {offlineMode ? "Offline" : "Online"}
+                <span className={statusColor}>
+                  {statusMessage}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -40,6 +76,19 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ sch
                 </span>
               </div>
             </div>
+            
+            {matriculaInfo && (
+              <div className="mt-2">
+                <div className="font-semibold">Detalhes da matrícula:</div>
+                <div className="bg-gray-100 p-2 rounded text-sm">
+                  <div>ID: {matriculaInfo.id}</div>
+                  <div>Status: {matriculaInfo.status}</div>
+                  {matriculaInfo.enrollmentDate && (
+                    <div>Data: {new Date(matriculaInfo.enrollmentDate).toLocaleDateString()}</div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {error && (
               <div className="mt-2">

@@ -114,8 +114,9 @@ const MatriculaStep4: React.FC<MatriculaStep4Props> = ({
           <h3 className="text-lg font-semibold mb-4">Integração com LearnWorlds</h3>
           
           <LearnWorldsStatusDetails 
-            status={learnWorldsStatus} 
-            matriculaInfo={learnWorldsMatriculaInfo} 
+            status={learnWorldsStatus}
+            matriculaInfo={learnWorldsMatriculaInfo}
+            offlineMode={learnWorldsMatriculaInfo?.simulatedResponse}
           />
           
           <Separator className="my-4" />
