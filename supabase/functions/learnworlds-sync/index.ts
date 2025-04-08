@@ -53,16 +53,23 @@ serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const supabase = createClient(supabaseUrl, anonKey);
 
-    const apiKey = Deno.env.get("LEARNWORLDS_API_KEY");
+    // Usando os tokens corretos da API LearnWorlds
+    const apiKey = Deno.env.get("LEARNWORLDS_API_KEY") || LEARNWORLDS_PUBLIC_TOKEN;
     const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-    const apiBaseUrl = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
-    const fullApiUrl = `${apiBaseUrl}/v2/${schoolId}`;
+    
+    // URL BASE CORRETA DA API LEARNWORLDS
+    const apiBaseUrl = "https://api.learnworlds.com";
+    // Formato correto para a API da LearnWorlds
+    const fullApiUrl = `${apiBaseUrl}/api/v2/${schoolId}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
     addLog(`Usando School ID: ${schoolId}`);
     addLog(`API Key encontrada: ${apiKey ? 'Sim' : 'Não'}`);
+    addLog(`URL da API: ${fullApiUrl}`);
 
     const fetchUsers = async (page, limit) => {
+      addLog(`Buscando usuários da API LearnWorlds: ${fullApiUrl}/users?page=${page}&limit=${limit}`);
+      
       const res = await fetch(`${fullApiUrl}/users?page=${page}&limit=${limit}`, {
         method: "GET",
         headers: {
@@ -82,9 +89,10 @@ serve(async (req) => {
     };
 
     const fetchCourses = async (page, limit) => {
-      addLog(`Buscando cursos da API LearnWorlds: página ${page}, limite ${limit}`);
+      const endpoint = `${fullApiUrl}/courses?page=${page}&limit=${limit}`;
+      addLog(`Buscando cursos da API LearnWorlds: ${endpoint}`);
       
-      const res = await fetch(`${fullApiUrl}/courses?page=${page}&limit=${limit}`, {
+      const res = await fetch(endpoint, {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
