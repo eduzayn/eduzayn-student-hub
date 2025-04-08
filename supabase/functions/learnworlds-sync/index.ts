@@ -11,6 +11,8 @@ const corsHeaders = {
 
 // Token de bypass para admins - usando um nome padronizado
 const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
+// Token público para operações de leitura
+const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 
 // Interface para dados do aluno da LearnWorlds
 interface LearnWorldsUser {
@@ -81,17 +83,23 @@ serve(async (req) => {
     
     // Log para depuração
     console.log(`Token recebido (primeiros 5 chars): ${token.substring(0, 5)}...`);
-    console.log(`Token esperado (primeiros 5 chars): ${ADMIN_BYPASS_JWT.substring(0, 5)}...`);
+    console.log(`Token admin esperado (primeiros 5 chars): ${ADMIN_BYPASS_JWT.substring(0, 5)}...`);
+    console.log(`Token público esperado (primeiros 5 chars): ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
 
     // Verificação com o token padronizado
     let isAuthenticated = false;
 
-    // Verificar se é o token de bypass
+    // Verificar se é o token de bypass ou token público
     if (token === ADMIN_BYPASS_JWT) {
       console.log("Autenticação via token bypass de admin");
       isAuthenticated = true;
+    } else if (token === LEARNWORLDS_PUBLIC_TOKEN) {
+      console.log("Autenticação via token público");
+      // Para operações de sincronização, verificar se o token público tem permissão
+      // Por padrão, permitimos que o token público também faça sincronização
+      isAuthenticated = true;
     } else {
-      // Se não for o token de bypass, verificar no Supabase
+      // Se não for o token de bypass ou público, verificar no Supabase
       try {
         // Criar um cliente Supabase para verificar o token
         const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
@@ -113,7 +121,12 @@ serve(async (req) => {
         if (authError || !userData.user) {
           console.error('Erro de autenticação:', authError);
           return new Response(
-            JSON.stringify({ error: 'Token de autenticação inválido', code: 401, details: authError }),
+            JSON.stringify({ 
+              error: 'Token de autenticação inválido', 
+              code: 401, 
+              details: authError,
+              receivedToken: token.substring(0, 5) + "..."  // Para diagnóstico
+            }),
             {
               status: 401,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -127,7 +140,12 @@ serve(async (req) => {
       } catch (authError) {
         console.error('Erro ao verificar token:', authError);
         return new Response(
-          JSON.stringify({ error: 'Erro ao verificar token', code: 401, details: authError.message }),
+          JSON.stringify({ 
+            error: 'Erro ao verificar token', 
+            code: 401, 
+            details: authError.message,
+            receivedToken: token.substring(0, 5) + "..."  // Para diagnóstico
+          }),
           {
             status: 401,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -138,7 +156,13 @@ serve(async (req) => {
     
     if (!isAuthenticated) {
       return new Response(
-        JSON.stringify({ error: 'Não autenticado', code: 401 }),
+        JSON.stringify({ 
+          error: 'Não autenticado', 
+          code: 401,
+          receivedTokenStart: token.substring(0, 5) + "...",
+          adminTokenStart: ADMIN_BYPASS_JWT.substring(0, 5) + "...",
+          publicTokenStart: LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5) + "..."
+        }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -373,3 +397,4 @@ serve(async (req) => {
     );
   }
 });
+

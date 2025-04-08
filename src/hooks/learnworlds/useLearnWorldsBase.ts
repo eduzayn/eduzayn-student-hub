@@ -44,7 +44,9 @@ const useLearnWorldsBase = () => {
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       
       if (!usePublicToken) {
-        console.log(`Token de autenticação formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+        console.log(`Token de autenticação administrativo formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+      } else {
+        console.log(`Token de autenticação público formatado como: Bearer ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
       }
 
       const headers: HeadersInit = {

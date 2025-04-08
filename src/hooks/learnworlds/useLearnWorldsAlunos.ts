@@ -20,7 +20,7 @@ export interface AlunoParams {
  * Hook para gerenciar alunos no LearnWorlds
  */
 const useLearnWorldsAlunos = () => {
-  const { makeRequest, loading, error, offlineMode } = useLearnWorldsBase();
+  const { makeRequest, loading, error, offlineMode, LEARNWORLDS_PUBLIC_TOKEN } = useLearnWorldsBase();
 
   /**
    * Busca usuários da API LearnWorlds
@@ -77,7 +77,12 @@ const useLearnWorldsAlunos = () => {
       logs.push(`[${new Date().toISOString()}] Chamando endpoint: ${url}`);
       console.log(`Chamando endpoint: ${url}`);
       
+      // Log detalhado dos headers para diagnóstico
+      console.log('Usando token para autenticação - primeiros 5 caracteres:', 
+                  LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5) + "...");
+      
       try {
+        // Usamos o makeRequest padrão para operações administrativas
         const result = await makeRequest(url);
         console.log("Resposta da sincronização recebida:", result);
         
@@ -163,7 +168,7 @@ const useLearnWorldsAlunos = () => {
         logs
       };
     }
-  }, [makeRequest]);
+  }, [makeRequest, LEARNWORLDS_PUBLIC_TOKEN]);
 
   return {
     loading,
