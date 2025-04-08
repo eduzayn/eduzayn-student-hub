@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import useLearnWorldsBase from './useLearnWorldsBase';
 import { toast } from 'sonner';
 
@@ -65,7 +65,7 @@ const useLearnWorldsAlunos = () => {
   /**
    * Inicia sincronização de alunos com LearnWorlds
    */
-  const sincronizarAlunos = async (sincronizarTodos: boolean = false): Promise<any> => {
+  const sincronizarAlunos = useCallback(async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
       console.log(`Iniciando sincronização - sincronizarTodos=${sincronizarTodos}`);
       
@@ -115,7 +115,7 @@ const useLearnWorldsAlunos = () => {
       toast.error(mensagemErro);
       throw error; // Propaga o erro para tratamento adicional
     }
-  };
+  }, [makeRequest]);
 
   return {
     loading,
