@@ -15,7 +15,7 @@ export const handleLearnWorldsApiError = (err: any, endpoint: string): string =>
     errorMessage = 'Erro de autenticação na API LearnWorlds. Verifique se o token API tem permissões suficientes.';
   } else if (errorMessage.includes('No API key found')) {
     errorMessage = 'Chave de API do Supabase não encontrada na requisição. Verifique a configuração do cliente Supabase.';
-  } else if (errorMessage.includes('HTML recebida')) {
+  } else if (errorMessage.includes('HTML recebida') || errorMessage.includes('não-JSON') || errorMessage.includes('API retornou conteúdo')) {
     errorMessage = 'A API retornou HTML em vez de JSON. Ativando modo offline para usar dados simulados.';
   }
   

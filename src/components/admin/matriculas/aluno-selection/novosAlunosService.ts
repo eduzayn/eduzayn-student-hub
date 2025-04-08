@@ -34,7 +34,7 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
     return { id: novoAlunoId, sucesso: true };
   } 
   
-  if (resultado === null) {
+  if (resultado === null || resultado === undefined) {
     // Quando a resposta é nula, possível erro na API
     novoAlunoId = `local-${Date.now()}`;
     
@@ -101,10 +101,11 @@ export const exibirErroAoCadastrar = (error: any): void => {
   if (error.message && (
       error.message.includes("Failed to fetch") || 
       error.message.includes("Erro de conexão") ||
-      error.message.includes("função edge")
+      error.message.includes("função edge") ||
+      error.message.includes("API retornou conteúdo não-JSON")
   )) {
     toast.error("Erro de conexão com a API", {
-      description: "Passando para modo offline. Deseja cadastrar o aluno offline?"
+      description: "A API está retornando dados no formato incorreto. Ativando modo offline."
     });
     
     return;

@@ -113,20 +113,25 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
     } catch (error: any) {
       exibirErroAoCadastrar(error);
       
+      // Se o erro indicar problema de conexão ou formato de dados incorreto, ativar modo offline
       if (error.message && (
           error.message.includes("Failed to fetch") || 
           error.message.includes("Erro de conexão") ||
-          error.message.includes("função edge")
+          error.message.includes("função edge") ||
+          error.message.includes("API retornou conteúdo não-JSON") ||
+          error.message.includes("HTML recebida")
       )) {
         if (setOfflineMode) {
           setOfflineMode(true);
+          
+          // Perguntar se deseja cadastrar em modo offline
+          setTimeout(() => {
+            const confirmOfflineMode = window.confirm("Deseja cadastrar o aluno em modo offline? Os dados serão sincronizados quando a conexão for restabelecida.");
+            if (confirmOfflineMode) {
+              handleCriarNovoAluno(); // Vai cair no bloco de modo offline agora
+            }
+          }, 500);
         }
-        
-        setTimeout(() => {
-          if (confirm("Deseja cadastrar o aluno em modo offline? Os dados serão sincronizados quando a conexão for restabelecida.")) {
-            handleCriarNovoAluno();
-          }
-        }, 500);
       }
     }
   };

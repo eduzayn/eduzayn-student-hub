@@ -1,4 +1,7 @@
 
+// Vamos manter o código existente, modificando apenas as partes necessárias
+// para lidar melhor com respostas HTML ao invés de JSON
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
@@ -26,6 +29,17 @@ console.log("API Key LearnWorlds:", LEARNWORLDS_API_KEY ? "Configurado ✓" : "N
 console.log("Token público LearnWorlds:", LEARNWORLDS_PUBLIC_TOKEN ? "Configurado ✓" : "Não configurado ✗");
 console.log("School ID LearnWorlds:", LEARNWORLDS_SCHOOL_ID ? "Configurado ✓" : "Não configurado ✗");
 console.log("URL base da API LearnWorlds:", LEARNWORLDS_API_BASE_URL);
+
+// Verificar se a resposta é HTML em vez de JSON
+const isHtmlResponse = (text: string): boolean => {
+  return (
+    text.includes("<!DOCTYPE html>") || 
+    text.includes("<html") || 
+    text.includes("</html>") ||
+    text.includes("<head") || 
+    text.includes("<body")
+  );
+};
 
 // Chamada real para a API LearnWorlds
 const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Promise<any> => {
@@ -71,15 +85,30 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
         throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
       }
       
-      // Verifica se a resposta tem conteúdo
+      // Verificar se a resposta é texto ou JSON
       const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        const responseData = await response.json();
-        return responseData;
-      } else {
-        const textResponse = await response.text();
-        console.log(`Resposta não-JSON: ${textResponse.substring(0, 100)}...`);
+      
+      // Sempre obter o texto da resposta primeiro
+      const responseText = await response.text();
+      
+      // Verificar se o texto é HTML
+      if (isHtmlResponse(responseText)) {
+        console.error("API retornou HTML em vez de JSON:", responseText.substring(0, 200));
         throw new Error("API retornou conteúdo não-JSON. Verifique as configurações da API.");
+      }
+      
+      // Se não for HTML, tentamos converter para JSON se o content type for application/json
+      if (contentType?.includes('application/json')) {
+        try {
+          return JSON.parse(responseText);
+        } catch (jsonError) {
+          console.error("Erro ao converter resposta para JSON:", jsonError);
+          throw new Error("Erro ao processar resposta da API. Formato JSON inválido.");
+        }
+      } else {
+        // Se não for JSON, mas também não for HTML (texto plano, etc)
+        console.log(`Resposta não-JSON: ${responseText.substring(0, 100)}...`);
+        return { text: responseText, status: response.status };
       }
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
@@ -93,6 +122,8 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
     throw error;
   }
 };
+
+// ... resto do código se mantém o mesmo
 
 // Dados simulados para quando a API não estiver disponível
 const mockData = {
@@ -150,6 +181,45 @@ const mockData = {
           ]
         }
       ]
+    };
+  },
+  getUsers: (page = 1, limit = 20, searchTerm = "") => {
+    const mockUsers = [
+      { id: "user-1", firstName: "Ana", lastName: "Silva", email: "ana@exemplo.com", customField1: "123.456.789-01", phoneNumber: "(11) 91234-5678" },
+      { id: "user-2", firstName: "Carlos", lastName: "Santos", email: "carlos@exemplo.com", customField1: "987.654.321-09", phoneNumber: "(11) 98765-4321" },
+      { id: "user-3", firstName: "Patricia", lastName: "Oliveira", email: "patricia@exemplo.com", customField1: "456.789.123-45", phoneNumber: "(11) 97654-3210" },
+      { id: "user-4", firstName: "Roberto", lastName: "Pereira", email: "roberto@exemplo.com", customField1: "789.123.456-78", phoneNumber: "(11) 96543-2109" },
+      { id: "user-5", firstName: "Juliana", lastName: "Costa", email: "juliana@exemplo.com", customField1: "321.654.987-01", phoneNumber: "(11) 95432-1098" }
+    ];
+
+    const filteredUsers = searchTerm
+      ? mockUsers.filter(u =>
+          u.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.customField1.includes(searchTerm)
+        )
+      : mockUsers;
+
+    return {
+      data: filteredUsers,
+      meta: {
+        page,
+        totalItems: filteredUsers.length,
+        totalPages: 1,
+        itemsPerPage: limit
+      }
+    };
+  },
+  createUser: (userData: any) => {
+    return {
+      id: `mock-user-${Date.now()}`,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      customField1: userData.cpf,
+      phoneNumber: userData.phoneNumber,
+      simulatedResponse: true
     };
   }
 };
@@ -325,7 +395,17 @@ serve(async (req) => {
       }
       
       // --- GET /users (somente admin)
-      if (path === "users" && isAdminToken) {
+      if (path === "users" || path.startsWith("users?")) {
+        if (!isAdminToken) {
+          return new Response(JSON.stringify({
+            code: 403,
+            message: "Esta operação requer token de administrador"
+          }), {
+            headers: corsHeaders,
+            status: 403
+          });
+        }
+        
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "20");
         const searchTerm = url.searchParams.get("q") || "";
@@ -351,37 +431,18 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error("Erro na chamada para API LearnWorlds (usuários):", error);
-          result = null;
+          console.log("Usando dados simulados para usuários");
+          result = mockData.getUsers(page, limit, searchTerm);
         }
         
         // Se não conseguimos dados reais, usamos simulados
-        if (!result) {
-          const mockUsers = [
-            { id: "user-1", firstName: "Ana", lastName: "Silva", email: "ana@exemplo.com", customField1: "123.456.789-01", phoneNumber: "(11) 91234-5678" },
-            { id: "user-2", firstName: "Carlos", lastName: "Santos", email: "carlos@exemplo.com", customField1: "987.654.321-09", phoneNumber: "(11) 98765-4321" },
-            { id: "user-3", firstName: "Patricia", lastName: "Oliveira", email: "patricia@exemplo.com", customField1: "456.789.123-45", phoneNumber: "(11) 97654-3210" }
-          ];
-
-          const filteredUsers = searchTerm
-            ? mockUsers.filter(u =>
-                u.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.customField1.includes(searchTerm)
-              )
-            : mockUsers;
-
-          result = {
-            data: filteredUsers,
-            meta: {
-              page,
-              totalItems: filteredUsers.length,
-              totalPages: 1,
-              itemsPerPage: limit
-            }
-          };
-          
-          console.log("Retornando dados simulados para usuários:", result);
+        if (!result || !Array.isArray(result.data)) {
+          const mockResult = mockData.getUsers(page, limit, searchTerm);
+          console.log("Retornando dados simulados para usuários:", mockResult);
+          return new Response(JSON.stringify(mockResult), {
+            headers: corsHeaders,
+            status: 200
+          });
         }
 
         return new Response(JSON.stringify(result), {
@@ -390,17 +451,6 @@ serve(async (req) => {
         });
       }
       
-      // --- ROTAS ESPECÍFICAS QUE EXIGEM TOKEN DE ADMIN
-      if (!isAdminToken && (path === "users" || path.startsWith("admin/"))) {
-        return new Response(JSON.stringify({
-          code: 403,
-          message: "Esta operação requer token de administrador"
-        }), {
-          headers: corsHeaders,
-          status: 403
-        });
-      }
-
       // Endpoint não encontrado
       return new Response(JSON.stringify({
         message: "Endpoint não implementado",
@@ -457,32 +507,53 @@ serve(async (req) => {
           
           console.log("Dados de usuário para LearnWorlds:", userData);
           
-          // Chamar a API do LearnWorlds
-          const result = await callLearnWorldsApi("/users", "POST", userData);
-          
-          console.log("Resposta da criação de usuário:", result);
-          
-          // Se temos uma resposta válida
-          if (result) {
-            return new Response(JSON.stringify(result), {
-              headers: corsHeaders,
-              status: 200
-            });
-          } else {
-            // Caso a API não retorne dados (possível erro no LearnWorlds)
-            console.warn("API do LearnWorlds não retornou dados para criação de usuário");
+          // Tentar chamar a API do LearnWorlds
+          try {
+            const result = await callLearnWorldsApi("/users", "POST", userData);
+            console.log("Resposta da criação de usuário:", result);
             
-            // Retornamos um objeto simulado com ID para permitir continuar o fluxo
-            return new Response(JSON.stringify({
-              id: `local-${Date.now()}`,
-              email: body.email,
-              firstName: body.firstName,
-              lastName: body.lastName,
-              simulatedResponse: true
-            }), {
-              headers: corsHeaders,
-              status: 200
-            });
+            // Se temos uma resposta válida
+            if (result && result.id) {
+              return new Response(JSON.stringify(result), {
+                headers: corsHeaders,
+                status: 200
+              });
+            } else {
+              // Caso a API não retorne dados no formato esperado
+              console.warn("API do LearnWorlds não retornou dados no formato esperado para criação de usuário");
+              
+              // Retornamos dados simulados para permitir continuar o fluxo
+              const mockResult = mockData.createUser(userData);
+              console.log("Retornando resposta simulada:", mockResult);
+              
+              return new Response(JSON.stringify(mockResult), {
+                headers: corsHeaders,
+                status: 200
+              });
+            }
+          } catch (apiError) {
+            // Se a API retornou um erro, tentamos usar dados simulados
+            console.error("Erro na API LearnWorlds:", apiError.message);
+            
+            // Verificar se o erro é sobre formato de dados (HTML vs JSON)
+            if (apiError.message && (
+              apiError.message.includes("HTML") || 
+              apiError.message.includes("não-JSON") ||
+              apiError.message.includes("retornou conteúdo")
+            )) {
+              console.log("API retornou formato inválido, usando dados simulados");
+              
+              const mockResult = mockData.createUser(userData);
+              console.log("Retornando resposta simulada:", mockResult);
+              
+              return new Response(JSON.stringify(mockResult), {
+                headers: corsHeaders,
+                status: 200
+              });
+            }
+            
+            // Se for outro tipo de erro, propagamos
+            throw apiError;
           }
         } catch (learnWorldsError) {
           console.error("Erro ao chamar API LearnWorlds para criar usuário:", learnWorldsError);
