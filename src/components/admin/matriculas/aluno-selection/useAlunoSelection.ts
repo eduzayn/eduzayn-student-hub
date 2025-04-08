@@ -52,7 +52,9 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
       setAlunos(alunosFormatados);
     } catch (error) {
       console.error("Erro ao carregar alunos:", error);
-      toast.error("Erro ao carregar a lista de alunos");
+      toast.error("Erro ao carregar a lista de alunos", {
+        description: "Usando dados em modo offline. Algumas funcionalidades podem estar limitadas."
+      });
       
       // Em caso de falha, carrega dados simulados como fallback
       carregarAlunosSimulados(termoBusca);
@@ -119,6 +121,45 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
       // Validação básica
       if (!formNovoAluno.nome || !formNovoAluno.email) {
         toast.error("Nome e e-mail são obrigatórios");
+        return;
+      }
+
+      // Se estamos no modo offline, simular criação com dados locais
+      if (offlineMode) {
+        toast.info("Cadastrando aluno em modo offline", {
+          description: "O aluno será sincronizado quando a conexão for restaurada."
+        });
+        
+        // Criar um ID simulado para o aluno offline
+        const offlineId = `offline-${Date.now()}`;
+        
+        // Criar o novo aluno no formato esperado
+        const novoAluno = {
+          id: offlineId,
+          nome: `${formNovoAluno.nome} ${formNovoAluno.sobrenome}`.trim(),
+          email: formNovoAluno.email,
+          cpf: formNovoAluno.cpf,
+          telefone: formNovoAluno.telefone,
+          // Marcar como um aluno offline para sincronização posterior
+          offline: true,
+          learnworlds_id: offlineId
+        };
+
+        // Adicionar o novo aluno à lista e selecioná-lo
+        setAlunos(prev => [novoAluno, ...prev]);
+        handleSelecionar(novoAluno);
+        
+        // Fechar o diálogo e limpar o formulário
+        setDialogAberto(false);
+        setFormNovoAluno({
+          nome: "",
+          sobrenome: "",
+          email: "",
+          cpf: "",
+          telefone: ""
+        });
+        
+        toast.success("Aluno cadastrado no modo offline");
         return;
       }
 

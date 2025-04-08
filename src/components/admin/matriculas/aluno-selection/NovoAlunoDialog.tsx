@@ -12,6 +12,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info, AlertCircle } from "lucide-react";
 
 interface NovoAlunoForm {
   nome: string;
@@ -52,6 +54,17 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
+        {offlineMode && (
+          <Alert variant="warning" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Modo Offline Ativo</AlertTitle>
+            <AlertDescription>
+              A conexão com a API do LearnWorlds está indisponível. Você pode cadastrar o aluno no modo offline, 
+              mas ele será sincronizado apenas quando a conexão for restabelecida.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-1">
@@ -64,6 +77,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
                 value={formData.nome}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               />
             </div>
             <div className="col-span-1">
@@ -91,6 +105,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               value={formData.email}
               onChange={handleInputChange}
               className="mt-1"
+              required
             />
           </div>
           
@@ -130,9 +145,9 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
           <Button 
             type="button" 
             onClick={handleCriarNovoAluno}
-            disabled={loading}
+            disabled={loading || !formData.nome || !formData.email}
           >
-            {loading ? "Cadastrando..." : "Cadastrar Aluno"}
+            {loading ? "Cadastrando..." : offlineMode ? "Cadastrar Offline" : "Cadastrar Aluno"}
           </Button>
         </DialogFooter>
       </DialogContent>

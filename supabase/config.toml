@@ -1,17 +1,42 @@
 
-# Configuração das funções edge do Supabase
-[functions]
+project_id = "bioarzkfmcobctblzztm"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[auth]
+enabled = true
+port = 54325
+
+[storage]
+enabled = true
+port = 54326
+
+[realtime]
+enabled = true
+port = 54327
+
+[analytics]
+enabled = false
+port = 54328
+
+[vector]
+enabled = false
+port = 54329
+
+[edge_functions]
 [functions.learnworlds-api]
 verify_jwt = false
-
-[functions.create-profile]
-verify_jwt = false
-
-[functions.send-auth-email]
-verify_jwt = false
-
-[functions.send-confirmation-email]
-verify_jwt = false
-
 [functions.learnworlds-sync]
 verify_jwt = false

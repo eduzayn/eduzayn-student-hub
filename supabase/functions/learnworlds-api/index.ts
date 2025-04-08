@@ -1,10 +1,11 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-// Cabeçalhos CORS
+// Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, Lw-Client, X-School-Id",
   "Content-Type": "application/json"
 };
 
@@ -85,7 +86,7 @@ serve(async (req) => {
   // Logging para depuração
   console.log(`Requisição recebida: ${method} ${new URL(req.url).pathname}`);
 
-  // Pré-flight CORS
+  // Pré-flight CORS - ATUALIZADO para lidar com OPTIONS corretamente
   if (method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -407,6 +408,8 @@ serve(async (req) => {
     try {
       const body = await req.json();
       
+      console.log(`Recebido POST para ${path} com corpo:`, JSON.stringify(body).substring(0, 200) + "...");
+      
       // Tentativa de chamar API real se tivermos o ID da escola e API key
       if (LEARNWORLDS_API_KEY && LEARNWORLDS_SCHOOL_ID) {
         try {
@@ -433,7 +436,8 @@ serve(async (req) => {
       // Resposta simulada para POST
       return new Response(JSON.stringify({
         message: "POST recebido com sucesso! (simulado)",
-        data: body
+        data: body,
+        id: crypto.randomUUID()
       }), {
         headers: corsHeaders,
         status: 200
