@@ -24,11 +24,14 @@ export const useCriarMatricula = () => {
       
       // Converter os dados para o tipo esperado pelo Supabase
       // Remover campos que possam não existir na tabela
+      // Converter status "pendente" para "ativo" se necessário
+      const status = matriculaData.status === "pendente" ? "ativo" : matriculaData.status;
+      
       const dadosParaInserir: MatriculaInsert = {
         aluno_id: matriculaData.aluno_id,
         curso_id: matriculaData.curso_id,
         data_inicio: matriculaData.data_inicio,
-        status: matriculaData.status,
+        status: status,
         observacoes: matriculaData.observacoes || null,
         forma_ingresso: matriculaData.forma_ingresso || null,
       };

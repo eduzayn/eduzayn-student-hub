@@ -31,7 +31,7 @@ const NovaMatriculaForm: React.FC = () => {
     forma_pagamento: 'pix',
     observacoes: '',
     com_pagamento: true,
-    status: 'pendente' as 'pendente' | 'ativo' | 'inativo' | 'trancado' | 'formado'
+    status: 'ativo' as 'ativo' | 'inativo' | 'trancado' | 'formado'
   });
   
   const [matriculaCriada, setMatriculaCriada] = useState<any>(null);
@@ -44,7 +44,6 @@ const NovaMatriculaForm: React.FC = () => {
   
   const handleCursoSelecionado = (curso: any) => {
     setCursoSelecionado(curso);
-    // Usar o valor do curso como valor padrão para a matrícula
     setMatriculaConfig(prev => ({
       ...prev,
       valor_matricula: curso.valor_mensalidade || 0
@@ -65,7 +64,6 @@ const NovaMatriculaForm: React.FC = () => {
     setLoading(true);
     
     try {
-      // Criar a matrícula com apenas os campos existentes na tabela matriculas
       const novaMatricula = {
         aluno_id: alunoSelecionado.id,
         curso_id: cursoSelecionado.id,
@@ -73,22 +71,19 @@ const NovaMatriculaForm: React.FC = () => {
         status: matriculaConfig.status,
         observacoes: matriculaConfig.observacoes,
         forma_ingresso: matriculaConfig.forma_pagamento === 'isento' ? 'isento' : matriculaConfig.forma_pagamento,
-        valor: matriculaConfig.valor_matricula, // Armazenar o valor em outra tabela se necessário
+        valor: matriculaConfig.valor_matricula
       };
       
       console.log("Dados da matrícula a criar:", novaMatricula);
       
-      // Chamar o hook para criar a matrícula
       const resultado = await criarMatricula(novaMatricula);
       
       if (!resultado) {
         throw new Error('Erro ao criar matrícula');
       }
       
-      // Guardar a matrícula criada
       setMatriculaCriada(resultado);
       
-      // Matricular aluno no LearnWorlds se não estiver em modo offline
       if (alunoSelecionado.learnworlds_id && cursoSelecionado.learning_worlds_id) {
         try {
           const matriculaLearnWorlds = await matricularAlunoEmCurso(
@@ -111,7 +106,6 @@ const NovaMatriculaForm: React.FC = () => {
         toast.warning('IDs do LearnWorlds não disponíveis para matrícula na plataforma');
       }
       
-      // Se a matrícula requer pagamento, gerar o link
       if (matriculaConfig.com_pagamento) {
         const pagamentoParams = {
           customerData: {

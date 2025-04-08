@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({
 }) => {
   const form = useForm({
     defaultValues: {
-      status: config.status || "pendente",
+      status: config.status || "ativo",
       data_inicio: config.data_inicio || new Date().toISOString().split('T')[0],
       forma_pagamento: config.forma_pagamento || "pix",
       valor_matricula: config.valor_matricula || valorCurso,
@@ -48,10 +47,9 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({
 
   const statusOptions = [
     { value: "ativo", label: "Ativo" },
-    { value: "pendente", label: "Pendente" },
+    { value: "inativo", label: "Inativo" },
     { value: "trancado", label: "Trancado" },
-    { value: "formado", label: "Formado" },
-    { value: "inativo", label: "Inativo" }
+    { value: "formado", label: "Formado" }
   ];
 
   const formasPagamento = [

@@ -31,7 +31,7 @@ export interface Matricula {
   curso_id: string;
   data_inicio: string;
   data_conclusao?: string;
-  status: 'ativo' | 'pendente' | 'trancado' | 'formado' | 'inativo';
+  status: 'ativo' | 'inativo' | 'trancado' | 'formado';
   forma_ingresso?: string;
   origem_matricula?: string;
   turno?: string;
