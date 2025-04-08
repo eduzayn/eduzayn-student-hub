@@ -37,8 +37,6 @@ const useLearnWorldsBase = () => {
       setError(null);
 
       // Determinar qual token usar com base no parâmetro usePublicToken
-      // Como desabilitamos a verificação JWT, estamos simplificando essa parte
-      // Ainda enviamos o token para compatibilidade com o código existente
       const authHeader = usePublicToken ? getPublicAuthorizationHeader() : getAuthorizationHeader();
       
       // Log para diagnóstico
@@ -98,9 +96,18 @@ const useLearnWorldsBase = () => {
       console.log(`Tipo de conteúdo da resposta: ${contentType}`);
       
       if (contentType.includes('application/json')) {
-        const data = await response.json();
-        setOfflineMode(false);
-        return data;
+        // Análise de JSON com tratamento de erro aprimorado
+        let data;
+        try {
+          const responseText = await response.text();
+          data = JSON.parse(responseText);
+          setOfflineMode(false);
+          return data;
+        } catch (parseError) {
+          console.error('Erro ao analisar resposta JSON:', parseError);
+          const responseText = await response.text();
+          throw new Error(`Erro ao analisar JSON: ${parseError.message}. Resposta: ${responseText.substring(0, 100)}...`);
+        }
       } else {
         // Se não for JSON, podemos ter um problema
         const textResponse = await response.text();
@@ -112,7 +119,11 @@ const useLearnWorldsBase = () => {
         
         setOfflineMode(false);
         // Tentar retornar algo útil
-        return { message: 'Resposta não-JSON recebida', text: textResponse.substring(0, 1000) };
+        return { 
+          message: 'Resposta não-JSON recebida', 
+          text: textResponse.substring(0, 1000),
+          success: response.ok 
+        };
       }
     } catch (err: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, err);
