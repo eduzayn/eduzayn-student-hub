@@ -50,7 +50,6 @@ const useLearnWorldsBase = () => {
       const headers: HeadersInit = {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
-        'apikey': supabaseKey // Adicionando a chave de API do Supabase
       };
       
       // Log para diagnóstico dos cabeçalhos
@@ -182,6 +181,7 @@ const useLearnWorldsBase = () => {
     loading,
     error,
     offlineMode,
+    setOfflineMode,
     makeRequest,
     makePublicRequest,
     LEARNWORLDS_PUBLIC_TOKEN,

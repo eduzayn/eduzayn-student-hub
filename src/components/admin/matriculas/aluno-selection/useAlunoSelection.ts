@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useLearnWorldsAlunos from "@/hooks/learnworlds/useLearnWorldsAlunos";
@@ -23,7 +24,7 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
     telefone: ""
   });
   
-  const { getUsers, cadastrarAluno, loading, error, offlineMode } = useLearnWorldsAlunos();
+  const { getUsers, cadastrarAluno, loading, error, offlineMode, setOfflineMode } = useLearnWorldsAlunos();
 
   useEffect(() => {
     carregarAlunos();
@@ -191,7 +192,9 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
           error.message.includes("Erro de conexão") ||
           error.message.includes("função edge")
       )) {
-        setOfflineMode(true);
+        if (setOfflineMode) {
+          setOfflineMode(true);
+        }
         toast.error("Erro de conexão com a API", {
           description: "Passando para modo offline. Deseja cadastrar o aluno offline?"
         });

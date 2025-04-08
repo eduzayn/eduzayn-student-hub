@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,23 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   
+  // Efeito para prevenir tremulação da tela
+  useEffect(() => {
+    // Adiciona classe para prevenir mudanças de layout que causam tremor
+    document.body.classList.add("overflow-y-scroll");
+    
+    // Adiciona padding-right para compensar a barra de rolagem e evitar saltos
+    document.body.style.paddingRight = "0px";
+    document.body.style.overscrollBehavior = "none";
+    
+    return () => {
+      // Remove as classes e estilos ao desmontar o componente
+      document.body.classList.remove("overflow-y-scroll");
+      document.body.style.paddingRight = "";
+      document.body.style.overscrollBehavior = "";
+    };
+  }, []);
+
   const handleLogout = async () => {
     await logoutUser();
     navigate("/login");

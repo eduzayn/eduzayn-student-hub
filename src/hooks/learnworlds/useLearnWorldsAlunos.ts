@@ -1,104 +1,89 @@
 
-import useLearnWorldsBase from './useLearnWorldsBase';
-import { toast } from 'sonner';
+import { useState, useCallback } from "react";
+import useLearnWorldsBase from "./useLearnWorldsBase";
 
-export interface AlunoParams {
+interface CadastrarAlunoDTO {
   firstName: string;
   lastName: string;
   email: string;
-  password?: string;
+  cpf?: string;
   phoneNumber?: string;
-  customField1?: string; // CPF
-  cpf?: string; // Adicionamos este campo para compatibilidade
 }
 
-/**
- * Hook para gerenciar alunos no LearnWorlds
- */
+interface AlunoDTO {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  customField1?: string; // CPF
+  phoneNumber?: string;
+  registrationDate: string;
+  lastLoginDate?: string;
+  coursesList?: string[];
+}
+
 const useLearnWorldsAlunos = () => {
-  const { makeRequest, makePublicRequest, loading, error, offlineMode } = useLearnWorldsBase();
+  const { loading, error, offlineMode, setOfflineMode, makeRequest, makePublicRequest } = useLearnWorldsBase();
+  const [dadosListagem, setDadosListagem] = useState<{ total: number; data: AlunoDTO[] }>({ 
+    total: 0, 
+    data: [] 
+  });
 
   /**
-   * Busca usuários (alunos) da API LearnWorlds
-   * @param page Número da página (padrão: 1)
-   * @param limit Limite de registros por página (padrão: 50)
-   * @param query Termo de busca opcional
+   * Obtém a lista de usuários/alunos do LearnWorlds
    */
-  const getUsers = async (page: number = 1, limit: number = 50, query?: string): Promise<any> => {
+  const getUsers = useCallback(async (page = 1, limit = 10, query = ""): Promise<{ total: number; data: AlunoDTO[] }> => {
     try {
-      let url = `learnworlds-api/users?page=${page}&limit=${limit}`;
+      const endpoint = `learnworlds-api/users?page=${page}&limit=${limit}${query ? `&q=${encodeURIComponent(query)}` : ''}`;
       
-      // Adiciona o parâmetro de busca se fornecido
-      if (query) {
-        url += `&query=${encodeURIComponent(query)}`;
+      const response = await makeRequest(endpoint, 'GET');
+      
+      if (response && response.data) {
+        setDadosListagem({
+          total: response.total || response.data.length,
+          data: response.data
+        });
+        return {
+          total: response.total || response.data.length,
+          data: response.data
+        };
       }
       
-      const response = await makePublicRequest(url);
-      return response;
+      return { total: 0, data: [] };
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-      return { data: [] };
+      console.error("Erro ao buscar usuários:", error);
+      throw error;
     }
-  };
+  }, [makeRequest]);
 
   /**
    * Cadastra um novo aluno no LearnWorlds
    */
-  const cadastrarAluno = async (params: AlunoParams): Promise<any> => {
+  const cadastrarAluno = useCallback(async (dados: CadastrarAlunoDTO): Promise<AlunoDTO | null> => {
     try {
-      // Se for fornecido o campo cpf, transfere para customField1
-      if (params.cpf && !params.customField1) {
-        params.customField1 = params.cpf;
+      console.log("Tentando cadastrar aluno:", dados);
+      
+      const response = await makeRequest('learnworlds-api/users', 'POST', dados);
+      
+      if (response && response.data) {
+        return response.data;
       }
       
-      const response = await makeRequest('learnworlds-api/users', 'POST', params);
-      return response;
+      return null;
     } catch (error) {
-      console.error('Erro ao cadastrar aluno:', error);
+      console.error("Erro ao cadastrar aluno:", error);
       throw error;
     }
-  };
-
-  /**
-   * Sincroniza alunos do LearnWorlds com o banco de dados local
-   */
-  const sincronizarAlunos = async (sincronizarTodos: boolean = false): Promise<any> => {
-    try {
-      toast.info(
-        sincronizarTodos ? "Iniciando sincronização completa de alunos..." : "Iniciando sincronização de alunos...", 
-        { description: "Este processo pode demorar alguns instantes." }
-      );
-      
-      // Usar a função unificada com parâmetro type=users
-      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}&type=users`);
-      
-      // Retorna o resultado da sincronização
-      if (result.imported > 0 || result.updated > 0) {
-        toast.success(
-          "Sincronização concluída com sucesso!", 
-          { description: `${result.imported} novos alunos e ${result.updated} atualizados.` }
-        );
-      } else {
-        toast.info("Nenhuma alteração foi necessária.");
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Erro ao sincronizar alunos:', error);
-      toast.error('Erro ao sincronizar alunos com o LearnWorlds', {
-        description: error instanceof Error ? error.message : "Erro desconhecido"
-      });
-      throw error;
-    }
-  };
+  }, [makeRequest]);
 
   return {
+    getUsers,
+    cadastrarAluno,
+    dadosListagem,
     loading,
     error,
     offlineMode,
-    getUsers,
-    cadastrarAluno,
-    sincronizarAlunos
+    setOfflineMode
   };
 };
 
