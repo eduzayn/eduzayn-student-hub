@@ -25,34 +25,35 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
 }) => {
   return (
     <FormField form={form} name={name} label={label} className={className}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-full pl-3 text-left font-normal",
-              !form.getValues(name) && "text-muted-foreground"
-            )}
-          >
-            {form.getValues(name) ? (
-              format(new Date(form.getValues(name)), "dd/MM/yyyy", { locale: ptBR })
-            ) : (
-              "Selecione uma data"
-            )}
-            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={form.getValues(name) ? new Date(form.getValues(name)) : undefined}
-            onSelect={(date) => date && form.setValue(name, date)}
-            initialFocus
-            className={cn("p-3 pointer-events-auto")}
-            locale={ptBR}
-          />
-        </PopoverContent>
-      </Popover>
+      {field => (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full pl-3 text-left font-normal",
+                !field.value && "text-muted-foreground"
+              )}
+            >
+              {field.value ? (
+                format(new Date(field.value), "dd/MM/yyyy", { locale: ptBR })
+              ) : (
+                "Selecione uma data"
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={field.value ? new Date(field.value) : undefined}
+              onSelect={(date) => field.onChange(date)}
+              initialFocus
+              locale={ptBR}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
     </FormField>
   );
 };
