@@ -1,8 +1,8 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import useLearnWorldsBase from "./useLearnWorldsBase";
 
-interface CadastrarAlunoDTO {
+export interface CadastrarAlunoDTO {
   firstName: string;
   lastName: string;
   email: string;
@@ -10,7 +10,7 @@ interface CadastrarAlunoDTO {
   phoneNumber?: string;
 }
 
-interface AlunoDTO {
+export interface AlunoDTO {
   id: string;
   firstName: string;
   lastName: string;
@@ -20,6 +20,16 @@ interface AlunoDTO {
   registrationDate: string;
   lastLoginDate?: string;
   coursesList?: string[];
+}
+
+// Interface AlunoParams para uso externo
+export interface AlunoParams {
+  id?: string;
+  nome?: string;
+  email?: string;
+  cpf?: string;
+  telefone?: string;
+  learnworlds_id?: string;
 }
 
 const useLearnWorldsAlunos = () => {
@@ -76,9 +86,33 @@ const useLearnWorldsAlunos = () => {
     }
   }, [makeRequest]);
 
+  /**
+   * Sincroniza alunos do LearnWorlds com o sistema
+   * @param todos Se verdadeiro, sincroniza todos os alunos. Caso contrário, apenas os novos ou modificados.
+   */
+  const sincronizarAlunos = useCallback(async (todos: boolean = false): Promise<any> => {
+    try {
+      console.log(`Iniciando sincronização de alunos. Sincronizar todos: ${todos}`);
+      
+      // Parâmetros para a função de sincronização
+      const params = todos ? { completa: true } : {};
+      
+      const endpoint = `learnworlds-api/admin/sync/alunos`;
+      const response = await makeRequest(endpoint, 'POST', params);
+      
+      console.log("Resposta da sincronização:", response);
+      
+      return response;
+    } catch (error) {
+      console.error("Erro na sincronização de alunos:", error);
+      throw error;
+    }
+  }, [makeRequest]);
+
   return {
     getUsers,
     cadastrarAluno,
+    sincronizarAlunos,
     dadosListagem,
     loading,
     error,
