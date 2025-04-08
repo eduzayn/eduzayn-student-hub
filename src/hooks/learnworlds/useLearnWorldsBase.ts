@@ -58,6 +58,10 @@ const useLearnWorldsBase = () => {
       const options: RequestInit = {
         method,
         headers,
+        // Adicionando configurações para evitar problemas de CORS e cache em produção
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
       };
 
       if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
@@ -97,10 +101,15 @@ const useLearnWorldsBase = () => {
       
       if (contentType.includes('application/json')) {
         // Análise de JSON com tratamento de erro aprimorado
-        let data;
         try {
           const responseText = await response.text();
-          data = JSON.parse(responseText);
+          // Verifica se a resposta não está vazia
+          if (!responseText.trim()) {
+            console.warn('Resposta vazia recebida');
+            setOfflineMode(false);
+            return null;
+          }
+          const data = JSON.parse(responseText);
           setOfflineMode(false);
           return data;
         } catch (parseError) {
@@ -114,7 +123,8 @@ const useLearnWorldsBase = () => {
         console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
         
         if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
-          throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API.');
+          console.error('Resposta HTML detectada em vez de JSON', textResponse.substring(0, 500));
+          throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API ou configuração CORS.');
         }
         
         setOfflineMode(false);
