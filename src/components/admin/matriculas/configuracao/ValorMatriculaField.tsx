@@ -2,48 +2,40 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { FormControl, FormDescription } from "@/components/ui/form";
+import { formatarMoeda } from "@/utils/formatarMoeda";
 import FormField from "./FormField";
 
 interface ValorMatriculaFieldProps {
   form: UseFormReturn<any>;
-  curso: any;
+  curso?: any;
 }
 
-const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({ form, curso }) => {
-  // Formato de moeda brasileira
-  const formatarMoeda = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
+const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({ 
+  form,
+  curso
+}) => {
+  const valorCurso = curso?.valor_mensalidade || 0;
 
   return (
     <FormField
       form={form}
       name="valor_matricula"
-      label="Valor"
+      label="Valor da Matrícula"
+      className="flex flex-col"
     >
-      <FormControl>
-        <Input
-          type="text"
-          placeholder="0,00"
-          value={form.getValues("valor_matricula") === 0 ? "" : form.getValues("valor_matricula")}
-          onChange={(e) => {
-            // Remove caracteres não numéricos, exceto vírgula e ponto
-            const value = e.target.value.replace(/[^\d.,]/g, "");
-            
-            // Converte para número (tratando vírgula como decimal)
-            const numeroFormatado = value ? parseFloat(value.replace(",", ".")) : 0;
-            
-            form.setValue("valor_matricula", numeroFormatado);
-          }}
-        />
-      </FormControl>
-      <FormDescription>
-        Valor mensalidade: {curso?.valor_mensalidade ? formatarMoeda(curso.valor_mensalidade) : "N/A"}
-      </FormDescription>
+      {field => (
+        <div className="flex items-center">
+          <span className="mr-2">R$</span>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={field.value || valorCurso}
+            onChange={field.onChange}
+            onFocus={(e) => e.target.select()}
+          />
+        </div>
+      )}
     </FormField>
   );
 };
