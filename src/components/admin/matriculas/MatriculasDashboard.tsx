@@ -168,7 +168,7 @@ const MatriculasDashboard: React.FC = () => {
                 <BarChart data={matriculasData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="mes" />
-                  {/* Removendo o uso de defaultProps e definindo as props diretamente */}
+                  {/* Em vez de usar defaultProps, passamos diretamente as propriedades */}
                   <YAxis width={40} tickFormatter={(value) => `${value}`} />
                   <RechartsTooltip
                     content={<ChartTooltipContent />}
@@ -323,4 +323,3 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 };
 
 export default MatriculasDashboard;
-
