@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminBypass';
 
+// Constante para o token público do LearnWorlds
+const LEARNWORLDS_PUBLIC_TOKEN = "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
+
 /**
  * Hook base para interagir com a API do LearnWorlds
  * Fornece funcionalidades compartilhadas para outros hooks especializados
@@ -15,19 +18,34 @@ const useLearnWorldsBase = () => {
   const { getAccessToken } = useAuth();
 
   /**
-   * Função auxiliar para fazer requisições para as funções edge
+   * Obtém o cabeçalho de autorização para requisições públicas (não administrativas)
    */
-  const makeRequest = async (endpoint: string, method = 'GET', body?: any): Promise<any> => {
+  const getPublicAuthorizationHeader = (): string => {
+    return `Bearer ${LEARNWORLDS_PUBLIC_TOKEN}`;
+  };
+
+  /**
+   * Função auxiliar para fazer requisições para as funções edge
+   * @param endpoint Endpoint da API
+   * @param method Método HTTP (GET, POST, etc.)
+   * @param body Corpo da requisição (opcional)
+   * @param usePublicToken Se verdadeiro, usa o token público em vez do token de administrador
+   */
+  const makeRequest = async (endpoint: string, method = 'GET', body?: any, usePublicToken = false): Promise<any> => {
     try {
       setLoading(true);
       setError(null);
 
-      // Usar o token JWT de bypass para autorização nas chamadas das funções edge
-      const authHeader = getAuthorizationHeader();
+      // Determinar qual token usar com base no parâmetro usePublicToken
+      const authHeader = usePublicToken ? getPublicAuthorizationHeader() : getAuthorizationHeader();
       
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
-      console.log(`Token de autenticação formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+      console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
+      
+      if (!usePublicToken) {
+        console.log(`Token de autenticação formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+      }
 
       const headers: HeadersInit = {
         'Authorization': authHeader,
@@ -101,11 +119,20 @@ const useLearnWorldsBase = () => {
     }
   };
 
+  /**
+   * Variante do makeRequest que sempre utiliza o token público
+   */
+  const makePublicRequest = async (endpoint: string, method = 'GET', body?: any): Promise<any> => {
+    return makeRequest(endpoint, method, body, true);
+  };
+
   return {
     loading,
     error,
     offlineMode,
-    makeRequest
+    makeRequest,
+    makePublicRequest,
+    LEARNWORLDS_PUBLIC_TOKEN
   };
 };
 

@@ -13,10 +13,13 @@ const corsHeaders = {
 const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 // Obtendo a chave API LearnWorlds do ambiente
 const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
+// Token público para operações do cliente
+const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "";
 
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token do ambiente configurado:", Deno.env.get("ADMIN_BYPASS_TOKEN") ? "Sim (✓)" : "Não (usando fallback)");
 console.log("API Key LearnWorlds configurada:", LEARNWORLDS_API_KEY ? "Sim (✓)" : "Não");
+console.log("Token público LearnWorlds configurado:", LEARNWORLDS_PUBLIC_TOKEN ? "Sim (✓)" : "Não");
 console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
 console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
 
@@ -63,8 +66,11 @@ serve(async (req) => {
   console.log("Token esperado (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
   console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
   
-  // Verificação com o token padronizado
-  if (token !== ADMIN_BYPASS_JWT) {
+  // Verificação do token - aceitamos tanto o token de administrador quanto o token público
+  const isAdminToken = token === ADMIN_BYPASS_JWT;
+  const isPublicToken = token === LEARNWORLDS_PUBLIC_TOKEN;
+  
+  if (!isAdminToken && !isPublicToken) {
     console.log("Token inválido - nenhuma correspondência encontrada");
     // Para diagnóstico - compare caractere por caractere
     let firstMismatchPos = -1;
@@ -92,7 +98,7 @@ serve(async (req) => {
     });
   }
 
-  console.log("Autenticação bem-sucedida com token de bypass");
+  console.log(`Autenticação bem-sucedida com ${isAdminToken ? 'token de bypass admin' : 'token público'}`);
 
   const url = new URL(req.url);
   const path = url.pathname.split("/learnworlds-api/")[1];
@@ -102,7 +108,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         message: "LearnWorlds API online",
         timestamp: new Date().toISOString(),
-        apiKeyConfigured: !!LEARNWORLDS_API_KEY
+        apiKeyConfigured: !!LEARNWORLDS_API_KEY,
+        publicTokenConfigured: !!LEARNWORLDS_PUBLIC_TOKEN,
+        authenticatedAs: isAdminToken ? 'admin' : 'public'
       }), {
         headers: corsHeaders,
         status: 200
@@ -110,7 +118,8 @@ serve(async (req) => {
     }
 
     // --- GET /users
-    if (path === "users") {
+    // Requer privilégios de administrador
+    if (path === "users" && isAdminToken) {
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "20");
       const searchTerm = url.searchParams.get("q") || "";
@@ -144,6 +153,7 @@ serve(async (req) => {
     }
 
     // --- GET /courses
+    // Permitir tanto para admin quanto para token público
     if (path === "courses") {
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "20");
@@ -175,6 +185,7 @@ serve(async (req) => {
     }
 
     // --- GET /courses/:id
+    // Permitir tanto para admin quanto para token público
     if (path.startsWith("courses/")) {
       const courseId = path.split("courses/")[1];
 
@@ -212,6 +223,17 @@ serve(async (req) => {
         status: 200
       });
     }
+    
+    // --- ROTAS ESPECÍFICAS QUE EXIGEM TOKEN DE ADMIN
+    if (!isAdminToken && (path === "users" || path.startsWith("admin/"))) {
+      return new Response(JSON.stringify({
+        code: 403,
+        message: "Esta operação requer token de administrador"
+      }), {
+        headers: corsHeaders,
+        status: 403
+      });
+    }
 
     // Endpoint não encontrado
     return new Response(JSON.stringify({
@@ -224,6 +246,19 @@ serve(async (req) => {
   }
 
   if (method === "POST") {
+    // Para operações POST, exigir token de administrador para operações sensíveis
+    const requiresAdmin = path === "users" || path.startsWith("admin/");
+    
+    if (requiresAdmin && !isAdminToken) {
+      return new Response(JSON.stringify({
+        code: 403,
+        message: "Esta operação requer token de administrador"
+      }), {
+        headers: corsHeaders,
+        status: 403
+      });
+    }
+    
     try {
       const body = await req.json();
       return new Response(JSON.stringify({
