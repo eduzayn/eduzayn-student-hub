@@ -54,11 +54,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, anonKey);
 
     const apiKey = Deno.env.get("LEARNWORLDS_API_KEY");
-    const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID");
+    const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
     const apiBaseUrl = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
     const fullApiUrl = `${apiBaseUrl}/api/v2/${schoolId}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
+    addLog(`Usando School ID: ${schoolId}`);
+    addLog(`API Key encontrada: ${apiKey ? 'Sim' : 'Não'}`);
 
     const fetchUsers = async (page, limit) => {
       const res = await fetch(`${fullApiUrl}/users?page=${page}&limit=${limit}`, {
@@ -69,10 +71,19 @@ serve(async (req) => {
           'Lw-Client': schoolId
         }
       });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        addLog(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
+        throw new Error(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
+      }
+
       return res.json();
     };
 
     const fetchCourses = async (page, limit) => {
+      addLog(`Buscando cursos da API LearnWorlds: página ${page}, limite ${limit}`);
+      
       const res = await fetch(`${fullApiUrl}/courses?page=${page}&limit=${limit}`, {
         method: "GET",
         headers: {
@@ -81,7 +92,16 @@ serve(async (req) => {
           'Lw-Client': schoolId
         }
       });
-      return res.json();
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        addLog(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
+        throw new Error(`Erro na API LearnWorlds: ${res.status} - ${errorText}`);
+      }
+
+      const data = await res.json();
+      addLog(`Resposta da API LearnWorlds cursos: ${data.data ? data.data.length : 0} itens recebidos`);
+      return data;
     };
 
     const supabaseService = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"));
@@ -166,18 +186,35 @@ serve(async (req) => {
     const processor = type === "courses" ? processCourses : processUsers;
 
     addLog(`Buscando dados da página ${pageNumber} com limite de ${pageSize} itens...`);
-    const firstPage = await handler(pageNumber, pageSize);
-    results.total = firstPage.total || firstPage.data.length;
-    addLog(`Total de itens encontrados: ${results.total}, Páginas: ${firstPage.pages || 1}`);
     
-    await processor(firstPage.data);
-    
-    if (isSyncAll && firstPage.pages > 1) {
-      for (let page = 2; page <= firstPage.pages; page++) {
-        addLog(`Processando página ${page} de ${firstPage.pages}...`);
-        const nextPage = await handler(page, pageSize);
-        await processor(nextPage.data);
+    try {
+      const firstPage = await handler(pageNumber, pageSize);
+      results.total = firstPage.total || firstPage.data?.length || 0;
+      addLog(`Total de itens encontrados: ${results.total}, Páginas: ${firstPage.pages || 1}`);
+      
+      if (!firstPage.data || firstPage.data.length === 0) {
+        addLog("Nenhum dado encontrado na API LearnWorlds");
+      } else {
+        await processor(firstPage.data);
+        
+        if (isSyncAll && firstPage.pages > 1) {
+          for (let page = 2; page <= firstPage.pages; page++) {
+            addLog(`Processando página ${page} de ${firstPage.pages}...`);
+            const nextPage = await handler(page, pageSize);
+            await processor(nextPage.data);
+          }
+        }
       }
+    } catch (apiError) {
+      addLog(`ERRO na API LearnWorlds: ${apiError.message}`);
+      return new Response(JSON.stringify({ 
+        error: apiError.message,
+        details: "Erro ao chamar API LearnWorlds. Verifique suas credenciais.",
+        results 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     addLog(`Sincronização concluída. Importados: ${results.imported}, Atualizados: ${results.updated}, Falhas: ${results.failed}`);

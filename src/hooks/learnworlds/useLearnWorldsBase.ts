@@ -44,13 +44,18 @@ const useLearnWorldsBase = () => {
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       
-      // Obter a chave anônima do Supabase diretamente da instância do cliente
-      const supabaseAnonKey = supabase.auth.session()?.access_token || '';
+      // Obtendo a chave anônima do Supabase 
+      // Corrigindo o método que estava causando o erro
+      const currentSession = await supabase.auth.getSession();
+      const supabaseAnonKey = currentSession?.data?.session?.access_token || '';
       
+      // URL base específica para o projeto Supabase (usando uma constante direta ao invés de propriedade protegida)
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2FyemtmbWNvYmN0Ymx6enRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4OTYwMTksImV4cCI6MjA1OTQ3MjAxOX0.VJTJA5hKhVWFA4x-pM7jXetJsCz8-aMuJDOoVAlPeQc";
+
       const headers: HeadersInit = {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
-        'apikey': supabase.supabaseKey // Adicionando a chave de API do Supabase
+        'apikey': supabaseKey // Adicionando a chave de API do Supabase
       };
 
       const options: RequestInit = {
