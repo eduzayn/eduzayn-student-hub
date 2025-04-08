@@ -1,4 +1,3 @@
-
 /**
  * Serviço de integração com a API da LearnWorlds e Supabase
  * Documentação: https://developers.learnworlds.com/
@@ -14,6 +13,10 @@ interface LearnWorldsCourse {
   title: string;
   description: string;
   thumbnail: string;
+  price: number;
+  modalidade: string;
+  access: string;
+  duration: string;
   progress: number;
 }
 
@@ -55,7 +58,12 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
           titulo,
           descricao,
           imagem_url,
-          learning_worlds_id
+          learning_worlds_id,
+          preco,
+          modalidade,
+          acesso,
+          duracao,
+          progresso
         )
       `)
       .eq('aluno_id', userId);
@@ -82,6 +90,10 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
         title: curso?.titulo || "Sem título",
         description: curso?.descricao || "Sem descrição",
         thumbnail: curso?.imagem_url || "https://via.placeholder.com/300x180?text=Curso",
+        price: curso?.preco || 0,
+        modalidade: curso?.modalidade || "Sem modalidade",
+        access: curso?.acesso || "Sem acesso",
+        duration: curso?.duracao || "Sem duração",
         progress: matricula.progresso || 0,
         learnWorldsId: curso?.learning_worlds_id || null
       };
@@ -110,6 +122,10 @@ const getMockCourses = (): LearnWorldsCourse[] => {
       title: "Desenvolvimento Web Frontend",
       description: "Aprenda a criar interfaces web modernas com HTML, CSS e JavaScript",
       thumbnail: "https://via.placeholder.com/300x180?text=Frontend",
+      price: 100,
+      modalidade: "Online",
+      access: "Aberto",
+      duration: "6 meses",
       progress: 65
     },
     {
@@ -117,6 +133,10 @@ const getMockCourses = (): LearnWorldsCourse[] => {
       title: "Desenvolvimento Backend com Node.js",
       description: "Construa APIs robustas e escaláveis com Node.js e Express",
       thumbnail: "https://via.placeholder.com/300x180?text=Backend",
+      price: 150,
+      modalidade: "Presencial",
+      access: "Aberto",
+      duration: "4 meses",
       progress: 30
     },
     {
@@ -124,6 +144,10 @@ const getMockCourses = (): LearnWorldsCourse[] => {
       title: "React Native para Iniciantes",
       description: "Crie aplicativos móveis nativos usando JavaScript",
       thumbnail: "https://via.placeholder.com/300x180?text=React+Native",
+      price: 200,
+      modalidade: "Online",
+      access: "Aberto",
+      duration: "3 meses",
       progress: 10
     }
   ];
