@@ -56,7 +56,7 @@ serve(async (req) => {
     const apiKey = Deno.env.get("LEARNWORLDS_API_KEY");
     const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
     const apiBaseUrl = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
-    const fullApiUrl = `${apiBaseUrl}/api/v2/${schoolId}`;
+    const fullApiUrl = `${apiBaseUrl}/v2/${schoolId}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
     addLog(`Usando School ID: ${schoolId}`);
