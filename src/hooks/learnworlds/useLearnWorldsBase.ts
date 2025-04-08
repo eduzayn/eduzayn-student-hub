@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -6,6 +5,8 @@ import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminB
 
 // Constante para o token público do LearnWorlds
 const LEARNWORLDS_PUBLIC_TOKEN = "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
+// School ID do LearnWorlds, definido como valor padrão
+const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
 
 /**
  * Hook base para interagir com a API do LearnWorlds
@@ -46,6 +47,7 @@ const useLearnWorldsBase = () => {
       
       if (!usePublicToken) {
         console.log(`Token administrativo formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+        console.log(`School ID utilizado: ${LEARNWORLDS_SCHOOL_ID}`);
       } else {
         console.log(`Token público formatado como: Bearer ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
       }
@@ -53,6 +55,7 @@ const useLearnWorldsBase = () => {
       const headers: HeadersInit = {
         'Authorization': authHeader,
         'Content-Type': 'application/json',
+        'X-School-Id': LEARNWORLDS_SCHOOL_ID, // Adicionando ID da escola nos cabeçalhos para diagnóstico
       };
 
       const options: RequestInit = {

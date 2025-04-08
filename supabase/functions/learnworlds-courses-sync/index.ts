@@ -61,7 +61,7 @@ serve(async (req) => {
 
     // Obter chaves da API e configurações da LearnWorlds
     const apiKey = Deno.env.get('LEARNWORLDS_API_KEY');
-    const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID');
+    const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || "grupozayneducacional";
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_BASE_URL') || 'https://api.learnworlds.com';
     
     // Log detalhado das configurações - IMPORTANTE para diagnóstico!

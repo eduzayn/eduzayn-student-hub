@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS
@@ -16,7 +15,7 @@ const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
 // Token público para operações do cliente
 const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "";
 // School ID do LearnWorlds
-const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "";
+const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
 // URL base da API do LearnWorlds
 const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_BASE_URL") || "https://api.learnworlds.com";
 
@@ -31,6 +30,7 @@ console.log("URL base da API LearnWorlds:", LEARNWORLDS_API_BASE_URL);
 const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Promise<any> => {
   if (!LEARNWORLDS_API_KEY || !LEARNWORLDS_SCHOOL_ID) {
     console.log("API Key ou School ID não configurados, usando dados simulados");
+    console.log(`School ID configurado: ${LEARNWORLDS_SCHOOL_ID}`);
     return null;
   }
 
@@ -38,6 +38,7 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
     const url = `${LEARNWORLDS_API_BASE_URL}/api/v2/${LEARNWORLDS_SCHOOL_ID}${path.startsWith('/') ? path : '/' + path}`;
     
     console.log(`Chamando API LearnWorlds: ${method} ${url}`);
+    console.log(`Usando School ID: ${LEARNWORLDS_SCHOOL_ID}`);
     
     const options: RequestInit = {
       method,

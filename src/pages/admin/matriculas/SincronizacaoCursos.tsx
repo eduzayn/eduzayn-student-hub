@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import SincronizacaoLogs from "@/components/admin/matriculas/sincronizacao/SincronizacaoLogs";
 import SincronizacaoAlertas from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlertas";
+
+const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
 
 const SincronizacaoCursos: React.FC = () => {
   const navigate = useNavigate();
@@ -132,7 +133,7 @@ const SincronizacaoCursos: React.FC = () => {
           <AlertDescription className="space-y-2">
             <p>A API do LearnWorlds está retornando um erro de "client_id". Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente</li>
+              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente. Valor atual: "{LEARNWORLDS_SCHOOL_ID}"</li>
               <li>O cabeçalho 'Lw-Client' não está sendo enviado corretamente</li>
               <li>O token de API não tem permissões suficientes</li>
             </ul>
