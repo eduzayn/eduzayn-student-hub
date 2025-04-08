@@ -26,6 +26,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         throw new Error("Erro ao carregar cursos do LearnWorlds");
       }
       
+      console.log("Dados originais dos cursos:", resultado.data);
+      
       // Mapeando os dados retornados para o formato necessário para exibição
       const cursosFormatados = resultado.data.map((curso: any) => ({
         id: curso.id,
@@ -134,7 +136,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   
   // Handler para selecionar um curso
   const handleSelecionar = (curso: any) => {
-    setSelecionado(curso.id);
+    setSelecionado(curso.id || curso.learning_worlds_id);
     onCursoSelecionado({
       ...curso,
       // Garantindo que temos o ID do LearnWorlds

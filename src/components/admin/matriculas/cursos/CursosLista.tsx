@@ -29,9 +29,9 @@ const CursosLista: React.FC<CursosListaProps> = ({
     <div className="space-y-3">
       {cursos.map(curso => (
         <CursoCard 
-          key={curso.id}
+          key={curso.id || curso.learning_worlds_id}
           curso={curso} 
-          selecionado={selecionado} 
+          selecionado={selecionado === (curso.id || curso.learning_worlds_id)} 
           onSelecionar={onSelecionar} 
         />
       ))}
