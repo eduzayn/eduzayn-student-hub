@@ -34,20 +34,27 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       console.log("Resposta de cursos do LearnWorlds:", response);
       
       // Verificar se temos uma resposta válida
-      if (response && 
-          ((response.data && Array.isArray(response.data)) || 
-           (response.text && response.text.includes("<!DOCTYPE html>")))) {
-        
-        // Se for HTML, ativar modo offline
-        if (response.text && response.text.includes("<!DOCTYPE html>")) {
-          console.warn("Recebida resposta HTML, ativando modo offline");
-          setOfflineMode(true);
-          return getDadosSimulados(page, limit, searchTerm);
-        }
-        
+      if (!response) {
+        console.error("Resposta nula da API de cursos");
+        setOfflineMode(true);
+        return getDadosSimulados(page, limit, searchTerm);
+      }
+      
+      // Verificar se recebemos HTML (erro comum)
+      if (response.text && typeof response.text === 'string' && 
+          (response.text.includes("<!DOCTYPE html>") || response.text.includes("<html"))) {
+        console.warn("Recebida resposta HTML, ativando modo offline");
+        setOfflineMode(true);
+        return getDadosSimulados(page, limit, searchTerm);
+      }
+      
+      // Verificar se temos dados no formato esperado
+      if (response.data && Array.isArray(response.data)) {
+        // Resposta válida
+        setOfflineMode(false);
         return response;
       } else {
-        console.error("Resposta inválida da API de cursos:", response);
+        console.error("Formato de resposta inválido da API de cursos:", response);
         setOfflineMode(true);
         return getDadosSimulados(page, limit, searchTerm);
       }
@@ -65,7 +72,10 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
     try {
       const response = await makePublicRequest(`learnworlds-api/courses/${courseId}`);
       
-      if (!response || response.error || (response.text && response.text.includes("<!DOCTYPE html>"))) {
+      // Verificar se recebemos HTML (erro comum)
+      if (!response || response.error || 
+          (response.text && typeof response.text === 'string' && 
+           (response.text.includes("<!DOCTYPE html>") || response.text.includes("<html")))) {
         setOfflineMode(true);
         return getDetalhesCursoSimulado(courseId);
       }

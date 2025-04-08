@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
@@ -78,7 +79,7 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
       } else {
         const textResponse = await response.text();
         console.log(`Resposta não-JSON: ${textResponse.substring(0, 100)}...`);
-        return { text: textResponse };
+        throw new Error("API retornou conteúdo não-JSON. Verifique as configurações da API.");
       }
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
@@ -90,6 +91,66 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
   } catch (error) {
     console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);
     throw error;
+  }
+};
+
+// Dados simulados para quando a API não estiver disponível
+const mockData = {
+  getCourses: (page = 1, limit = 20, searchTerm = "") => {
+    const mockCourses = [
+      { id: "course-1", title: "Desenvolvimento Web Frontend", description: "Aprenda HTML, CSS e JS", price: 1200.00, price_final: 1200.00, duration: "60 horas", image: "https://via.placeholder.com/300x200" },
+      { id: "course-2", title: "Python para Ciência de Dados", description: "Fundamentos de Python e análise", price: 1500.00, price_final: 1500.00, duration: "80 horas", image: "https://via.placeholder.com/300x200" },
+      { id: "course-3", title: "Marketing Digital Avançado", description: "Estratégias modernas de marketing", price: 1800.00, price_final: 1800.00, duration: "90 horas", image: "https://via.placeholder.com/300x200" },
+      { id: "course-4", title: "Design UX/UI", description: "Princípios de design e experiência", price: 1400.00, price_final: 1400.00, duration: "70 horas", image: "https://via.placeholder.com/300x200" }
+    ];
+
+    const filteredCourses = searchTerm
+      ? mockCourses.filter(c =>
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : mockCourses;
+
+    return {
+      data: filteredCourses,
+      meta: {
+        page,
+        totalItems: filteredCourses.length,
+        totalPages: 1,
+        itemsPerPage: limit
+      }
+    };
+  },
+  getCourseDetails: (id: string) => {
+    return {
+      id,
+      title: `Curso ${id}`,
+      description: `Descrição detalhada do curso ${id}`,
+      price: 1500.00,
+      price_final: 1500.00,
+      duration: "80 horas",
+      image: "https://via.placeholder.com/600x400",
+      modules: [
+        {
+          id: "module-1",
+          title: "Introdução",
+          description: "Fundamentos básicos",
+          lessons: [
+            { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
+            { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
+          ]
+        },
+        {
+          id: "module-2",
+          title: "Intermediário",
+          description: "Aprofundamento teórico",
+          lessons: [
+            { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
+            { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
+          ]
+        }
+      ]
+    };
   }
 };
 
@@ -201,6 +262,7 @@ serve(async (req) => {
         let result;
         
         try {
+          // Tentativa de chamada real à API
           result = await callLearnWorldsApi(`/courses?${apiParams.toString()}`);
           console.log(`Resposta da API LearnWorlds (cursos):`, result);
           
@@ -218,36 +280,14 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error("Erro na chamada para API LearnWorlds:", error);
-          result = null;
+          console.log("Usando dados simulados devido a erro na API");
+          result = mockData.getCourses(page, limit, searchTerm);
         }
         
-        // Se não conseguimos dados reais, usamos simulados
-        if (!result) {
-          const mockCourses = [
-            { id: "course-1", title: "Desenvolvimento Web Frontend", description: "Aprenda HTML, CSS e JS", price: 1200.00, price_final: 1200.00, duration: "60 horas", image: "https://via.placeholder.com/300x200" },
-            { id: "course-2", title: "Python para Ciência de Dados", description: "Fundamentos de Python e análise", price: 1500.00, price_final: 1500.00, duration: "80 horas", image: "https://via.placeholder.com/300x200" },
-            { id: "course-3", title: "Marketing Digital Avançado", description: "Estratégias modernas de marketing", price: 1800.00, price_final: 1800.00, duration: "90 horas", image: "https://via.placeholder.com/300x200" },
-            { id: "course-4", title: "Design UX/UI", description: "Princípios de design e experiência", price: 1400.00, price_final: 1400.00, duration: "70 horas", image: "https://via.placeholder.com/300x200" }
-          ];
-
-          const filteredCourses = searchTerm
-            ? mockCourses.filter(c =>
-                c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                c.description.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-            : mockCourses;
-
-          result = {
-            data: filteredCourses,
-            meta: {
-              page,
-              totalItems: filteredCourses.length,
-              totalPages: 1,
-              itemsPerPage: limit
-            }
-          };
-          
-          console.log("Retornando dados simulados para cursos:", result);
+        // Se não conseguimos dados reais ou o resultado não é no formato esperado
+        if (!result || !Array.isArray(result.data)) {
+          console.warn("Formato inválido de resultado ou sem dados, usando dados simulados");
+          result = mockData.getCourses(page, limit, searchTerm);
         }
 
         return new Response(JSON.stringify(result), {
@@ -268,42 +308,14 @@ serve(async (req) => {
           console.log(`Resposta da API LearnWorlds (detalhes do curso ${courseId}):`, result);
         } catch (error) {
           console.error(`Erro na chamada para API LearnWorlds (curso ${courseId}):`, error);
-          result = null;
+          console.log("Usando dados simulados para detalhes do curso");
+          result = mockData.getCourseDetails(courseId);
         }
         
-        // Se não conseguimos dados reais, usamos simulados
-        if (!result) {
-          result = {
-            id: courseId,
-            title: `Curso ${courseId}`,
-            description: `Descrição detalhada do curso ${courseId}`,
-            price: 1500.00,
-            price_final: 1500.00,
-            duration: "80 horas",
-            image: "https://via.placeholder.com/600x400",
-            modules: [
-              {
-                id: "module-1",
-                title: "Introdução",
-                description: "Fundamentos básicos",
-                lessons: [
-                  { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
-                  { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
-                ]
-              },
-              {
-                id: "module-2",
-                title: "Intermediário",
-                description: "Aprofundamento teórico",
-                lessons: [
-                  { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
-                  { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
-                ]
-              }
-            ]
-          };
-          
-          console.log("Retornando dados simulados para detalhes do curso:", result);
+        // Se não conseguimos dados reais ou o resultado não tem formato esperado
+        if (!result || !result.id) {
+          console.warn("Formato inválido de resultado para detalhes do curso, usando dados simulados");
+          result = mockData.getCourseDetails(courseId);
         }
 
         return new Response(JSON.stringify(result), {
