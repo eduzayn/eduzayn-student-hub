@@ -15,4 +15,3 @@ verify_jwt = false
 
 [functions.learnworlds-sync]
 verify_jwt = false
-

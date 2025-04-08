@@ -43,23 +43,16 @@ const useLearnWorldsBase = () => {
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
-      console.log(`A verificação JWT está desativada, mas ainda enviamos o token por compatibilidade`);
       
-      if (!usePublicToken) {
-        console.log(`Token administrativo formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
-        console.log(`School ID utilizado: ${LEARNWORLDS_SCHOOL_ID}`);
-      } else {
-        console.log(`Token público formatado como: Bearer ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
-      }
-
+      // Obter a chave anônima do Supabase diretamente da instância do cliente
+      const supabaseAnonKey = supabase.auth.session()?.access_token || '';
+      
       const headers: HeadersInit = {
         'Authorization': authHeader,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'apikey': supabase.supabaseKey // Adicionando a chave de API do Supabase
       };
 
-      // Removemos os cabeçalhos específicos do LearnWorlds que estavam causando problemas de CORS
-      // Como 'Lw-Client' e 'x-school-id'
-      
       const options: RequestInit = {
         method,
         headers,
@@ -95,7 +88,6 @@ const useLearnWorldsBase = () => {
             }
           } catch (parseError) {
             console.error('Erro ao analisar resposta como JSON:', parseError);
-            // Se não for JSON, usar o texto como está
           }
           
           throw new Error(`Erro ${response.status}: ${errorDetails}`);
@@ -106,10 +98,8 @@ const useLearnWorldsBase = () => {
         console.log(`Tipo de conteúdo da resposta: ${contentType}`);
         
         if (contentType.includes('application/json')) {
-          // Análise de JSON com tratamento de erro aprimorado
           try {
             const responseText = await response.text();
-            // Verifica se a resposta não está vazia
             if (!responseText.trim()) {
               console.warn('Resposta vazia recebida');
               setOfflineMode(false);
@@ -124,7 +114,6 @@ const useLearnWorldsBase = () => {
             throw new Error(`Erro ao analisar JSON: ${parseError.message}. Resposta: ${responseText.substring(0, 100)}...`);
           }
         } else {
-          // Se não for JSON, podemos ter um problema
           const textResponse = await response.text();
           console.warn('Resposta não-JSON recebida:', textResponse.substring(0, 200) + '...');
           
@@ -134,7 +123,6 @@ const useLearnWorldsBase = () => {
           }
           
           setOfflineMode(false);
-          // Tentar retornar algo útil
           return { 
             message: 'Resposta não-JSON recebida', 
             text: textResponse.substring(0, 1000),
@@ -142,7 +130,6 @@ const useLearnWorldsBase = () => {
           };
         }
       } catch (fetchError) {
-        // Tratamento específico para o erro de conexão "Failed to fetch"
         if (fetchError.message === 'Failed to fetch') {
           console.error('Erro de conexão: Failed to fetch. Possíveis causas: CORS, rede, função edge indisponível');
           throw new Error(`Erro de conexão: Não foi possível acessar a função edge. Verifique se a função está ativa e configurada corretamente.`);
@@ -153,7 +140,6 @@ const useLearnWorldsBase = () => {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, err);
       setOfflineMode(true);
       
-      // Mensagem de erro mais específica com base no tipo de erro
       let errorMessage = err.message || 'Erro ao comunicar com a API';
       if (errorMessage.includes('Failed to fetch')) {
         errorMessage = 'Falha de conexão com a API. Verifique se a função edge está ativa e se não há bloqueios de rede ou CORS.';
@@ -161,6 +147,8 @@ const useLearnWorldsBase = () => {
         errorMessage = 'Erro de configuração do LearnWorlds: client_id ausente ou incorreto. Verifique o valor de LEARNWORLDS_SCHOOL_ID.';
       } else if (errorMessage.includes('401') || errorMessage.includes('403')) {
         errorMessage = 'Erro de autenticação na API LearnWorlds. Verifique se o token API tem permissões suficientes.';
+      } else if (errorMessage.includes('No API key found')) {
+        errorMessage = 'Chave de API do Supabase não encontrada na requisição. Verifique a configuração do cliente Supabase.';
       }
       
       setError(errorMessage);
