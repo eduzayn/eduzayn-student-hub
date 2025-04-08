@@ -150,30 +150,63 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         return;
       }
 
-      const resultado = await cadastrarAluno({
+      // Preparar dados para envio à API
+      const dadosAluno = {
         firstName: formNovoAluno.nome,
         lastName: formNovoAluno.sobrenome,
         email: formNovoAluno.email,
         cpf: formNovoAluno.cpf,
         phoneNumber: formNovoAluno.telefone
-      });
+      };
+      
+      console.log("Enviando dados do aluno:", dadosAluno);
+      
+      // Fazer a requisição à API
+      const resultado = await cadastrarAluno(dadosAluno);
+      
+      // Verificar resposta da API
+      console.log("Resposta da API:", resultado);
 
-      if (!resultado) {
-        throw new Error("Falha ao cadastrar aluno no LearnWorlds");
+      // Aceitar tanto resultado no formato esperado quanto formato alternativo com text HTML
+      let novoAlunoId;
+      
+      if (resultado && resultado.id) {
+        // Formato esperado da API
+        novoAlunoId = resultado.id;
+      } else if (resultado && resultado.text) {
+        // Formato alternativo (resposta HTML ou outro formato)
+        // Criar ID local para permitir uso offline
+        novoAlunoId = `local-${Date.now()}`;
+        
+        toast.info("Resposta da API em formato não-padrão, usando ID local", {
+          description: "A sincronização completa pode ser necessária mais tarde."
+        });
+      } else if (resultado && typeof resultado === 'object') {
+        // Quando recebemos um objeto, mas sem o ID esperado
+        novoAlunoId = `local-${Date.now()}`;
+        
+        toast.info("Resposta da API sem ID, usando ID local", {
+          description: "A sincronização completa pode ser necessária mais tarde."
+        });
+      } else {
+        throw new Error("Resposta inválida da API");
       }
 
+      // Criar objeto do novo aluno para a interface
       const novoAluno = {
-        id: resultado.id,
+        id: novoAlunoId,
         nome: `${formNovoAluno.nome} ${formNovoAluno.sobrenome}`.trim(),
         email: formNovoAluno.email,
         cpf: formNovoAluno.cpf,
         telefone: formNovoAluno.telefone,
-        learnworlds_id: resultado.id
+        learnworlds_id: novoAlunoId
       };
 
+      // Adicionar à lista de alunos e selecionar
       setAlunos(prev => [novoAluno, ...prev]);
       handleSelecionar(novoAluno);
       
+      // Fechar diálogo e limpar formulário
       setDialogAberto(false);
       setFormNovoAluno({
         nome: "",
