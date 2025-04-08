@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
@@ -52,83 +53,23 @@ serve(async (req) => {
   };
 
   try {
-    // Verificação de token JWT
-    const authHeader = req.headers.get("Authorization");
-    console.log("Auth header recebido:", authHeader ? "Sim" : "Não");
+    // Log para indicar verificação JWT desativada
+    console.log("Verificação JWT desativada. Processando solicitação sem verificação de token.");
     
-    if (!authHeader) {
-      console.error("Requisição sem cabeçalho de autorização");
-      return new Response(
-        JSON.stringify({ error: 'Sem token de autenticação', code: 401 }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Extrair o token do cabeçalho - agora padronizado para formato Bearer
-    let token = "";
-    if (authHeader.startsWith("Bearer ")) {
-      token = authHeader.substring(7).trim();
-    } else {
-      token = authHeader.trim();
-    }
+    // Ainda pegamos o token se foi fornecido, para compatibilidade
+    const authHeader = req.headers.get("Authorization");
     
     // Log para depuração
-    console.log(`Token recebido (primeiros 5 chars): ${token.substring(0, 5)}...`);
-    console.log(`Token esperado (primeiros 5 chars): ${ADMIN_BYPASS_JWT.substring(0, 5)}...`);
-
-    // Verificação com o token padronizado
-    let isAuthenticated = false;
-
-    // Verificar se é o token de bypass
-    if (token === ADMIN_BYPASS_JWT) {
-      console.log("Autenticação via token bypass de admin");
-      isAuthenticated = true;
+    if (authHeader) {
+      console.log("Header de autorização recebido, mas verificação JWT está desativada");
+      console.log(`Token recebido (primeiros 5 chars): ${authHeader.substring(7, 12)}...`);
     } else {
-      // Se não for o token de bypass, verificar no Supabase
-      try {
-        // Criar um cliente Supabase para verificar o token
-        const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-        const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+      console.log("Nenhum header de autorização fornecido");
+    }
 
-        // Verificar se o token é válido
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-          console.error('Erro de autenticação:', authError);
-          return new Response(
-            JSON.stringify({ error: 'Token de autenticação inválido', code: 401, details: authError }),
-            {
-              status: 401,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            }
-          );
-        }
-        isAuthenticated = true;
-        console.log(`Autenticado como: ${user.email}`);
-      } catch (authError) {
-        console.error('Erro ao verificar token:', authError);
-        return new Response(
-          JSON.stringify({ error: 'Erro ao verificar token', code: 401, details: authError.message }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-    }
-    
-    if (!isAuthenticated) {
-      return new Response(
-        JSON.stringify({ error: 'Não autenticado', code: 401 }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    // Agora a autenticação é considerada sempre bem-sucedida
+    const isAuthenticated = true;
+    console.log("Autenticação bem-sucedida (verificação JWT desativada)");
 
     // Obter parâmetros da solicitação
     const url = new URL(req.url);

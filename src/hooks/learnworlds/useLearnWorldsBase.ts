@@ -37,16 +37,19 @@ const useLearnWorldsBase = () => {
       setError(null);
 
       // Determinar qual token usar com base no parâmetro usePublicToken
+      // Como desabilitamos a verificação JWT, estamos simplificando essa parte
+      // Ainda enviamos o token para compatibilidade com o código existente
       const authHeader = usePublicToken ? getPublicAuthorizationHeader() : getAuthorizationHeader();
       
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
+      console.log(`A verificação JWT está desativada, mas ainda enviamos o token por compatibilidade`);
       
       if (!usePublicToken) {
-        console.log(`Token de autenticação administrativo formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
+        console.log(`Token administrativo formatado como: Bearer ${getAdminBypassToken().substring(0, 5)}...`);
       } else {
-        console.log(`Token de autenticação público formatado como: Bearer ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
+        console.log(`Token público formatado como: Bearer ${LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5)}...`);
       }
 
       const headers: HeadersInit = {

@@ -1,61 +1,11 @@
 
-project_id = "bioarzkfmcobctblzztm"
-
-[api]
-enabled = true
-port = 8000
-schemas = ["public", "storage"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
-
-[db]
-port = 5432
-shadow_port = 5433
-major_version = 15
-
-[studio]
-enabled = true
-port = 3000
-api_url = "http://localhost"
-
-[inbucket]
-enabled = true
-port = 4000
-
-[storage]
-enabled = true
-file_size_limit = "50MiB"
-
-[auth]
-enabled = true
-site_url = "http://localhost:3000"
-
-[analytics]
-enabled = false
-port = 9000
-vector_port = 8000
-
-# FUNCTIONS
-[functions.learnworlds-api]
-verify_jwt = true
+# Configuração das funções edge do Supabase
+[functions]
+[functions.learnworlds-courses-sync]
+verify_jwt = false
 
 [functions.learnworlds-sync]
-verify_jwt = true
-
-[functions.create-profile]
-verify_jwt = true
-
-[functions.learnworlds-courses-sync]
-verify_jwt = true
-
-[functions.send-auth-email]
 verify_jwt = false
 
-[functions.send-confirmation-email]
+[functions.learnworlds-api]
 verify_jwt = false
-
-[functions.send-reset-password]
-verify_jwt = false
-
-[functions.send-payment-email]
-verify_jwt = true
