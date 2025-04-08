@@ -64,6 +64,7 @@ serve(async (req) => {
     const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID');
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_BASE_URL') || 'https://api.learnworlds.com';
     
+    // Log detalhado das configurações - IMPORTANTE para diagnóstico!
     console.log(`LEARNWORLDS_API_KEY: ${apiKey ? "definido (primeiros 5 chars): " + apiKey.substring(0, 5) + "..." : "indefinido"}`);
     console.log(`LEARNWORLDS_SCHOOL_ID: ${schoolId || "indefinido"}`);
     console.log(`LEARNWORLDS_BASE_URL: ${apiBaseUrl}`);
@@ -91,52 +92,29 @@ serve(async (req) => {
     console.log(`Iniciando sincronização de cursos da LearnWorlds${isSyncAll ? ' (todos os cursos)' : ''}`);
     addLog(results, `Iniciando sincronização de cursos - Página ${pageNumber}, Tamanho ${pageSize}`);
 
-    // Implementação de cursos simulados para desenvolvimento e diagnóstico
-    const useMockCourses = false; // Definir como true para testes locais sem API
-    
     // Função para buscar cursos da LearnWorlds
     const fetchCourses = async (page: number, limit: number): Promise<{ data: LearnWorldsCourse[], total: number, pages: number }> => {
-      if (useMockCourses) {
-        // Dados simulados para desenvolvimento e diagnóstico
-        console.log("Usando dados simulados para teste");
-        addLog(results, "MODO DE TESTE: Usando dados simulados");
-        
-        // Gerar 5 cursos simulados
-        const mockCourses: LearnWorldsCourse[] = [];
-        for (let i = 1; i <= 5; i++) {
-          mockCourses.push({
-            id: `mock-course-${i}`,
-            title: `Curso Simulado ${i}`,
-            description: `Descrição do curso simulado ${i} para testes`,
-            shortDescription: `Resumo do curso ${i}`,
-            price: 100.00 * i,
-            duration: `${i * 10} horas`,
-            image: `https://example.com/course-${i}.jpg`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          });
-        }
-        
-        return {
-          data: mockCourses,
-          total: mockCourses.length,
-          pages: 1
-        };
-      }
-      
-      // Construir a URL da API com os parâmetros de paginação
+      // Construir a URL da API com os parâmetros de paginação - usando a URL base configurada
       const apiUrl = `${apiBaseUrl}/api/v2/${schoolId}/courses?page=${page}&limit=${limit}`;
       console.log(`Buscando cursos da LearnWorlds: ${apiUrl}`);
       addLog(results, `Buscando cursos da página ${page} (limite ${limit})`);
       
       try {
+        // IMPORTANTE: Garantir que o cabeçalho Lw-Client está sendo enviado corretamente
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Lw-Client': schoolId, // Este cabeçalho é obrigatório!
+        };
+        
+        console.log("Enviando requisição com cabeçalhos:", JSON.stringify({
+          Authorization: "Bearer " + apiKey.substring(0, 5) + "...",
+          "Lw-Client": schoolId
+        }));
+        
         const response = await fetch(apiUrl, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'Lw-Client': schoolId, // Adicionando o cabeçalho Lw-Client exigido pela API
-          },
+          headers: headers,
         });
 
         console.log(`Resposta da API LearnWorlds: Status ${response.status}`);
@@ -145,6 +123,12 @@ serve(async (req) => {
           const errorText = await response.text();
           console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
           addLog(results, `Erro na API LearnWorlds: ${response.status} - ${errorText}`);
+          
+          // Verificar especificamente os erros relacionados ao client_id
+          if (errorText.includes('client_id')) {
+            addLog(results, `ERRO: Problema com o cabeçalho 'Lw-Client'. O ID da escola '${schoolId}' pode estar incorreto.`);
+          }
+          
           throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
         }
         
@@ -152,29 +136,25 @@ serve(async (req) => {
         const contentType = response.headers.get('content-type') || '';
         console.log(`Tipo de conteúdo da resposta: ${contentType}`);
         
-        let responseText = '';
-        let responseData;
+        // Processar a resposta
+        const responseText = await response.text();
         
+        // Verificar se a resposta não está vazia
+        if (!responseText) {
+          const errorMsg = "Resposta vazia recebida da API LearnWorlds";
+          console.error(errorMsg);
+          addLog(results, errorMsg);
+          return { data: [], total: 0, pages: 0 };
+        }
+        
+        // Tentar analisar o JSON
         try {
-          responseText = await response.text();
+          const responseData = JSON.parse(responseText);
           
-          // Verificar se a resposta não está vazia
-          if (!responseText) {
-            const errorMsg = "Resposta vazia recebida da API LearnWorlds";
-            console.error(errorMsg);
-            addLog(results, errorMsg);
-            return { data: [], total: 0, pages: 0 };
-          }
-          
-          // Tentar analisar o JSON
-          try {
-            responseData = JSON.parse(responseText);
-          } catch (jsonError) {
-            console.error("Erro ao analisar JSON:", jsonError);
-            console.error("Resposta recebida:", responseText.substring(0, 500));
-            addLog(results, `Erro ao analisar JSON da resposta: ${jsonError.message}`);
-            addLog(results, `Primeiros 100 caracteres da resposta: ${responseText.substring(0, 100)}...`);
-            throw new Error(`Falha ao analisar resposta JSON: ${jsonError.message}`);
+          // Adicionar logs detalhados sobre a estrutura da resposta
+          console.log(`Resposta recebida com ${responseData.data?.length || 0} cursos`);
+          if (responseData.meta) {
+            console.log(`Meta: página ${responseData.meta.page}, total ${responseData.meta.totalItems} itens`);
           }
           
           // Validar a estrutura da resposta
@@ -184,14 +164,15 @@ serve(async (req) => {
             return { data: [], total: 0, pages: 0 };
           }
           
-          console.log(`Recebidos ${responseData.data.length} cursos da API LearnWorlds`);
           addLog(results, `Recebidos ${responseData.data.length} cursos da API`);
           
           return responseData;
-        } catch (parseError) {
-          console.error('Erro ao processar resposta:', parseError);
-          addLog(results, `Erro ao processar resposta: ${parseError.message}`);
-          throw parseError;
+        } catch (jsonError) {
+          console.error("Erro ao analisar JSON:", jsonError);
+          console.error("Resposta recebida:", responseText.substring(0, 500));
+          addLog(results, `Erro ao analisar JSON da resposta: ${jsonError.message}`);
+          addLog(results, `Primeiros 100 caracteres da resposta: ${responseText.substring(0, 100)}...`);
+          throw new Error(`Falha ao analisar resposta JSON: ${jsonError.message}`);
         }
       } catch (error) {
         console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);
@@ -199,6 +180,41 @@ serve(async (req) => {
         return { data: [], total: 0, pages: 0 };
       }
     };
+
+    // Helper para adicionar logs
+    function addLog(results: SyncResults, message: string) {
+      results.logs.push(`[${new Date().toISOString()}] ${message}`);
+      console.log(message);
+    }
+
+    // Helper para converter duração em string para minutos
+    function parseDuration(duration: string): number {
+      // Tenta converter a duração para um número de horas
+      try {
+        // Se for apenas um número, assume que são horas
+        if (/^\d+$/.test(duration)) {
+          return parseInt(duration) * 60; // Converte horas para minutos
+        }
+        
+        // Se for no formato "X horas" ou "X h"
+        const hoursMatch = duration.match(/(\d+)\s*(horas|hora|h)/i);
+        if (hoursMatch) {
+          return parseInt(hoursMatch[1]) * 60;
+        }
+        
+        // Se for no formato "X minutos" ou "X min"
+        const minutesMatch = duration.match(/(\d+)\s*(minutos|minuto|min)/i);
+        if (minutesMatch) {
+          return parseInt(minutesMatch[1]);
+        }
+        
+        // Formato desconhecido, retorna 0
+        return 0;
+      } catch (error) {
+        console.error("Erro ao converter duração:", error);
+        return 0;
+      }
+    }
 
     // Função para processar e sincronizar cursos
     const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
@@ -287,41 +303,6 @@ serve(async (req) => {
       }
     };
 
-    // Helper para converter duração em string para minutos
-    function parseDuration(duration: string): number {
-      // Tenta converter a duração para um número de horas
-      try {
-        // Se for apenas um número, assume que são horas
-        if (/^\d+$/.test(duration)) {
-          return parseInt(duration) * 60; // Converte horas para minutos
-        }
-        
-        // Se for no formato "X horas" ou "X h"
-        const hoursMatch = duration.match(/(\d+)\s*(horas|hora|h)/i);
-        if (hoursMatch) {
-          return parseInt(hoursMatch[1]) * 60;
-        }
-        
-        // Se for no formato "X minutos" ou "X min"
-        const minutesMatch = duration.match(/(\d+)\s*(minutos|minuto|min)/i);
-        if (minutesMatch) {
-          return parseInt(minutesMatch[1]);
-        }
-        
-        // Formato desconhecido, retorna 0
-        return 0;
-      } catch (error) {
-        console.error("Erro ao converter duração:", error);
-        return 0;
-      }
-    }
-
-    // Helper para adicionar logs
-    function addLog(results: SyncResults, message: string) {
-      results.logs.push(`[${new Date().toISOString()}] ${message}`);
-      console.log(message);
-    }
-
     // Iniciar a sincronização com a API
     try {
       if (isSyncAll) {
@@ -388,122 +369,6 @@ serve(async (req) => {
     );
   }
 });
-
-// Função para processar e sincronizar cursos
-const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
-  if (!courses || courses.length === 0) {
-    addLog(results, "Nenhum curso para processar");
-    return;
-  }
-  
-  addLog(results, `Processando ${courses.length} cursos`);
-  
-  for (const course of courses) {
-    try {
-      // Verificar dados obrigatórios do curso
-      if (!course.id || !course.title) {
-        console.error(`Curso com dados incompletos: ${JSON.stringify(course)}`);
-        results.failed++;
-        addLog(results, `Falha: Curso com dados incompletos (ID: ${course.id || 'desconhecido'})`);
-        continue;
-      }
-
-      // Verificar se o curso já existe no Supabase
-      const { data: existingCourse, error: queryError } = await supabase
-        .from('cursos')
-        .select('id, titulo, data_atualizacao')
-        .eq('learning_worlds_id', course.id)
-        .maybeSingle();
-      
-      if (queryError) {
-        console.error(`Erro ao buscar curso no Supabase: ${queryError.message}`);
-        results.failed++;
-        addLog(results, `Falha ao processar curso ${course.id}: ${queryError.message}`);
-        continue;
-      }
-      
-      // Preparar dados para inserir/atualizar
-      const courseData = {
-        titulo: course.title,
-        descricao: course.description || course.shortDescription || '',
-        learning_worlds_id: course.id,
-        valor_total: course.price || 0,
-        valor_mensalidade: course.price ? course.price / 12 : 0,
-        carga_horaria: parseDuration(course.duration || '0'),
-        imagem_url: course.image || '',
-        codigo: `LW-${course.id.substring(0, 6).toUpperCase()}`,
-        data_atualizacao: new Date().toISOString()
-      };
-      
-      if (existingCourse) {
-        // Atualizar curso existente
-        const { error: updateError } = await supabase
-          .from('cursos')
-          .update(courseData)
-          .eq('id', existingCourse.id);
-          
-        if (updateError) {
-          console.error(`Erro ao atualizar curso no Supabase: ${updateError.message}`);
-          results.failed++;
-          addLog(results, `Falha ao atualizar curso ${course.id}: ${updateError.message}`);
-        } else {
-          results.updated++;
-          addLog(results, `Curso atualizado: ${course.title} (${course.id})`);
-        }
-      } else {
-        // Criar novo curso
-        const { error: insertError } = await supabase
-          .from('cursos')
-          .insert({
-            ...courseData,
-            data_criacao: new Date().toISOString()
-          });
-          
-        if (insertError) {
-          console.error(`Erro ao inserir curso no Supabase: ${insertError.message}`);
-          results.failed++;
-          addLog(results, `Falha ao criar curso ${course.id}: ${insertError.message}`);
-        } else {
-          results.imported++;
-          addLog(results, `Novo curso importado: ${course.title} (${course.id})`);
-        }
-      }
-    } catch (error) {
-      console.error(`Erro ao processar curso ${course.id}:`, error);
-      results.failed++;
-      addLog(results, `Erro não tratado com curso ${course.id}: ${error.message}`);
-    }
-  }
-};
-
-// Helper para converter duração em string para minutos
-function parseDuration(duration: string): number {
-  // Tenta converter a duração para um número de horas
-  try {
-    // Se for apenas um número, assume que são horas
-    if (/^\d+$/.test(duration)) {
-      return parseInt(duration) * 60; // Converte horas para minutos
-    }
-    
-    // Se for no formato "X horas" ou "X h"
-    const hoursMatch = duration.match(/(\d+)\s*(horas|hora|h)/i);
-    if (hoursMatch) {
-      return parseInt(hoursMatch[1]) * 60;
-    }
-    
-    // Se for no formato "X minutos" ou "X min"
-    const minutesMatch = duration.match(/(\d+)\s*(minutos|minuto|min)/i);
-    if (minutesMatch) {
-      return parseInt(minutesMatch[1]);
-    }
-    
-    // Formato desconhecido, retorna 0
-    return 0;
-  } catch (error) {
-    console.error("Erro ao converter duração:", error);
-    return 0;
-  }
-}
 
 // Helper para adicionar logs
 function addLog(results: SyncResults, message: string) {

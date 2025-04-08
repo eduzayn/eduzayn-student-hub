@@ -10,7 +10,7 @@ const useLearnWorldsCursos = () => {
 
   /**
    * Busca cursos da API LearnWorlds conforme documentação
-   * https://stoplight.io/mocks/learnworlds/api:main/2951998/v2/courses
+   * https://api.learnworlds.com/v2/courses
    * 
    * @param page Número da página (padrão: 1)
    * @param limit Limite de cursos por página (padrão: 50)
@@ -51,7 +51,7 @@ const useLearnWorldsCursos = () => {
       console.log("Resposta da API de cursos:", response);
 
       // Verificação específica para erro de client_id
-      if (response && response.error && response.error.includes('client_id')) {
+      if (response && response.error && typeof response.error === 'string' && response.error.includes('client_id')) {
         console.error('Erro de configuração da API: client_id ausente ou inválido');
         toast.error("Erro de configuração da API LearnWorlds", {
           description: "ID de cliente ausente ou inválido. Verifique as configurações."
@@ -76,7 +76,7 @@ const useLearnWorldsCursos = () => {
       
       // Verificar se é um erro relacionado ao client_id
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (errorMessage.includes('client_id')) {
+      if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
         toast.error("Erro de configuração da API", {
           description: "ID de cliente LearnWorlds ausente ou inválido"
         });
@@ -163,12 +163,16 @@ const useLearnWorldsCursos = () => {
       
       // Verificamos se há erros específicos nos logs
       if (result && result.logs) {
+        // Verificar erros relacionados ao client_id
         const clientIdError = result.logs.find((log: string) => 
-          log.includes("client_id") && log.includes("cannot be found")
+          log.includes("client_id") && (log.includes("cannot be found") || log.includes("Missing"))
         );
         
         if (clientIdError) {
           console.error("Erro de client_id detectado:", clientIdError);
+          toast.error('Erro de configuração da API LearnWorlds', {
+            description: "ID de cliente (LEARNWORLDS_SCHOOL_ID) ausente ou inválido nas configurações."
+          });
         }
       }
       
@@ -197,7 +201,7 @@ const useLearnWorldsCursos = () => {
       
       // Verificar se é um erro relacionado ao client_id
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (errorMessage.includes('client_id')) {
+      if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
         toast.error('Erro de configuração da API LearnWorlds', {
           description: "ID de cliente ausente ou inválido nas configurações."
         });

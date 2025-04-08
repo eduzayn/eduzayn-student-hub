@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2, Info } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCw, ArrowLeft, Loader2, Info, ShieldAlert, Link } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { Badge } from "@/components/ui/badge";
@@ -42,13 +42,23 @@ const SincronizacaoCursos: React.FC = () => {
         
         // Verificar mensagens de erro específicas nos logs
         const clientIdErrorLog = result.logs?.find(log => 
-          log.includes("client_id") && log.includes("cannot be found")
+          log.includes("client_id") && 
+          (log.includes("cannot be found") || log.includes("Missing"))
+        );
+        
+        const accessDeniedLog = result.logs?.find(log =>
+          log.includes("access_denied") || log.includes("401") || log.includes("403")
         );
         
         if (clientIdErrorLog) {
           setDetalhesErro("Erro de autenticação com a API LearnWorlds: ID de cliente ausente ou inválido. Verifique as configurações da API.");
           toast.error("Erro na API LearnWorlds", {
             description: "ID de cliente ausente ou inválido. Verifique as configurações da API."
+          });
+        } else if (accessDeniedLog) {
+          setDetalhesErro("Erro de autorização na API LearnWorlds. Verifique se o token da API tem permissões suficientes.");
+          toast.error("Erro de autorização", {
+            description: "O token da API não tem permissões suficientes"
           });
         }
         
@@ -114,9 +124,10 @@ const SincronizacaoCursos: React.FC = () => {
         offlineMode={offlineMode}
       />
       
+      {/* Alerta específico de erro client_id */}
       {detalhesErro && detalhesErro.includes("client_id") && (
         <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
+          <ShieldAlert className="h-4 w-4" />
           <AlertTitle>Erro de configuração da API LearnWorlds</AlertTitle>
           <AlertDescription className="space-y-2">
             <p>A API do LearnWorlds está retornando um erro de "client_id". Isso geralmente significa que:</p>
@@ -125,7 +136,28 @@ const SincronizacaoCursos: React.FC = () => {
               <li>O cabeçalho 'Lw-Client' não está sendo enviado corretamente</li>
               <li>O token de API não tem permissões suficientes</li>
             </ul>
-            <p>Verifique as configurações de API no painel de administração do LearnWorlds.</p>
+            <p className="mt-2 text-sm">
+              <span className="font-medium">Solução:</span> Verifique se o valor de LEARNWORLDS_SCHOOL_ID está correto nas configurações de segredos da função edge.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Alerta específico de erro de acesso */}
+      {logs.some(log => log.includes("access_denied")) && (
+        <Alert variant="destructive" className="mb-4 border-amber-600">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de autorização na API LearnWorlds</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>A API do LearnWorlds retornou um erro de "access_denied". Isso geralmente significa que:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>O token da API não tem permissões suficientes</li>
+              <li>O token da API expirou ou é inválido</li>
+              <li>A sua conta LearnWorlds não tem acesso à API de cursos</li>
+            </ul>
+            <p className="mt-2 text-sm">
+              <span className="font-medium">Solução:</span> Verifique o token API no painel do LearnWorlds e certifique-se que ele tem as permissões necessárias.
+            </p>
           </AlertDescription>
         </Alert>
       )}
