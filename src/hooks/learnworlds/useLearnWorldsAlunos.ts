@@ -1,4 +1,3 @@
-
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import useLearnWorldsBase from "./useLearnWorldsBase";
 
@@ -17,9 +16,11 @@ export interface AlunoDTO {
   email: string;
   customField1?: string; // CPF
   phoneNumber?: string;
-  registrationDate: string;
+  registrationDate?: string;
   lastLoginDate?: string;
   coursesList?: string[];
+  text?: string; // Adicionado para suportar respostas em formato não-JSON
+  simulatedResponse?: boolean; // Adicionado para identificar respostas simuladas
 }
 
 // Interface AlunoParams para uso externo
@@ -75,8 +76,8 @@ const useLearnWorldsAlunos = () => {
       
       const response = await makeRequest('learnworlds-api/users', 'POST', dados);
       
-      if (response && response.data) {
-        return response.data;
+      if (response) {
+        return response;
       }
       
       return null;

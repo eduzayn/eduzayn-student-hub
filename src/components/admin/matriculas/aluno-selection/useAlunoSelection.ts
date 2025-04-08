@@ -173,7 +173,7 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
       if (resultado && resultado.id) {
         // Formato esperado da API
         novoAlunoId = resultado.id;
-      } else if (resultado && resultado.text) {
+      } else if (resultado && typeof resultado === 'object' && 'text' in resultado) {
         // Formato alternativo (resposta HTML ou outro formato)
         // Criar ID local para permitir uso offline
         novoAlunoId = `local-${Date.now()}`;
@@ -187,6 +187,13 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         
         toast.info("Resposta da API sem ID, usando ID local", {
           description: "A sincronização completa pode ser necessária mais tarde."
+        });
+      } else if (resultado === null) {
+        // Quando a resposta é nula, possível erro na API
+        novoAlunoId = `local-${Date.now()}`;
+        
+        toast.warning("Resposta nula da API, usando ID local", {
+          description: "O cadastro pode não ter sido concluído no servidor."
         });
       } else {
         throw new Error("Resposta inválida da API");
