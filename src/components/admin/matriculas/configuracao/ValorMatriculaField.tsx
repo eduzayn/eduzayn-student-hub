@@ -22,8 +22,7 @@ const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({
       name="valor_matricula"
       label="Valor da Matrícula"
       className="flex flex-col"
-    >
-      {field => (
+      render={({ field }) => (
         <div className="flex items-center">
           <span className="mr-2">R$</span>
           <Input
@@ -36,7 +35,7 @@ const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({
           />
         </div>
       )}
-    </FormField>
+    />
   );
 };
 
