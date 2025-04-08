@@ -36,6 +36,7 @@ const useLearnWorldsAlunos = () => {
         queryParams.append('q', searchTerm);
       }
 
+      console.log(`Buscando usuários com parâmetros: page=${page}, limit=${limit}, searchTerm=${searchTerm || 'nenhum'}`);
       return await makeRequest(`learnworlds-api/users?${queryParams}`);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -48,7 +49,9 @@ const useLearnWorldsAlunos = () => {
    */
   const cadastrarAluno = async (alunoData: AlunoParams): Promise<any> => {
     try {
+      console.log('Enviando dados para cadastro de aluno:', JSON.stringify(alunoData, null, 2));
       const result = await makeRequest('learnworlds-api/users', 'POST', alunoData);
+      console.log('Resultado do cadastro de aluno:', result);
       return result;
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error);
@@ -64,8 +67,18 @@ const useLearnWorldsAlunos = () => {
       console.log(`Iniciando sincronização - sincronizarTodos=${sincronizarTodos}`);
       
       // Usamos o endpoint correto para sincronização de alunos: learnworlds-sync
-      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}`);
+      const url = `learnworlds-sync?syncAll=${sincronizarTodos}`;
+      console.log(`Chamando endpoint: ${url}`);
+      
+      const result = await makeRequest(url);
       console.log("Resposta da sincronização recebida:", result);
+      
+      // Verifica se a resposta contém os campos esperados
+      if (!result || typeof result !== 'object') {
+        console.error("Formato de resposta inválido:", result);
+        toast.error("Formato de resposta inválido da API de sincronização");
+        return null;
+      }
       
       if (result.imported > 0 || result.updated > 0) {
         toast.success(
