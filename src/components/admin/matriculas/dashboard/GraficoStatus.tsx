@@ -1,57 +1,72 @@
 
 import React from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+
+interface DataPoint {
+  name: string;
+  value: number;
+  color: string;
+}
 
 interface GraficoStatusProps {
-  data: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
+  data: DataPoint[];
   title: string;
 }
 
 const GraficoStatus: React.FC<GraficoStatusProps> = ({ data, title }) => {
-  const chartConfig = {
-    ativas: { color: '#10B981' },
-    pendentes: { color: '#F59E0B' },
-    trancadas: { color: '#6B7280' },
-    canceladas: { color: '#EF4444' },
-    emDia: { color: '#10B981' },
-    atrasados: { color: '#EF4444' },
-    processando: { color: '#60A5FA' }
-  };
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="text-base font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-40">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={data}
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <div className="h-[185px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                innerRadius={40}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="name"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "4px",
+                  padding: "8px",
+                }}
+                formatter={(value, name) => [`${value}`, `${name}`]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-2 flex justify-center gap-4">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-xs text-muted-foreground">{item.name}</span>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

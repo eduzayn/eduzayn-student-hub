@@ -31,7 +31,7 @@ const CursosLista: React.FC<CursosListaProps> = ({
         <CursoCard 
           key={curso.id || curso.learning_worlds_id}
           curso={curso} 
-          selecionado={selecionado === (curso.id || curso.learning_worlds_id)} 
+          selecionado={selecionado === (curso.id || curso.learning_worlds_id)}
           onSelecionar={onSelecionar} 
         />
       ))}

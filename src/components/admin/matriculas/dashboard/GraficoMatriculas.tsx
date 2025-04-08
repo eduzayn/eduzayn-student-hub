@@ -1,47 +1,75 @@
 
 import React from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  TooltipProps
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+
+interface DataPoint {
+  name: string;
+  matriculas: number;
+}
 
 interface GraficoMatriculasProps {
-  data: Array<{
-    mes: string;
-    matriculas: number;
-  }>;
+  data: DataPoint[];
 }
 
 const GraficoMatriculas: React.FC<GraficoMatriculasProps> = ({ data }) => {
-  const chartConfig = {
-    matriculas: { color: '#3B82F6' }
-  };
-  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evolução de Matrículas</CardTitle>
+        <CardTitle>Matrículas por Mês</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
-          <ChartContainer config={chartConfig}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              {/* Usando parâmetros padrões ao invés de defaultProps */}
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 10,
+                left: 10,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12 }} 
+                tickLine={{ stroke: '#e0e0e0' }}
+                axisLine={{ stroke: '#e0e0e0' }}
+              />
               <YAxis 
-                width={40} 
-                tickFormatter={(value) => `${value}`}
-                // Definir propriedades explicitamente ao invés de usar defaultProps
-                allowDecimals={false}
-                allowDataOverflow={false}
-                domain={['auto', 'auto']}
+                tick={{ fontSize: 12 }} 
+                tickLine={{ stroke: '#e0e0e0' }}
+                axisLine={{ stroke: '#e0e0e0' }}
+                width={40}
               />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "4px",
+                  padding: "8px",
+                }}
               />
-              <Bar dataKey="matriculas" fill="var(--color-matriculas, #3B82F6)" />
-            </BarChart>
-          </ChartContainer>
+              <Line
+                type="monotone"
+                dataKey="matriculas"
+                stroke="#3f83f8"
+                strokeWidth={2}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, stroke: "#3f83f8", strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
