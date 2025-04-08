@@ -63,6 +63,10 @@ const CursosLista: React.FC<CursosListaProps> = ({
 
   return (
     <div className="space-y-3">
+      <div className="text-sm text-muted-foreground mb-2">
+        Mostrando {cursosExibir.length} cursos
+      </div>
+      
       {cursosExibir.map(curso => (
         <CursoCard 
           key={getLearnWorldsId(curso)}

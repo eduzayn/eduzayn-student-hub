@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 interface BuscaCursoProps {
   busca: string;
@@ -11,26 +11,37 @@ interface BuscaCursoProps {
   loading: boolean;
 }
 
-const BuscaCurso: React.FC<BuscaCursoProps> = ({ 
-  busca, 
-  setBusca, 
-  handleBusca, 
-  loading 
-}) => {
+const BuscaCurso: React.FC<BuscaCursoProps> = ({ busca, setBusca, handleBusca, loading }) => {
+  // Função para lidar com a tecla Enter
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleBusca();
+    }
+  };
+
   return (
     <div className="flex gap-2">
       <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por título ou código..."
-          className="pl-9"
+          type="search"
+          placeholder="Buscar curso por nome ou código..."
+          className="pl-8"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleBusca()}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
         />
       </div>
       <Button onClick={handleBusca} disabled={loading}>
-        {loading ? "Buscando..." : "Buscar"}
+        {loading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Buscando...
+          </>
+        ) : (
+          "Buscar"
+        )}
       </Button>
     </div>
   );

@@ -7,12 +7,22 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   const [busca, setBusca] = useState("");
   const [cursos, setCursos] = useState<any[]>([]);
   const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isBuscaAtiva, setIsBuscaAtiva] = useState(false);
   const { getCourses, loading, error, offlineMode } = useLearnWorldsApi();
   
-  // Carregar cursos quando o componente montar
+  // Cursos por página - podemos aumentar se necessário
+  const cursosPerPage = 50;
+  
+  // Carregar cursos quando o componente montar ou a página mudar
   useEffect(() => {
-    carregarCursos();
-  }, []);
+    if (!isBuscaAtiva) {
+      carregarCursos("", page);
+    } else {
+      carregarCursos(busca, page);
+    }
+  }, [page]);
   
   // Função para extrair o slug da URL do curso do LearnWorlds
   const extractSlugFromUrl = (url: string): string => {
@@ -25,71 +35,6 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     } catch (error) {
       console.error("Erro ao extrair slug da URL:", error);
       return "";
-    }
-  };
-  
-  // Função para buscar cursos na API
-  const carregarCursos = async (termoBusca = "") => {
-    try {
-      console.log("Iniciando busca de cursos com termo:", termoBusca);
-      
-      // Busca cursos da API LearnWorlds com token atualizado
-      const resultado = await getCourses(1, 20, termoBusca);
-      
-      if (!resultado || !resultado.data) {
-        console.error("Erro ao carregar cursos: resultado inválido", resultado);
-        throw new Error("Erro ao carregar cursos do LearnWorlds");
-      }
-      
-      console.log("Dados originais dos cursos:", resultado.data);
-      
-      // Mapeando os dados retornados para o formato necessário para exibição
-      const cursosFormatados = resultado.data
-        .filter(curso => curso.title && curso.id) // Filtra cursos sem título ou id
-        .map((curso: any) => {
-          // Extrai o slug da URL se disponível
-          let slug = "";
-          if (curso.url) {
-            slug = extractSlugFromUrl(curso.url);
-          }
-          
-          return {
-            id: curso.id,
-            titulo: curso.title,
-            codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
-            modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
-            carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-            // Não usaremos mais os valores do LearnWorlds para preço
-            valor_total: 0, // Zerando para permitir personalização manual
-            valor_mensalidade: 0, // Zerando para permitir personalização manual
-            descricao: curso.description || curso.shortDescription || "",
-            imagem_url: curso.image || curso.courseImage || "",
-            categorias: curso.categories || [],
-            learning_worlds_id: curso.id,
-            acesso: curso.access || "pago",
-            url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
-            // Adicionado flag para identificar se é simulado - todos cursos da API não são simulados
-            simulado: false
-          };
-        });
-      
-      console.log("Cursos formatados:", cursosFormatados);
-      setCursos(cursosFormatados);
-      
-      // Se estamos em modo offline, mostramos um aviso e carregamos dados simulados
-      if (offlineMode) {
-        toast.warning("Usando dados simulados do LearnWorlds", {
-          description: "A API do LearnWorlds está indisponível no momento."
-        });
-        carregarCursosSimulados(termoBusca);
-      }
-      
-    } catch (error) {
-      console.error("Erro ao carregar cursos:", error);
-      toast.error("Erro ao carregar a lista de cursos. Usando dados simulados.");
-      
-      // Em caso de falha, carrega dados simulados como fallback
-      carregarCursosSimulados(termoBusca);
     }
   };
   
@@ -119,6 +64,80 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     } catch (error) {
       console.error("Erro ao converter duração:", error);
       return 0;
+    }
+  };
+  
+  // Função para formatar os cursos retornados da API
+  const formatarCursos = (cursosData: any[]) => {
+    return cursosData
+      .filter(curso => curso.title && curso.id) // Filtra cursos sem título ou id
+      .map((curso: any) => {
+        // Extrai o slug da URL se disponível
+        let slug = "";
+        if (curso.url) {
+          slug = extractSlugFromUrl(curso.url);
+        }
+        
+        return {
+          id: curso.id,
+          titulo: curso.title,
+          codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
+          modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
+          carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
+          valor_total: 0, // Zerando para permitir personalização manual
+          valor_mensalidade: 0, // Zerando para permitir personalização manual
+          descricao: curso.description || curso.shortDescription || "",
+          imagem_url: curso.image || curso.courseImage || "",
+          categorias: curso.categories || [],
+          learning_worlds_id: curso.id,
+          acesso: curso.access || "pago",
+          url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
+          simulado: false
+        };
+      });
+  };
+  
+  // Função para buscar cursos na API
+  const carregarCursos = async (termoBusca = "", pagina = 1) => {
+    try {
+      console.log(`Iniciando busca de cursos com termo: "${termoBusca}", página: ${pagina}`);
+      
+      // Busca cursos da API LearnWorlds com token atualizado
+      const resultado = await getCourses(pagina, cursosPerPage, termoBusca);
+      
+      if (!resultado || !resultado.data) {
+        console.error("Erro ao carregar cursos: resultado inválido", resultado);
+        throw new Error("Erro ao carregar cursos do LearnWorlds");
+      }
+      
+      console.log("Dados originais dos cursos:", resultado.data);
+      console.log("Metadados da paginação:", resultado.meta);
+      
+      // Atualizar o total de páginas baseado na resposta da API
+      if (resultado.meta && resultado.meta.totalPages) {
+        setTotalPages(resultado.meta.totalPages);
+      }
+      
+      // Mapeando os dados retornados para o formato necessário para exibição
+      const cursosFormatados = formatarCursos(resultado.data);
+      
+      console.log("Cursos formatados:", cursosFormatados);
+      setCursos(cursosFormatados);
+      
+      // Se estamos em modo offline, mostramos um aviso e carregamos dados simulados
+      if (offlineMode) {
+        toast.warning("Usando dados simulados do LearnWorlds", {
+          description: "A API do LearnWorlds está indisponível no momento."
+        });
+        carregarCursosSimulados(termoBusca);
+      }
+      
+    } catch (error) {
+      console.error("Erro ao carregar cursos:", error);
+      toast.error("Erro ao carregar a lista de cursos. Usando dados simulados.");
+      
+      // Em caso de falha, carrega dados simulados como fallback
+      carregarCursosSimulados(termoBusca);
     }
   };
   
@@ -175,6 +194,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     // Em modo offline, substituímos os cursos completamente
     if (offlineMode) {
       setCursos(filtrados);
+      setTotalPages(1); // Com dados simulados, temos apenas uma página
     }
     
     // Aviso sobre dados simulados
@@ -185,7 +205,9 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   
   // Handler para a busca de cursos
   const handleBusca = () => {
-    carregarCursos(busca);
+    setPage(1); // Resetar para primeira página quando fizer uma nova busca
+    setIsBuscaAtiva(true);
+    carregarCursos(busca, 1);
   };
   
   // Handler para selecionar um curso
@@ -201,6 +223,14 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     });
   };
 
+  // Limpar a busca e carregar todos os cursos
+  const limparBusca = () => {
+    setBusca("");
+    setIsBuscaAtiva(false);
+    setPage(1);
+    carregarCursos("", 1);
+  };
+
   return {
     busca,
     setBusca,
@@ -209,8 +239,12 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     loading,
     error,
     offlineMode,
+    page,
+    totalPages,
+    setPage,
     handleBusca,
-    handleSelecionar
+    handleSelecionar,
+    limparBusca
   };
 };
 
