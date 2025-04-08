@@ -7,7 +7,7 @@ import { formatarMoeda, formatarCargaHoraria } from "../utils/formatadores";
 
 interface CursoCardProps {
   curso: any;
-  selecionado: string | null;
+  selecionado: boolean;
   onSelecionar: (curso: any) => void;
 }
 
@@ -16,12 +16,10 @@ const CursoCard: React.FC<CursoCardProps> = ({
   selecionado, 
   onSelecionar 
 }) => {
-  const isSelecionado = selecionado === curso.id;
-
   return (
     <Card 
       key={curso.id} 
-      className={`cursor-pointer transition-colors ${isSelecionado ? 'border-primary bg-primary/5' : 'hover:bg-gray-50'}`}
+      className={`cursor-pointer transition-colors ${selecionado ? 'border-primary bg-primary/5' : 'hover:bg-gray-50'}`}
       onClick={() => onSelecionar(curso)}
     >
       <CardContent className="p-4">
@@ -82,7 +80,7 @@ const CursoCard: React.FC<CursoCardProps> = ({
             </div>
           </div>
           
-          {isSelecionado && (
+          {selecionado && (
             <CheckCircle className="h-5 w-5 text-primary" />
           )}
         </div>
