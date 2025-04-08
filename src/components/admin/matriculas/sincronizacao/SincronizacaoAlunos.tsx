@@ -36,7 +36,7 @@ const SincronizacaoAlunos: React.FC<SincronizacaoAlunosProps> = () => {
         setResultado(result);
         setLogs(result.logs || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       
       // Capturar mais detalhes sobre o erro

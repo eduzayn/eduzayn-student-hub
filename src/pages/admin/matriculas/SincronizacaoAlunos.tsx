@@ -20,16 +20,19 @@ const SincronizacaoAlunos: React.FC = () => {
   // Estados - mantenha todos os useState juntos
   const [resultado, setResultado] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [localError, setLocalError] = useState<string | null>(null);
   
   const handleSincronizar = async (todos: boolean = false) => {
     try {
+      setLocalError(null);
       const result = await sincronizarAlunos(todos);
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
+      setLocalError(error?.message || "Erro desconhecido na sincronização");
     }
   };
   
@@ -48,11 +51,11 @@ const SincronizacaoAlunos: React.FC = () => {
         </div>
       </div>
 
-      {error && (
+      {(error || localError) && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro de Comunicação</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{localError || error}</AlertDescription>
         </Alert>
       )}
 
