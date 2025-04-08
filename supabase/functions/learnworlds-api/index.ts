@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS atualizados para incluir apikey nos headers permitidos
@@ -31,7 +32,7 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
   if (!LEARNWORLDS_API_KEY || !LEARNWORLDS_SCHOOL_ID) {
     console.log("API Key ou School ID não configurados, usando dados simulados");
     console.log(`School ID configurado: ${LEARNWORLDS_SCHOOL_ID}`);
-    return null;
+    throw new Error("Credenciais do LearnWorlds não configuradas");
   }
 
   try {
@@ -53,25 +54,39 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
       options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(url, options);
-    
-    console.log(`Resposta da API LearnWorlds: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
-      throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
-    }
-    
-    // Verifica se a resposta tem conteúdo
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
-      const responseData = await response.json();
-      return responseData;
-    } else {
-      const textResponse = await response.text();
-      console.log(`Resposta não-JSON: ${textResponse.substring(0, 100)}...`);
-      return { text: textResponse };
+    // Adicionando um timeout para a requisição
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    options.signal = controller.signal;
+
+    try {
+      const response = await fetch(url, options);
+      clearTimeout(timeoutId);
+      
+      console.log(`Resposta da API LearnWorlds: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
+        throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
+      }
+      
+      // Verifica se a resposta tem conteúdo
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const responseData = await response.json();
+        return responseData;
+      } else {
+        const textResponse = await response.text();
+        console.log(`Resposta não-JSON: ${textResponse.substring(0, 100)}...`);
+        return { text: textResponse };
+      }
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        console.error('Requisição para LearnWorlds cancelada por timeout');
+        throw new Error('A requisição para LearnWorlds expirou');
+      }
+      throw fetchError;
     }
   } catch (error) {
     console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);

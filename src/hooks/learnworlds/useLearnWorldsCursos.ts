@@ -1,213 +1,308 @@
 
+import { useState } from 'react';
 import useLearnWorldsBase from './useLearnWorldsBase';
-import { toast } from 'sonner';
 
-/**
- * Hook para gerenciar cursos no LearnWorlds
- */
+interface Course {
+  id: string;
+  title: string;
+  description?: string;
+  shortDescription?: string;
+  image?: string;
+  courseImage?: string;
+  price?: number;
+  price_original?: number;
+  price_final?: number;
+  duration?: string;
+  access?: 'free' | 'paid';
+  categories?: string[];
+}
+
+interface CoursesResponse {
+  data: Course[];
+  meta?: {
+    page: number;
+    totalItems: number;
+    totalPages: number;
+    itemsPerPage: number;
+  };
+}
+
 const useLearnWorldsCursos = () => {
-  const { makeRequest, makePublicRequest, loading, error, offlineMode } = useLearnWorldsBase();
+  const { 
+    makeRequest, 
+    makePublicRequest, 
+    loading, 
+    error, 
+    offlineMode, 
+    setOfflineMode 
+  } = useLearnWorldsBase();
+  const [loadingAllCourses, setLoadingAllCourses] = useState(false);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
 
   /**
-   * Busca cursos da API LearnWorlds conforme documentação
-   * https://api.learnworlds.com/v2/courses
-   * 
-   * @param page Número da página (padrão: 1)
-   * @param limit Limite de cursos por página (padrão: 50)
+   * Busca cursos do LearnWorlds com paginação
+   * @param page Número da página para carregar
+   * @param limit Quantidade de cursos por página
    * @param searchTerm Termo de busca opcional
-   * @param options Opções adicionais de filtro (access, categories)
+   * @param categories Categorias para filtrar
+   * @returns Resposta com cursos e metadados
    */
-  const getCourses = async (page: number = 1, limit: number = 50, searchTerm: string = '', options: any = {}): Promise<any> => {
+  const getCourses = async (
+    page = 1, 
+    limit = 20, 
+    searchTerm = "", 
+    categories = ""
+  ): Promise<CoursesResponse> => {
+    console.log(`Buscando cursos: página ${page}, limite ${limit}, termo "${searchTerm}"`);
+    
     try {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString()
-      });
-
-      // Adiciona termo de busca se fornecido (não é um parâmetro padrão da API, mas mantemos por compatibilidade)
+      // Construir endpoint com parâmetros de consulta
+      let endpoint = `learnworlds-api/courses?page=${page}&limit=${limit}`;
+      
       if (searchTerm) {
-        queryParams.append('q', searchTerm);
+        endpoint += `&q=${encodeURIComponent(searchTerm)}`;
       }
-
-      // Adiciona filtro de acesso se fornecido
-      if (options.access) {
-        // Pode ser uma string única ou um array
-        if (Array.isArray(options.access)) {
-          queryParams.append('access', options.access.join(','));
-        } else {
-          queryParams.append('access', options.access);
+      
+      if (categories) {
+        endpoint += `&categories=${encodeURIComponent(categories)}`;
+      }
+      
+      // Usar token público para esta operação
+      const response = await makePublicRequest(endpoint);
+      console.log("Resposta de cursos do LearnWorlds:", response);
+      
+      // Verificar se temos uma resposta válida
+      if (response && 
+          ((response.data && Array.isArray(response.data)) || 
+           (response.text && response.text.includes("<!DOCTYPE html>")))) {
+        
+        // Se for HTML, ativar modo offline
+        if (response.text && response.text.includes("<!DOCTYPE html>")) {
+          console.warn("Recebida resposta HTML, ativando modo offline");
+          setOfflineMode(true);
+          return getDadosSimulados(page, limit, searchTerm);
         }
-      }
-
-      // Adiciona filtro de categorias se fornecido
-      if (options.categories) {
-        queryParams.append('categories', options.categories);
-      }
-
-      // Para diagnóstico
-      console.log(`Buscando cursos LearnWorlds: página ${page}, limite ${limit}, parâmetros: ${queryParams.toString()}`);
-
-      // Usando token público para leitura de cursos
-      const response = await makePublicRequest(`learnworlds-api/courses?${queryParams}`);
-      console.log("Resposta da API de cursos:", response);
-
-      // Verificação específica para erro de client_id
-      if (response && response.error && typeof response.error === 'string' && response.error.includes('client_id')) {
-        console.error('Erro de configuração da API: client_id ausente ou inválido');
-        toast.error("Erro de configuração da API LearnWorlds", {
-          description: "ID de cliente ausente ou inválido. Verifique as configurações."
-        });
-        return { data: [], total: 0, pages: 1 };
-      }
-
-      // Verifica se a resposta está no formato esperado
-      if (!response || !response.data || !Array.isArray(response.data)) {
-        console.error("Formato de resposta inválido da API de cursos:", response);
-        toast.error("Formato de resposta inválido da API LearnWorlds");
-        return { data: [], total: 0, pages: 1 };
-      }
-
-      return {
-        data: response.data,
-        total: response.meta?.totalItems || response.data.length,
-        pages: response.meta?.totalPages || 1
-      };
-    } catch (error) {
-      console.error('Erro ao buscar cursos:', error);
-      
-      // Verificar se é um erro relacionado ao client_id
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
-        toast.error("Erro de configuração da API", {
-          description: "ID de cliente LearnWorlds ausente ou inválido"
-        });
+        
+        return response;
       } else {
-        toast.error("Falha ao buscar cursos", {
-          description: errorMessage
-        });
+        console.error("Resposta inválida da API de cursos:", response);
+        setOfflineMode(true);
+        return getDadosSimulados(page, limit, searchTerm);
       }
-      
-      return { data: [], total: 0, pages: 1 };
+    } catch (error) {
+      console.error("Erro ao buscar cursos:", error);
+      setOfflineMode(true);
+      return getDadosSimulados(page, limit, searchTerm);
     }
   };
-
+  
   /**
-   * Busca detalhes de um curso específico
-   * Usa o token público para operações de leitura
+   * Busca detalhes de um curso específico por ID
+   * @param courseId ID do curso a ser consultado
+   * @returns Detalhes completos do curso
    */
   const getCourseDetails = async (courseId: string): Promise<any> => {
     try {
-      console.log(`Buscando detalhes do curso: ${courseId}`);
       const response = await makePublicRequest(`learnworlds-api/courses/${courseId}`);
-      console.log(`Detalhes do curso ${courseId} recebidos:`, response);
+      
+      if (!response || response.error || (response.text && response.text.includes("<!DOCTYPE html>"))) {
+        setOfflineMode(true);
+        return getDetalhesCursoSimulado(courseId);
+      }
+      
       return response;
     } catch (error) {
       console.error(`Erro ao buscar detalhes do curso ${courseId}:`, error);
-      toast.error(`Erro ao carregar detalhes do curso`, {
-        description: error instanceof Error ? error.message : "Erro desconhecido"
-      });
-      return null;
+      setOfflineMode(true);
+      return getDetalhesCursoSimulado(courseId);
     }
   };
-
+  
   /**
-   * Busca todos os cursos disponíveis
-   * Suporta paginação automática para obter todos os cursos
+   * Busca todos os cursos, gerenciando múltiplas requisições paginadas
+   * @returns Array com todos os cursos encontrados
    */
-  const getAllCourses = async (page: number = 1, limit: number = 50, buscaTodos: boolean = false): Promise<any> => {
+  const getAllCourses = async (): Promise<Course[]> => {
+    setLoadingAllCourses(true);
+    
     try {
-      console.log(`Iniciando busca de cursos. Página: ${page}, Limite: ${limit}, BuscarTodos: ${buscaTodos}`);
-      const resultado = await getCourses(page, limit);
+      const firstPage = await getCourses(1, 50);
       
-      if (!resultado || !resultado.data) {
-        console.error("Resultado da busca de cursos inválido:", resultado);
-        return [];
+      // Se não temos meta ou apenas uma página, retornamos os resultados da primeira página
+      if (!firstPage.meta || firstPage.meta.totalPages <= 1) {
+        setAllCourses(firstPage.data);
+        return firstPage.data;
       }
       
-      let cursos = [...resultado.data];
+      // Se temos múltiplas páginas, vamos buscar todas
+      let allData = [...firstPage.data];
       
-      // Se buscarTodos for verdadeiro e houver mais páginas, busca todas recursivamente
-      if (buscaTodos && resultado.pages > 1 && page < resultado.pages) {
-        console.log(`Buscando página ${page+1} de ${resultado.pages}`);
-        const proximosCursos = await getAllCourses(page + 1, limit, true);
-        if (Array.isArray(proximosCursos)) {
-          cursos = [...cursos, ...proximosCursos];
+      // Criar promessas para todas as outras páginas
+      const promises = [];
+      
+      for (let page = 2; page <= firstPage.meta.totalPages; page++) {
+        promises.push(getCourses(page, 50));
+      }
+      
+      // Executar todas as promessas em paralelo
+      const results = await Promise.all(promises);
+      
+      // Concatenar os resultados
+      for (const result of results) {
+        if (result.data) {
+          allData = [...allData, ...result.data];
         }
       }
       
-      return cursos;
+      setAllCourses(allData);
+      return allData;
     } catch (error) {
-      console.error('Erro ao buscar todos os cursos:', error);
-      toast.error("Falha ao carregar lista completa de cursos");
-      return [];
+      console.error("Erro ao buscar todos os cursos:", error);
+      
+      // Em caso de falha, usamos dados simulados
+      const dadosSimulados = getDadosSimulados(1, 10, "").data;
+      setAllCourses(dadosSimulados);
+      return dadosSimulados;
+    } finally {
+      setLoadingAllCourses(false);
     }
   };
-
+  
   /**
-   * Inicia sincronização de cursos com LearnWorlds usando a função edge
+   * Sincroniza cursos do LearnWorlds com o banco de dados local
+   * @returns Status da sincronização
    */
-  const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
+  const sincronizarCursos = async (): Promise<{ success: boolean, message: string, syncedItems?: number }> => {
     try {
-      console.log(`Iniciando sincronização de cursos. sincronizarTodos=${sincronizarTodos}`);
+      // Esta função requer token de administrador
+      const response = await makeRequest("learnworlds-sync/courses", "POST");
       
-      toast.info(
-        sincronizarTodos ? "Iniciando sincronização completa de cursos..." : "Iniciando sincronização incremental de cursos...",
-        { description: "Este processo pode levar alguns instantes." }
-      );
-      
-      // Usar a função correta e adicionar timestamp para evitar cache
-      const timestamp = new Date().getTime();
-      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}&type=courses&ts=${timestamp}`);
-      
-      console.log("Resultado da sincronização:", result);
-      
-      // Notificações com base no resultado
-      if (result) {
-        if (result.imported > 0 || result.updated > 0) {
-          toast.success(
-            "Sincronização concluída com sucesso!", 
-            { description: `${result.imported} novos cursos e ${result.updated} atualizados.` }
-          );
-        } else if (result.failed > 0) {
-          toast.error(
-            "Problemas na sincronização", 
-            { description: `${result.failed} cursos não puderam ser sincronizados.` }
-          );
-        } else if (result.total === 0) {
-          toast.info("Nenhum curso encontrado para sincronização.");
-        } else {
-          toast.info("Sincronização concluída sem alterações.");
-        }
+      if (!response || response.error) {
+        throw new Error(response?.message || "Erro na sincronização de cursos");
       }
       
-      return result;
-    } catch (error) {
-      console.error('Erro ao sincronizar cursos:', error);
+      return {
+        success: true,
+        message: "Cursos sincronizados com sucesso",
+        syncedItems: response.syncedCount || 0
+      };
+    } catch (error: any) {
+      console.error("Erro ao sincronizar cursos:", error);
       
-      // Verificar tipo de erro para mensagem mais específica
-      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (typeof errorMessage === 'string' && errorMessage.includes('Failed to fetch')) {
-        toast.error('Erro de conexão', {
-          description: "Falha ao conectar com a função edge do Supabase."
-        });
-      } else {
-        toast.error('Erro ao sincronizar cursos com o LearnWorlds', {
-          description: errorMessage
-        });
-      }
-      
-      throw error;
+      return {
+        success: false,
+        message: error.message || "Erro ao sincronizar cursos"
+      };
     }
+  };
+  
+  // Função auxiliar para retornar dados simulados
+  const getDadosSimulados = (page: number, limit: number, searchTerm: string): CoursesResponse => {
+    const cursos = [
+      {
+        id: "c-001",
+        title: "Desenvolvimento Web Frontend",
+        description: "Aprenda HTML, CSS e JavaScript para criar sites modernos e responsivos.",
+        shortDescription: "Aprenda HTML, CSS e JS",
+        price_original: 1200,
+        price_final: 1200,
+        duration: "60 horas",
+        image: "https://via.placeholder.com/300x200",
+        access: "paid" as 'free' | 'paid',
+        categories: ["Tecnologia", "Desenvolvimento"]
+      },
+      {
+        id: "c-002",
+        title: "Python para Ciência de Dados",
+        description: "Fundamentos de Python e bibliotecas para análise de dados.",
+        shortDescription: "Fundamentos de Python e análise",
+        price_original: 1500,
+        price_final: 1500,
+        duration: "80 horas",
+        image: "https://via.placeholder.com/300x200",
+        access: "paid" as 'free' | 'paid',
+        categories: ["Tecnologia", "Dados"]
+      },
+      {
+        id: "c-003",
+        title: "Marketing Digital Avançado",
+        description: "Estratégias modernas de marketing para impulsionar sua presença online.",
+        shortDescription: "Estratégias modernas de marketing",
+        price_original: 1800,
+        price_final: 1800,
+        duration: "90 horas",
+        image: "https://via.placeholder.com/300x200",
+        access: "paid" as 'free' | 'paid',
+        categories: ["Marketing", "Digital"]
+      }
+    ];
+
+    // Filtrar cursos se houver termo de busca
+    const filteredCourses = searchTerm
+      ? cursos.filter(c =>
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.shortDescription.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : cursos;
+
+    // Aplicar paginação
+    const startIndex = (page - 1) * limit;
+    const paginatedCourses = filteredCourses.slice(startIndex, startIndex + limit);
+    
+    return {
+      data: paginatedCourses,
+      meta: {
+        page,
+        totalItems: filteredCourses.length,
+        totalPages: Math.ceil(filteredCourses.length / limit),
+        itemsPerPage: limit
+      }
+    };
+  };
+  
+  // Função auxiliar para retornar detalhes simulados de um curso
+  const getDetalhesCursoSimulado = (courseId: string): any => {
+    return {
+      id: courseId,
+      title: `Curso ${courseId}`,
+      description: `Descrição detalhada do curso ${courseId}`,
+      price_original: 1500,
+      price_final: 1500,
+      duration: "80 horas",
+      image: "https://via.placeholder.com/600x400",
+      modules: [
+        {
+          id: "module-1",
+          title: "Introdução",
+          description: "Fundamentos básicos",
+          lessons: [
+            { id: "lesson-1-1", title: "Primeiros passos", duration: 45 },
+            { id: "lesson-1-2", title: "Conceitos fundamentais", duration: 60 }
+          ]
+        },
+        {
+          id: "module-2",
+          title: "Intermediário",
+          description: "Aprofundamento teórico",
+          lessons: [
+            { id: "lesson-2-1", title: "Técnicas avançadas", duration: 75 },
+            { id: "lesson-2-2", title: "Estudos de caso", duration: 90 }
+          ]
+        }
+      ]
+    };
   };
 
   return {
-    loading,
-    error,
-    offlineMode,
     getCourses,
     getCourseDetails,
     getAllCourses,
-    sincronizarCursos
+    sincronizarCursos,
+    allCourses,
+    loading: loading || loadingAllCourses,
+    error,
+    offlineMode
   };
 };
 

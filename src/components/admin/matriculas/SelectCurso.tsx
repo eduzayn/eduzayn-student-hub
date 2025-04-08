@@ -8,6 +8,7 @@ import { Search, CheckCircle, BookOpen, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { Badge } from "@/components/ui/badge";
+import OfflineModeIndicator from "./OfflineModeIndicator";
 
 interface SelectCursoProps {
   onCursoSelecionado: (curso: any) => void;
@@ -30,6 +31,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       const resultado = await getCourses(1, 20, termoBusca);
       
       if (!resultado || !resultado.data) {
+        console.error("Erro ao carregar cursos: resultado inválido", resultado);
         throw new Error("Erro ao carregar cursos do LearnWorlds");
       }
       
@@ -53,7 +55,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       setCursos(cursosFormatados);
     } catch (error) {
       console.error("Erro ao carregar cursos:", error);
-      toast.error("Erro ao carregar a lista de cursos do LearnWorlds");
+      toast.error("Erro ao carregar a lista de cursos. Usando dados simulados.");
       
       // Em caso de falha, carrega dados simulados como fallback
       carregarCursosSimulados(termoBusca);
@@ -167,6 +169,10 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Selecione o Curso</h2>
       
+      {offlineMode && (
+        <OfflineModeIndicator message="API do LearnWorlds indisponível. Usando dados simulados para cursos." />
+      )}
+      
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -183,7 +189,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
         </Button>
       </div>
       
-      {error && (
+      {error && !offlineMode && (
         <div className="bg-destructive/10 p-3 rounded-md flex items-center gap-2 text-sm">
           <AlertCircle className="h-4 w-4 text-destructive" />
           <span>Erro ao buscar cursos: {error}</span>

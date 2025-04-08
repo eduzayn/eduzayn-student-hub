@@ -75,7 +75,15 @@ const useLearnWorldsBase = () => {
       console.log(`Fazendo requisição ${method} para ${url}`);
       
       try {
+        // Tentativa inicial com timeout para evitar solicitações pendentes
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+        
+        options.signal = controller.signal;
+        
         const response = await fetch(url, options);
+        clearTimeout(timeoutId);
+        
         console.log(`Resposta HTTP status: ${response.status}`);
         
         if (!response.ok) {
@@ -132,7 +140,9 @@ const useLearnWorldsBase = () => {
           
           if (textResponse.includes('<!DOCTYPE html>') || textResponse.includes('<html>')) {
             console.error('Resposta HTML detectada em vez de JSON', textResponse.substring(0, 500));
-            throw new Error('Resposta HTML recebida ao invés de JSON. Possível erro na URL da API ou configuração CORS.');
+            // Ativamos o modo offline em vez de lançar erro, para usar dados simulados
+            setOfflineMode(true);
+            throw new Error('Resposta HTML recebida ao invés de JSON. Ativando modo offline.');
           }
           
           setOfflineMode(false);
@@ -142,7 +152,14 @@ const useLearnWorldsBase = () => {
             success: response.ok 
           };
         }
-      } catch (fetchError) {
+      } catch (fetchError: any) {
+        console.error(`Erro na requisição: ${fetchError.message}`);
+        
+        if (fetchError.name === 'AbortError') {
+          console.error('Requisição cancelada por timeout (15s)');
+          throw new Error('A requisição expirou por tempo. Verifique sua conexão de internet ou a disponibilidade do servidor.');
+        }
+        
         if (fetchError.message === 'Failed to fetch') {
           console.error('Erro de conexão: Failed to fetch. Possíveis causas: CORS, rede, função edge indisponível');
           throw new Error(`Erro de conexão: Não foi possível acessar a função edge. Verifique se a função está ativa e configurada corretamente.`);
@@ -162,6 +179,8 @@ const useLearnWorldsBase = () => {
         errorMessage = 'Erro de autenticação na API LearnWorlds. Verifique se o token API tem permissões suficientes.';
       } else if (errorMessage.includes('No API key found')) {
         errorMessage = 'Chave de API do Supabase não encontrada na requisição. Verifique a configuração do cliente Supabase.';
+      } else if (errorMessage.includes('HTML recebida')) {
+        errorMessage = 'A API retornou HTML em vez de JSON. Ativando modo offline para usar dados simulados.';
       }
       
       setError(errorMessage);
