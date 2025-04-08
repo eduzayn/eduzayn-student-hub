@@ -69,35 +69,75 @@ const useLearnWorldsAlunos = () => {
     try {
       console.log(`Iniciando sincronização - sincronizarTodos=${sincronizarTodos}`);
       
+      // Gerando logs mais detalhados
+      const logs = [`[${new Date().toISOString()}] Iniciando sincronização de alunos (sincronizarTodos=${sincronizarTodos})`];
+      
       // Usamos o endpoint correto para sincronização de alunos: learnworlds-sync
       const url = `learnworlds-sync?syncAll=${sincronizarTodos}`;
+      logs.push(`[${new Date().toISOString()}] Chamando endpoint: ${url}`);
       console.log(`Chamando endpoint: ${url}`);
       
-      const result = await makeRequest(url);
-      console.log("Resposta da sincronização recebida:", result);
-      
-      // Verifica se a resposta contém os campos esperados
-      if (!result || typeof result !== 'object') {
-        console.error("Formato de resposta inválido:", result);
-        toast.error("Formato de resposta inválido da API de sincronização");
-        return null;
+      try {
+        const result = await makeRequest(url);
+        console.log("Resposta da sincronização recebida:", result);
+        
+        // Adicionar logs recebidos da API
+        if (result && Array.isArray(result.logs)) {
+          logs.push(...result.logs);
+        }
+        
+        // Verifica se a resposta contém os campos esperados
+        if (!result || typeof result !== 'object') {
+          const errorMessage = "Formato de resposta inválido da API de sincronização";
+          logs.push(`[${new Date().toISOString()}] ERRO: ${errorMessage}`);
+          toast.error(errorMessage);
+          return {
+            imported: 0,
+            updated: 0,
+            failed: 0,
+            total: 0,
+            logs
+          };
+        }
+        
+        // Adicionar resumo ao final dos logs
+        logs.push(`[${new Date().toISOString()}] Sincronização concluída: ${result.imported} importados, ${result.updated} atualizados, ${result.failed} falhas`);
+        
+        // Resultado com feedback visual
+        if (result.imported > 0 || result.updated > 0) {
+          toast.success(
+            `Sincronização concluída com sucesso!`, 
+            { description: `${result.imported} novos alunos importados e ${result.updated} atualizados.` }
+          );
+        } else if (result.failed > 0) {
+          toast.warning(
+            `Sincronização concluída com avisos`,
+            { description: `${result.failed} falhas na sincronização.` }
+          );
+        } else {
+          toast.info('Nenhuma alteração foi necessária.');
+        }
+        
+        // Garantir que o resultado sempre tenha logs
+        return {
+          ...result,
+          logs: logs
+        };
+      } catch (requestError: any) {
+        // Extrair código HTTP se disponível
+        const statusCode = requestError.status || 500;
+        const errorDetail = requestError.message || "Erro desconhecido";
+        logs.push(`[${new Date().toISOString()}] ERRO HTTP ${statusCode}: ${errorDetail}`);
+        
+        console.error('Erro na requisição de sincronização:', requestError);
+        throw new Error(`Erro de comunicação (HTTP ${statusCode}): ${errorDetail}`);
       }
-      
-      if (result.imported > 0 || result.updated > 0) {
-        toast.success(
-          `Sincronização concluída com sucesso!`, 
-          { description: `${result.imported} novos alunos importados e ${result.updated} atualizados.` }
-        );
-      } else {
-        toast.info('Nenhuma alteração foi necessária.');
-      }
-      
-      return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao sincronizar alunos:', error);
       
       // Melhor tratamento de erros
       let mensagemErro = "Erro ao sincronizar alunos com o LearnWorlds";
+      const logs = [`[${new Date().toISOString()}] ERRO: ${error.message || mensagemErro}`];
       
       if (error instanceof Error) {
         console.error('Detalhes do erro:', error.message);
@@ -113,7 +153,15 @@ const useLearnWorldsAlunos = () => {
       }
       
       toast.error(mensagemErro);
-      throw error; // Propaga o erro para tratamento adicional
+      
+      // Retornar um objeto com formato válido contendo os logs de erro
+      return {
+        imported: 0,
+        updated: 0,
+        failed: 1,
+        total: 0,
+        logs
+      };
     }
   }, [makeRequest]);
 
