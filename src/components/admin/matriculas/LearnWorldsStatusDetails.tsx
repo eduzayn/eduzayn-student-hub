@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Code, ExternalLink } from "lucide-react";
+import { AlertTriangle, Code, ExternalLink, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LearnWorldsStatusDetailsProps {
@@ -31,6 +31,16 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ sch
               </div>
             </div>
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold">Método de autenticação:</span>
+                <span className="text-blue-600 flex items-center">
+                  <Check className="h-3 w-3 mr-1" />
+                  OAuth 2.0
+                </span>
+              </div>
+            </div>
+            
             {error && (
               <div className="mt-2">
                 <div className="font-semibold text-red-600">Erro:</div>
@@ -45,7 +55,7 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ sch
               <ul className="list-disc pl-5 space-y-1">
                 <li>Verifique se a função edge do Supabase está ativa e configurada corretamente</li>
                 <li>Confirme que o School ID "{schoolId}" está correto (deve corresponder ao subdomínio da sua escola)</li>
-                <li>Verifique se o token API do LearnWorlds tem as permissões necessárias</li>
+                <li>Verifique se as credenciais OAuth (CLIENT_ID e CLIENT_SECRET) estão configuradas corretamente</li>
               </ul>
               <div className="flex justify-end mt-2">
                 <Button 

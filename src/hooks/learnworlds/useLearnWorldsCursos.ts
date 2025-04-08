@@ -144,7 +144,7 @@ const useLearnWorldsCursos = () => {
 
   /**
    * Inicia sincronização de cursos com LearnWorlds
-   * Usa o token de administrador pois é uma operação administrativa
+   * Usa autenticação OAuth para operações administrativas
    */
   const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
@@ -155,23 +155,22 @@ const useLearnWorldsCursos = () => {
         { description: "Este processo pode levar alguns instantes." }
       );
       
-      // Usamos o endpoint correto para sincronização de cursos: learnworlds-courses-sync
-      // Como é operação administrativa, usamos makeRequest padrão (com token admin)
+      // Usamos o endpoint correto para sincronização de cursos com autenticação OAuth
       const result = await makeRequest(`learnworlds-courses-sync?syncAll=${sincronizarTodos}`);
       
       console.log("Resultado da sincronização:", result);
       
       // Verificamos se há erros específicos nos logs
       if (result && result.logs) {
-        // Verificar erros relacionados ao client_id
-        const clientIdError = result.logs.find((log: string) => 
-          log.includes("client_id") && (log.includes("cannot be found") || log.includes("Missing"))
+        // Verificar erros relacionados à autenticação OAuth
+        const oauthError = result.logs.find((log: string) => 
+          log.includes("OAuth") && log.includes("Erro")
         );
         
-        if (clientIdError) {
-          console.error("Erro de client_id detectado:", clientIdError);
-          toast.error('Erro de configuração da API LearnWorlds', {
-            description: "ID de cliente (LEARNWORLDS_SCHOOL_ID) ausente ou inválido nas configurações."
+        if (oauthError) {
+          console.error("Erro de autenticação OAuth detectado:", oauthError);
+          toast.error('Erro de autenticação OAuth', {
+            description: "Falha na autenticação OAuth. Verifique as credenciais CLIENT_ID e CLIENT_SECRET."
           });
         }
       }
@@ -199,9 +198,13 @@ const useLearnWorldsCursos = () => {
     } catch (error) {
       console.error('Erro ao sincronizar cursos:', error);
       
-      // Verificar se é um erro relacionado ao client_id
+      // Verificar se é um erro relacionado à autenticação OAuth
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
+      if (typeof errorMessage === 'string' && errorMessage.includes('OAuth')) {
+        toast.error('Erro de autenticação OAuth', {
+          description: "Falha na autenticação OAuth. Verifique as credenciais CLIENT_ID e CLIENT_SECRET."
+        });
+      } else if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
         toast.error('Erro de configuração da API LearnWorlds', {
           description: "ID de cliente ausente ou inválido nas configurações."
         });

@@ -9,19 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
-// Interface para dados do curso da LearnWorlds
-interface LearnWorldsCourse {
-  id: string;
-  title: string;
-  description?: string;
-  shortDescription?: string;
-  price?: number;
-  duration?: string;
-  image?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 // Interface para resultados da sincronização
 interface SyncResults {
   imported: number;
@@ -53,6 +40,12 @@ serve(async (req) => {
   };
 
   try {
+    // Helper para adicionar logs
+    function addLog(message: string) {
+      results.logs.push(`[${new Date().toISOString()}] ${message}`);
+      console.log(message);
+    }
+
     // Obter parâmetros da solicitação
     const url = new URL(req.url);
     const isSyncAll = url.searchParams.get('syncAll') === 'true';
@@ -60,21 +53,25 @@ serve(async (req) => {
     const pageNumber = parseInt(url.searchParams.get('page') || '1');
 
     // Obter chaves da API e configurações da LearnWorlds
-    const apiKey = Deno.env.get('LEARNWORLDS_API_KEY');
     const schoolId = Deno.env.get('LEARNWORLDS_SCHOOL_ID') || "grupozayneducacional";
+    const clientId = Deno.env.get('CLIENTE_ID');
+    const clientSecret = Deno.env.get('CLIENT_SECRET');
+    const tokenPath = Deno.env.get('LEARNWORLDS_OAUTH_TOKEN') || "token";
     const apiBaseUrl = Deno.env.get('LEARNWORLDS_BASE_URL') || 'https://api.learnworlds.com';
     
     // Log detalhado das configurações - IMPORTANTE para diagnóstico!
-    console.log(`LEARNWORLDS_API_KEY: ${apiKey ? "definido (primeiros 5 chars): " + apiKey.substring(0, 5) + "..." : "indefinido"}`);
-    console.log(`LEARNWORLDS_SCHOOL_ID: ${schoolId || "indefinido"}`);
-    console.log(`LEARNWORLDS_BASE_URL: ${apiBaseUrl}`);
+    addLog(`LEARNWORLDS_SCHOOL_ID: ${schoolId || "indefinido"}`);
+    addLog(`CLIENTE_ID: ${clientId ? "definido" : "indefinido"}`);
+    addLog(`CLIENT_SECRET: ${clientSecret ? "definido" : "indefinido"}`);
+    addLog(`LEARNWORLDS_BASE_URL: ${apiBaseUrl}`);
+    addLog(`LEARNWORLDS_OAUTH_TOKEN: ${tokenPath}`);
 
-    if (!apiKey || !schoolId) {
-      console.error('Configurações da API LearnWorlds ausentes');
-      addLog(results, "Erro: Configurações da API LearnWorlds ausentes (API_KEY ou SCHOOL_ID)");
+    if (!clientId || !clientSecret || !schoolId) {
+      const errorMsg = 'Configurações da API LearnWorlds ausentes (CLIENT_ID, CLIENT_SECRET ou SCHOOL_ID)';
+      addLog(`Erro: ${errorMsg}`);
       return new Response(
         JSON.stringify({ 
-          error: 'Configurações da API ausentes',
+          error: errorMsg,
           results
         }),
         {
@@ -89,52 +86,73 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Iniciando sincronização de cursos da LearnWorlds${isSyncAll ? ' (todos os cursos)' : ''}`);
-    addLog(results, `Iniciando sincronização de cursos - Página ${pageNumber}, Tamanho ${pageSize}`);
+    addLog(`Iniciando sincronização de cursos da LearnWorlds${isSyncAll ? ' (todos os cursos)' : ''}`);
+
+    // Solicitar token de acesso OAuth
+    addLog('Solicitando token de acesso...');
+    const tokenUrl = `${apiBaseUrl}/oauth2/${tokenPath}`;
+    addLog(`URL do token: ${tokenUrl}`);
+    
+    const authRes = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Lw-Client': schoolId
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'client_credentials'
+      })
+    });
+    
+    if (!authRes.ok) {
+      const errorText = await authRes.text();
+      addLog(`Erro ao solicitar token: ${authRes.status} - ${errorText}`);
+      throw new Error(`Erro de autenticação OAuth: ${authRes.status} - ${errorText}`);
+    }
+    
+    const authData = await authRes.json();
+    const accessToken = authData.access_token;
+    
+    if (!accessToken) {
+      addLog("Token de acesso não recebido na resposta");
+      throw new Error("Token de acesso não recebido na resposta OAuth");
+    }
+    
+    addLog('Token de acesso OAuth recebido com sucesso');
 
     // Função para buscar cursos da LearnWorlds
-    const fetchCourses = async (page: number, limit: number): Promise<{ data: LearnWorldsCourse[], total: number, pages: number }> => {
+    const fetchCourses = async (page: number, limit: number): Promise<{ data: any[], total: number, pages: number }> => {
       // Construir a URL da API com os parâmetros de paginação - usando a URL base configurada
       const apiUrl = `${apiBaseUrl}/api/v2/${schoolId}/courses?page=${page}&limit=${limit}`;
-      console.log(`Buscando cursos da LearnWorlds: ${apiUrl}`);
-      addLog(results, `Buscando cursos da página ${page} (limite ${limit})`);
+      addLog(`Buscando cursos da LearnWorlds: ${apiUrl}`);
       
       try {
-        // IMPORTANTE: Garantir que o cabeçalho Lw-Client está sendo enviado corretamente
+        // Usando o token OAuth obtido
         const headers = {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Lw-Client': schoolId, // Este cabeçalho é obrigatório!
+          'Authorization': `Bearer ${accessToken}`
         };
         
-        console.log("Enviando requisição com cabeçalhos:", JSON.stringify({
-          Authorization: "Bearer " + apiKey.substring(0, 5) + "...",
-          "Lw-Client": schoolId
-        }));
+        addLog("Enviando requisição com token OAuth");
         
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: headers,
         });
 
-        console.log(`Resposta da API LearnWorlds: Status ${response.status}`);
+        addLog(`Resposta da API LearnWorlds: Status ${response.status}`);
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
-          addLog(results, `Erro na API LearnWorlds: ${response.status} - ${errorText}`);
-          
-          // Verificar especificamente os erros relacionados ao client_id
-          if (errorText.includes('client_id')) {
-            addLog(results, `ERRO: Problema com o cabeçalho 'Lw-Client'. O ID da escola '${schoolId}' pode estar incorreto.`);
-          }
-          
+          addLog(`Erro na API LearnWorlds: ${response.status} - ${errorText}`);
           throw new Error(`LearnWorlds API Error: ${response.status} - ${errorText}`);
         }
         
         // Verificar o tipo de conteúdo para melhor diagnóstico
         const contentType = response.headers.get('content-type') || '';
-        console.log(`Tipo de conteúdo da resposta: ${contentType}`);
+        addLog(`Tipo de conteúdo da resposta: ${contentType}`);
         
         // Processar a resposta
         const responseText = await response.text();
@@ -142,8 +160,7 @@ serve(async (req) => {
         // Verificar se a resposta não está vazia
         if (!responseText) {
           const errorMsg = "Resposta vazia recebida da API LearnWorlds";
-          console.error(errorMsg);
-          addLog(results, errorMsg);
+          addLog(errorMsg);
           return { data: [], total: 0, pages: 0 };
         }
         
@@ -152,40 +169,30 @@ serve(async (req) => {
           const responseData = JSON.parse(responseText);
           
           // Adicionar logs detalhados sobre a estrutura da resposta
-          console.log(`Resposta recebida com ${responseData.data?.length || 0} cursos`);
+          addLog(`Resposta recebida com ${responseData.data?.length || 0} cursos`);
           if (responseData.meta) {
-            console.log(`Meta: página ${responseData.meta.page}, total ${responseData.meta.totalItems} itens`);
+            addLog(`Meta: página ${responseData.meta.page}, total ${responseData.meta.totalItems} itens`);
           }
           
           // Validar a estrutura da resposta
           if (!responseData || !Array.isArray(responseData.data)) {
-            console.error("Resposta inválida da API:", responseData);
-            addLog(results, `Estrutura de resposta inválida: ${JSON.stringify(responseData).substring(0, 100)}...`);
+            addLog(`Estrutura de resposta inválida: ${JSON.stringify(responseData).substring(0, 100)}...`);
             return { data: [], total: 0, pages: 0 };
           }
           
-          addLog(results, `Recebidos ${responseData.data.length} cursos da API`);
+          addLog(`Recebidos ${responseData.data.length} cursos da API`);
           
           return responseData;
         } catch (jsonError) {
-          console.error("Erro ao analisar JSON:", jsonError);
-          console.error("Resposta recebida:", responseText.substring(0, 500));
-          addLog(results, `Erro ao analisar JSON da resposta: ${jsonError.message}`);
-          addLog(results, `Primeiros 100 caracteres da resposta: ${responseText.substring(0, 100)}...`);
+          addLog(`Erro ao analisar JSON da resposta: ${jsonError.message}`);
+          addLog(`Primeiros 100 caracteres da resposta: ${responseText.substring(0, 100)}...`);
           throw new Error(`Falha ao analisar resposta JSON: ${jsonError.message}`);
         }
-      } catch (error) {
-        console.error(`Erro ao chamar API LearnWorlds: ${error.message}`);
-        addLog(results, `Falha ao buscar cursos: ${error.message}`);
+      } catch (error: any) {
+        addLog(`Falha ao buscar cursos: ${error.message}`);
         return { data: [], total: 0, pages: 0 };
       }
     };
-
-    // Helper para adicionar logs
-    function addLog(results: SyncResults, message: string) {
-      results.logs.push(`[${new Date().toISOString()}] ${message}`);
-      console.log(message);
-    }
 
     // Helper para converter duração em string para minutos
     function parseDuration(duration: string): number {
@@ -217,21 +224,20 @@ serve(async (req) => {
     }
 
     // Função para processar e sincronizar cursos
-    const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
+    const processCourses = async (courses: any[]): Promise<void> => {
       if (!courses || courses.length === 0) {
-        addLog(results, "Nenhum curso para processar");
+        addLog("Nenhum curso para processar");
         return;
       }
       
-      addLog(results, `Processando ${courses.length} cursos`);
+      addLog(`Processando ${courses.length} cursos`);
       
       for (const course of courses) {
         try {
           // Verificar dados obrigatórios do curso
           if (!course.id || !course.title) {
-            console.error(`Curso com dados incompletos: ${JSON.stringify(course)}`);
+            addLog(`Falha: Curso com dados incompletos (ID: ${course.id || 'desconhecido'})`);
             results.failed++;
-            addLog(results, `Falha: Curso com dados incompletos (ID: ${course.id || 'desconhecido'})`);
             continue;
           }
 
@@ -243,9 +249,8 @@ serve(async (req) => {
             .maybeSingle();
           
           if (queryError) {
-            console.error(`Erro ao buscar curso no Supabase: ${queryError.message}`);
+            addLog(`Falha ao processar curso ${course.id}: ${queryError.message}`);
             results.failed++;
-            addLog(results, `Falha ao processar curso ${course.id}: ${queryError.message}`);
             continue;
           }
           
@@ -270,12 +275,11 @@ serve(async (req) => {
               .eq('id', existingCourse.id);
               
             if (updateError) {
-              console.error(`Erro ao atualizar curso no Supabase: ${updateError.message}`);
+              addLog(`Falha ao atualizar curso ${course.id}: ${updateError.message}`);
               results.failed++;
-              addLog(results, `Falha ao atualizar curso ${course.id}: ${updateError.message}`);
             } else {
               results.updated++;
-              addLog(results, `Curso atualizado: ${course.title} (${course.id})`);
+              addLog(`Curso atualizado: ${course.title} (${course.id})`);
             }
           } else {
             // Criar novo curso
@@ -287,18 +291,16 @@ serve(async (req) => {
               });
               
             if (insertError) {
-              console.error(`Erro ao inserir curso no Supabase: ${insertError.message}`);
+              addLog(`Falha ao criar curso ${course.id}: ${insertError.message}`);
               results.failed++;
-              addLog(results, `Falha ao criar curso ${course.id}: ${insertError.message}`);
             } else {
               results.imported++;
-              addLog(results, `Novo curso importado: ${course.title} (${course.id})`);
+              addLog(`Novo curso importado: ${course.title} (${course.id})`);
             }
           }
-        } catch (error) {
-          console.error(`Erro ao processar curso ${course.id}:`, error);
+        } catch (error: any) {
+          addLog(`Erro não tratado com curso ${course.id}: ${error.message}`);
           results.failed++;
-          addLog(results, `Erro não tratado com curso ${course.id}: ${error.message}`);
         }
       }
     };
@@ -311,7 +313,7 @@ serve(async (req) => {
         results.total = firstPage.total || firstPage.data.length;
         
         if (firstPage.data.length > 0) {
-          addLog(results, `Total de ${results.total} cursos encontrados em ${firstPage.pages || 1} páginas`);
+          addLog(`Total de ${results.total} cursos encontrados em ${firstPage.pages || 1} páginas`);
           
           // Processar primeira página
           await processCourses(firstPage.data);
@@ -319,13 +321,13 @@ serve(async (req) => {
           // Processar páginas adicionais (se houver)
           if (firstPage.pages && firstPage.pages > 1) {
             for (let page = 2; page <= firstPage.pages; page++) {
-              addLog(results, `Processando página ${page} de ${firstPage.pages}`);
+              addLog(`Processando página ${page} de ${firstPage.pages}`);
               const pageData = await fetchCourses(page, pageSize);
               await processCourses(pageData.data);
             }
           }
         } else {
-          addLog(results, `Nenhum curso encontrado na API do LearnWorlds`);
+          addLog(`Nenhum curso encontrado na API do LearnWorlds`);
         }
       } else {
         // Buscar apenas uma página específica
@@ -333,18 +335,17 @@ serve(async (req) => {
         results.total = pageData.data.length;
         
         if (pageData.data.length > 0) {
-          addLog(results, `Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages || 1})`);
+          addLog(`Processando ${pageData.data.length} cursos (página ${pageNumber} de ${pageData.pages || 1})`);
           await processCourses(pageData.data);
         } else {
-          addLog(results, `Nenhum curso encontrado na página ${pageNumber}`);
+          addLog(`Nenhum curso encontrado na página ${pageNumber}`);
         }
       }
-    } catch (syncError) {
-      console.error("Erro durante sincronização:", syncError);
-      addLog(results, `Erro na sincronização: ${syncError.message}`);
+    } catch (syncError: any) {
+      addLog(`Erro na sincronização: ${syncError.message}`);
     }
 
-    addLog(results, `Sincronização concluída: ${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas`);
+    addLog(`Sincronização concluída: ${results.imported} importados, ${results.updated} atualizados, ${results.failed} falhas`);
     
     // Retornar resultados
     return new Response(
@@ -355,7 +356,7 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     // Lidar com erros gerais
     console.error('Erro ao processar solicitação:', error);
     results.logs.push(`[${new Date().toISOString()}] Erro geral: ${error.message}`);
@@ -369,9 +370,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper para adicionar logs
-function addLog(results: SyncResults, message: string) {
-  results.logs.push(`[${new Date().toISOString()}] ${message}`);
-  console.log(message);
-}

@@ -58,19 +58,19 @@ const SincronizacaoCursos: React.FC = () => {
         setLogs(result.logs || []);
         
         // Verificar mensagens de erro específicas nos logs
-        const clientIdErrorLog = result.logs?.find(log => 
-          log.includes("client_id") && 
-          (log.includes("cannot be found") || log.includes("Missing"))
+        const oauthErrorLog = result.logs?.find(log => 
+          log.includes("OAuth") && 
+          log.includes("Erro")
         );
         
         const accessDeniedLog = result.logs?.find(log =>
           log.includes("access_denied") || log.includes("401") || log.includes("403")
         );
         
-        if (clientIdErrorLog) {
-          setDetalhesErro("Erro de autenticação com a API LearnWorlds: ID de cliente ausente ou inválido. Verifique as configurações da API.");
-          toast.error("Erro na API LearnWorlds", {
-            description: "ID de cliente ausente ou inválido. Verifique as configurações da API."
+        if (oauthErrorLog) {
+          setDetalhesErro("Erro de autenticação OAuth: Falha na autenticação. Verifique as credenciais CLIENT_ID e CLIENT_SECRET.");
+          toast.error("Erro de autenticação OAuth", {
+            description: "Falha na autenticação. Verifique as credenciais do cliente."
           });
         } else if (accessDeniedLog) {
           setDetalhesErro("Erro de autorização na API LearnWorlds. Verifique se o token da API tem permissões suficientes.");
@@ -104,8 +104,13 @@ const SincronizacaoCursos: React.FC = () => {
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       
-      // Exibir erro específico relacionado ao client_id
-      if (error.message && error.message.includes("client_id")) {
+      // Exibir erro específico relacionado à autenticação OAuth
+      if (error.message && error.message.includes("OAuth")) {
+        setDetalhesErro("Erro de autenticação OAuth: Falha na autenticação. Verifique as credenciais CLIENT_ID e CLIENT_SECRET.");
+        toast.error("Erro de autenticação OAuth", { 
+          description: "Falha na autenticação. Verifique as credenciais do cliente."
+        });
+      } else if (error.message && error.message.includes("client_id")) {
         setDetalhesErro("Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.");
         toast.error("Erro de configuração da API", { 
           description: "ID do cliente LearnWorlds ausente ou incorreto nas configurações."
@@ -153,20 +158,20 @@ const SincronizacaoCursos: React.FC = () => {
         offlineMode={offlineMode}
       />
       
-      {/* Alerta específico de erro client_id */}
-      {detalhesErro && detalhesErro.includes("client_id") && (
+      {/* Alerta específico de erro de autenticação OAuth */}
+      {detalhesErro && detalhesErro.includes("OAuth") && (
         <Alert variant="destructive" className="mb-4">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Erro de configuração da API LearnWorlds</AlertTitle>
+          <AlertTitle>Erro de autenticação OAuth</AlertTitle>
           <AlertDescription className="space-y-2">
-            <p>A API do LearnWorlds está retornando um erro de "client_id". Isso geralmente significa que:</p>
+            <p>A autenticação OAuth com LearnWorlds falhou. Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente. Valor atual: "{schoolId}"</li>
-              <li>O cabeçalho 'Lw-Client' não está sendo enviado corretamente</li>
-              <li>O token de API não tem permissões suficientes</li>
+              <li>O CLIENT_ID ou CLIENT_SECRET não estão configurados corretamente</li>
+              <li>As credenciais OAuth não têm permissões suficientes</li>
+              <li>A API LearnWorlds rejeitou a solicitação de autenticação</li>
             </ul>
             <p className="mt-2 text-sm">
-              <span className="font-medium">Solução:</span> Verifique se o valor de LEARNWORLDS_SCHOOL_ID está correto nas configurações de segredos da função edge.
+              <span className="font-medium">Solução:</span> Verifique se o CLIENT_ID e CLIENT_SECRET estão corretos nas configurações de segredos da função edge.
             </p>
           </AlertDescription>
         </Alert>
@@ -199,12 +204,12 @@ const SincronizacaoCursos: React.FC = () => {
           <AlertDescription className="space-y-2">
             <p>A API do LearnWorlds retornou um erro de "access_denied". Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O token da API não tem permissões suficientes</li>
-              <li>O token da API expirou ou é inválido</li>
+              <li>O token OAuth obtido não tem permissões suficientes</li>
+              <li>As credenciais de cliente não têm os escopos necessários</li>
               <li>A sua conta LearnWorlds não tem acesso à API de cursos</li>
             </ul>
             <p className="mt-2 text-sm">
-              <span className="font-medium">Solução:</span> Verifique o token API no painel do LearnWorlds e certifique-se que ele tem as permissões necessárias.
+              <span className="font-medium">Solução:</span> Verifique se o CLIENT_ID e CLIENT_SECRET têm as permissões necessárias para acessar a API de cursos.
             </p>
           </AlertDescription>
         </Alert>
