@@ -1,12 +1,6 @@
 
 # Configuração das funções edge do Supabase
 [functions]
-[functions.learnworlds-courses-sync]
-verify_jwt = false
-
-[functions.learnworlds-sync]
-verify_jwt = false
-
 [functions.learnworlds-api]
 verify_jwt = false
 
@@ -17,4 +11,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-confirmation-email]
+verify_jwt = false
+
+[functions.learnworlds-sync]
 verify_jwt = false

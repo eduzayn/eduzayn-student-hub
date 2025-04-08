@@ -143,8 +143,7 @@ const useLearnWorldsCursos = () => {
   };
 
   /**
-   * Inicia sincronização de cursos com LearnWorlds
-   * Usa autenticação OAuth para operações administrativas
+   * Inicia sincronização de cursos com LearnWorlds usando a nova função unificada
    */
   const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
@@ -155,25 +154,10 @@ const useLearnWorldsCursos = () => {
         { description: "Este processo pode levar alguns instantes." }
       );
       
-      // Usamos o endpoint correto para sincronização de cursos com autenticação OAuth
-      const result = await makeRequest(`learnworlds-courses-sync?syncAll=${sincronizarTodos}`);
+      // Usar a função unificada com parâmetro type=courses
+      const result = await makeRequest(`learnworlds-sync?syncAll=${sincronizarTodos}&type=courses`);
       
       console.log("Resultado da sincronização:", result);
-      
-      // Verificamos se há erros específicos nos logs
-      if (result && result.logs) {
-        // Verificar erros relacionados à autenticação OAuth
-        const oauthError = result.logs.find((log: string) => 
-          log.includes("OAuth") && log.includes("Erro")
-        );
-        
-        if (oauthError) {
-          console.error("Erro de autenticação OAuth detectado:", oauthError);
-          toast.error('Erro de autenticação OAuth', {
-            description: "Falha na autenticação OAuth. Verifique as credenciais CLIENT_ID e CLIENT_SECRET."
-          });
-        }
-      }
       
       // Notificações com base no resultado
       if (result) {
@@ -198,15 +182,11 @@ const useLearnWorldsCursos = () => {
     } catch (error) {
       console.error('Erro ao sincronizar cursos:', error);
       
-      // Verificar se é um erro relacionado à autenticação OAuth
+      // Verificar tipo de erro para mensagem mais específica
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-      if (typeof errorMessage === 'string' && errorMessage.includes('OAuth')) {
-        toast.error('Erro de autenticação OAuth', {
-          description: "Falha na autenticação OAuth. Verifique as credenciais CLIENT_ID e CLIENT_SECRET."
-        });
-      } else if (typeof errorMessage === 'string' && errorMessage.includes('client_id')) {
-        toast.error('Erro de configuração da API LearnWorlds', {
-          description: "ID de cliente ausente ou inválido nas configurações."
+      if (typeof errorMessage === 'string' && errorMessage.includes('Failed to fetch')) {
+        toast.error('Erro de conexão', {
+          description: "Falha ao conectar com a função edge do Supabase."
         });
       } else {
         toast.error('Erro ao sincronizar cursos com o LearnWorlds', {

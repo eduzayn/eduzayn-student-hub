@@ -58,8 +58,8 @@ const SincronizacaoCursos: React.FC = () => {
         setLogs(result.logs || []);
         
         // Verificar mensagens de erro específicas nos logs
-        const oauthErrorLog = result.logs?.find(log => 
-          log.includes("OAuth") && 
+        const apiErrorLog = result.logs?.find(log => 
+          log.includes("API") && 
           log.includes("Erro")
         );
         
@@ -67,10 +67,10 @@ const SincronizacaoCursos: React.FC = () => {
           log.includes("access_denied") || log.includes("401") || log.includes("403")
         );
         
-        if (oauthErrorLog) {
-          setDetalhesErro("Erro de autenticação OAuth: Falha na autenticação. Verifique as credenciais CLIENT_ID e CLIENT_SECRET.");
-          toast.error("Erro de autenticação OAuth", {
-            description: "Falha na autenticação. Verifique as credenciais do cliente."
+        if (apiErrorLog) {
+          setDetalhesErro("Erro da API LearnWorlds: Verifique se a API Key está configurada corretamente.");
+          toast.error("Erro da API LearnWorlds", {
+            description: "Falha na autenticação. Verifique a API key."
           });
         } else if (accessDeniedLog) {
           setDetalhesErro("Erro de autorização na API LearnWorlds. Verifique se o token da API tem permissões suficientes.");
@@ -104,11 +104,11 @@ const SincronizacaoCursos: React.FC = () => {
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       
-      // Exibir erro específico relacionado à autenticação OAuth
-      if (error.message && error.message.includes("OAuth")) {
-        setDetalhesErro("Erro de autenticação OAuth: Falha na autenticação. Verifique as credenciais CLIENT_ID e CLIENT_SECRET.");
-        toast.error("Erro de autenticação OAuth", { 
-          description: "Falha na autenticação. Verifique as credenciais do cliente."
+      // Exibir erro específico relacionado à autenticação
+      if (error.message && error.message.includes("API")) {
+        setDetalhesErro("Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique a API key.");
+        toast.error("Erro de autenticação da API", { 
+          description: "Falha na autenticação. Verifique a API key."
         });
       } else if (error.message && error.message.includes("client_id")) {
         setDetalhesErro("Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.");
@@ -158,20 +158,20 @@ const SincronizacaoCursos: React.FC = () => {
         offlineMode={offlineMode}
       />
       
-      {/* Alerta específico de erro de autenticação OAuth */}
-      {detalhesErro && detalhesErro.includes("OAuth") && (
+      {/* Alerta específico de erro de autenticação API */}
+      {detalhesErro && detalhesErro.includes("API") && (
         <Alert variant="destructive" className="mb-4">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Erro de autenticação OAuth</AlertTitle>
+          <AlertTitle>Erro de autenticação da API</AlertTitle>
           <AlertDescription className="space-y-2">
-            <p>A autenticação OAuth com LearnWorlds falhou. Isso geralmente significa que:</p>
+            <p>A autenticação com a API do LearnWorlds falhou. Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O CLIENT_ID ou CLIENT_SECRET não estão configurados corretamente</li>
-              <li>As credenciais OAuth não têm permissões suficientes</li>
+              <li>A API Key não está configurada corretamente</li>
+              <li>A API Key não tem permissões suficientes</li>
               <li>A API LearnWorlds rejeitou a solicitação de autenticação</li>
             </ul>
             <p className="mt-2 text-sm">
-              <span className="font-medium">Solução:</span> Verifique se o CLIENT_ID e CLIENT_SECRET estão corretos nas configurações de segredos da função edge.
+              <span className="font-medium">Solução:</span> Verifique se a API Key está correta nas configurações de segredos da função edge.
             </p>
           </AlertDescription>
         </Alert>
@@ -185,7 +185,7 @@ const SincronizacaoCursos: React.FC = () => {
           <AlertDescription className="space-y-2">
             <p>Não foi possível conectar à função edge do Supabase. Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>A função edge "learnworlds-courses-sync" pode estar indisponível</li>
+              <li>A função edge "learnworlds-sync" pode estar indisponível</li>
               <li>Há um problema de rede ou CORS impedindo a conexão</li>
               <li>A função edge precisa ser reimplementada</li>
             </ul>
@@ -204,12 +204,11 @@ const SincronizacaoCursos: React.FC = () => {
           <AlertDescription className="space-y-2">
             <p>A API do LearnWorlds retornou um erro de "access_denied". Isso geralmente significa que:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>O token OAuth obtido não tem permissões suficientes</li>
-              <li>As credenciais de cliente não têm os escopos necessários</li>
+              <li>O token API obtido não tem permissões suficientes</li>
               <li>A sua conta LearnWorlds não tem acesso à API de cursos</li>
             </ul>
             <p className="mt-2 text-sm">
-              <span className="font-medium">Solução:</span> Verifique se o CLIENT_ID e CLIENT_SECRET têm as permissões necessárias para acessar a API de cursos.
+              <span className="font-medium">Solução:</span> Verifique se a API Key tem as permissões necessárias para acessar a API de cursos.
             </p>
           </AlertDescription>
         </Alert>

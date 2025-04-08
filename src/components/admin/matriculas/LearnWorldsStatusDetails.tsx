@@ -36,7 +36,7 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ sch
                 <span className="font-semibold">Método de autenticação:</span>
                 <span className="text-blue-600 flex items-center">
                   <Check className="h-3 w-3 mr-1" />
-                  OAuth 2.0
+                  API Key
                 </span>
               </div>
             </div>
@@ -55,14 +55,14 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({ sch
               <ul className="list-disc pl-5 space-y-1">
                 <li>Verifique se a função edge do Supabase está ativa e configurada corretamente</li>
                 <li>Confirme que o School ID "{schoolId}" está correto (deve corresponder ao subdomínio da sua escola)</li>
-                <li>Verifique se as credenciais OAuth (CLIENT_ID e CLIENT_SECRET) estão configuradas corretamente</li>
+                <li>Verifique se a API Key do LearnWorlds está configurada corretamente nas variáveis de ambiente</li>
               </ul>
               <div className="flex justify-end mt-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="text-xs" 
-                  onClick={() => window.open('https://bioarzkfmcobctblzztm.supabase.co/functions/learnworlds-courses-sync/logs', '_blank')}
+                  onClick={() => window.open('https://bioarzkfmcobctblzztm.supabase.co/functions/learnworlds-sync/logs', '_blank')}
                 >
                   <Code className="h-3 w-3 mr-1" />
                   Logs da função edge
