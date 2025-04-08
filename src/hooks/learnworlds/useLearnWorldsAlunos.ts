@@ -37,9 +37,12 @@ const useLearnWorldsAlunos = () => {
       }
 
       console.log(`Buscando usuários com parâmetros: page=${page}, limit=${limit}, searchTerm=${searchTerm || 'nenhum'}`);
-      return await makeRequest(`learnworlds-api/users?${queryParams}`);
+      const result = await makeRequest(`learnworlds-api/users?${queryParams}`);
+      console.log('Resultado da busca de usuários:', result);
+      return result;
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
+      toast.error('Erro ao buscar usuários. Verifique os logs para mais detalhes.');
       return null;
     }
   };
