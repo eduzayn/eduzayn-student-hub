@@ -55,11 +55,12 @@ const useLearnWorldsBase = () => {
 
       const headers: HeadersInit = {
         'Authorization': authHeader,
-        'Content-Type': 'application/json',
-        'X-School-Id': LEARNWORLDS_SCHOOL_ID, // Adicionando ID da escola nos cabeçalhos para diagnóstico
-        'Lw-Client': LEARNWORLDS_SCHOOL_ID // Adicionando o cabeçalho Lw-Client que é obrigatório
+        'Content-Type': 'application/json'
       };
 
+      // Removemos os cabeçalhos específicos do LearnWorlds para requisições às funções edge
+      // Esses cabeçalhos serão adicionados pela função edge quando fizer requisições para o LearnWorlds
+      
       const options: RequestInit = {
         method,
         headers,
