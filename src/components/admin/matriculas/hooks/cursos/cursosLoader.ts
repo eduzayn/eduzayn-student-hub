@@ -47,13 +47,8 @@ export const carregarCursos = async (
     console.log("Cursos formatados:", cursosFormatados);
     setCursos(cursosFormatados);
     
-    // Se estamos em modo offline, mostramos um aviso e carregamos dados simulados
-    if (offlineMode) {
-      toast.warning("Usando dados simulados do LearnWorlds", {
-        description: "A API do LearnWorlds está indisponível no momento."
-      });
-      handleFallbackData(setCursos, setTotalPages, termoBusca);
-    }
+    // CORREÇÃO: Removido o carregamento de dados simulados quando temos dados reais
+    // Se a API retornou dados válidos, não devemos carregar dados simulados
     
   } catch (error) {
     console.error("Erro ao carregar cursos:", error);

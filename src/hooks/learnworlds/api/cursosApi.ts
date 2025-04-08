@@ -52,16 +52,13 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       }
       
       // Verificar se temos dados no formato esperado
-      if (response.data !== undefined) {
-        // Resposta válida
+      if (response.data !== undefined && Array.isArray(response.data) && response.data.length > 0) {
+        // CORREÇÃO: Verificar se os dados são válidos antes de usar
         console.log("Usando dados reais de cursos da API LearnWorlds");
-        
-        // Aqui não usaremos dados simulados se não encontrar resultados
-        // O comportamento anterior de misturar resultados reais e simulados foi removido
         setOfflineMode(false);
         return response;
       } else {
-        console.error("Formato de resposta inválido da API de cursos:", response);
+        console.error("Formato de resposta inválido ou sem dados da API de cursos:", response);
         setOfflineMode(true);
         return getDadosSimulados(page, limit, searchTerm);
       }

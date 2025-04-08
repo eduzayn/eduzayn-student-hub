@@ -41,7 +41,32 @@ export const carregarCursosSimulados = (termoBusca = "") => {
       learning_worlds_id: "pos_graduacao_em_direito_civil",
       url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-civil",
       simulado: true
-    }
+    },
+    // Adicionar indicadores claros para os cursos que são simulados na API
+    {
+      id: "course-1",
+      titulo: "[SIMULADO] Desenvolvimento Web Frontend",
+      codigo: "SIM-WEB",
+      modalidade: "EAD",
+      carga_horaria: 60,
+      valor_total: 1200.00,
+      valor_mensalidade: 200.00,
+      learning_worlds_id: "course-1",
+      url: "https://grupozayneducacional.com.br/course/course-1",
+      simulado: true
+    },
+    {
+      id: "course-2",
+      titulo: "[SIMULADO] Python para Ciência de Dados",
+      codigo: "SIM-PY",
+      modalidade: "EAD",
+      carga_horaria: 80,
+      valor_total: 1500.00,
+      valor_mensalidade: 250.00,
+      learning_worlds_id: "course-2",
+      url: "https://grupozayneducacional.com.br/course/course-2",
+      simulado: true
+    },
   ];
   
   // Filtragem pela busca (se houver)

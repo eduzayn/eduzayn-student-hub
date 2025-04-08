@@ -7,7 +7,8 @@ import OfflineModeIndicator from "./OfflineModeIndicator";
 import useCursoSelection from "./hooks/useCursoSelection";
 import CursosPagination from "./cursos/lista/CursosPagination";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SelectCursoProps {
   onCursoSelecionado: (curso: any) => void;
@@ -30,12 +31,25 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
     limparBusca
   } = useCursoSelection(onCursoSelecionado);
   
+  // Verificar se todos os cursos são simulados
+  const todosCursosSimulados = cursos.length > 0 && cursos.every(curso => curso.simulado);
+  
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Selecione o Curso</h2>
       
       {offlineMode && (
         <OfflineModeIndicator message="API do LearnWorlds indisponível. Usando dados simulados para cursos." />
+      )}
+      
+      {!offlineMode && todosCursosSimulados && !loading && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Atenção: Apesar da API estar disponível, todos os cursos exibidos são simulados. 
+            Verifique a configuração da API ou contate o suporte técnico.
+          </AlertDescription>
+        </Alert>
       )}
       
       <div className="flex flex-col gap-2">
