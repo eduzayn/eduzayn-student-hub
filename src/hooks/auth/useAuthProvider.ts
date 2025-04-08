@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { checkAdminBypass, isAdminBypassAuthenticated, getAdminBypassEmail, ADMIN_BYPASS_JWT } from "./adminBypass";
+import { checkAdminBypass, isAdminBypassAuthenticated, getAdminBypassEmail, getAdminBypassToken } from "./adminBypass";
 import { checkSupabaseAuth } from "./supabaseAuth";
 import { ADMIN_EMAILS } from "@/components/auth/LoginForm";
 
@@ -123,7 +123,7 @@ export const useAuthProvider = () => {
     if (isAdminBypass && getAdminBypassEmail() !== "ana.diretoria@eduzayn.com.br") {
       // Para bypass admin (exceto ana.diretoria), retornar o token JWT anônimo
       console.log("[useAuthProvider] Retornando token JWT anônimo para bypass admin");
-      return ADMIN_BYPASS_JWT;
+      return getAdminBypassToken();
     }
 
     // Para autenticação normal, obter o token da sessão do Supabase

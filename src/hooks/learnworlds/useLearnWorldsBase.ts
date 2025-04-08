@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminBypass';
 
 /**
  * Hook base para interagir com a API do LearnWorlds
@@ -22,15 +23,15 @@ const useLearnWorldsBase = () => {
       setError(null);
 
       // Usar o token JWT de bypass diretamente para chamadas das funções edge
-      // Este é o token definido como ADMIN_BYPASS_JWT no edge e no auth
-      const ADMIN_BYPASS_JWT = "byZ4yn-#v0lt-2025!SEC";
+      // Agora usando a função centralizada para obter o token de autorização
+      const authHeader = getAuthorizationHeader();
       
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
-      console.log(`Token de autenticação (bypass): ${ADMIN_BYPASS_JWT.substring(0, 5)}...`);
+      console.log(`Token de autenticação (formato): Bearer ${getAdminBypassToken().substring(0, 5)}...`);
 
       const headers: HeadersInit = {
-        'Authorization': `Bearer ${ADMIN_BYPASS_JWT}`,
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
       };
 

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 // Cabeçalhos CORS
@@ -9,16 +8,13 @@ const corsHeaders = {
   "Content-Type": "application/json"
 };
 
-// Obter o token do ambiente (configurado como secret no Supabase)
-// Se não existir, usa o valor hardcoded como fallback
-const adminToken = Deno.env.get("ADMIN_BYPASS_TOKEN");
-const fallbackToken = "byZ4yn-#v0lt-2025!SEC";
-const ADMIN_BYPASS_TOKEN = adminToken || fallbackToken;
+// Token de bypass para admins - usando um nome padronizado
+const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 
 console.log("Inicializando função edge learnworlds-api");
-console.log("Token do ambiente configurado:", adminToken ? "Sim (✓)" : "Não (usando fallback)");
-console.log("Comprimento do token esperado:", ADMIN_BYPASS_TOKEN.length);
-console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_TOKEN.substring(0, 5) + "...");
+console.log("Token do ambiente configurado:", Deno.env.get("ADMIN_BYPASS_TOKEN") ? "Sim (✓)" : "Não (usando fallback)");
+console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
+console.log("Primeiros 5 caracteres do token:", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
 
 serve(async (req) => {
   const { method } = req;
@@ -49,7 +45,7 @@ serve(async (req) => {
     });
   }
 
-  // Extrair o token do cabeçalho
+  // Extrair o token do cabeçalho - agora padronizado para formato Bearer
   let token = "";
   if (authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7).trim();
@@ -60,21 +56,16 @@ serve(async (req) => {
   // Log detalhado dos tokens para diagnóstico
   console.log("Token recebido (primeiros 5 chars):", token.substring(0, 5) + "...");
   console.log("Comprimento do token recebido:", token.length);
-  console.log("Token esperado (primeiros 5 chars):", ADMIN_BYPASS_TOKEN.substring(0, 5) + "...");
-  console.log("Comprimento do token esperado:", ADMIN_BYPASS_TOKEN.length);
+  console.log("Token esperado (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
+  console.log("Comprimento do token esperado:", ADMIN_BYPASS_JWT.length);
   
-  // Verificação flexível: comparar tanto com o token do ambiente quanto com o fallback
-  const tokenMatches = 
-    token === ADMIN_BYPASS_TOKEN || 
-    token === adminToken || 
-    token === fallbackToken;
-  
-  if (!tokenMatches) {
+  // Verificação com o token padronizado
+  if (token !== ADMIN_BYPASS_JWT) {
     console.log("Token inválido - nenhuma correspondência encontrada");
     // TEMPORARIAMENTE para diagnóstico - compare caractere por caractere
     let firstMismatchPos = -1;
-    for (let i = 0; i < Math.min(token.length, ADMIN_BYPASS_TOKEN.length); i++) {
-      if (token[i] !== ADMIN_BYPASS_TOKEN[i]) {
+    for (let i = 0; i < Math.min(token.length, ADMIN_BYPASS_JWT.length); i++) {
+      if (token[i] !== ADMIN_BYPASS_JWT[i]) {
         firstMismatchPos = i;
         break;
       }
@@ -85,11 +76,11 @@ serve(async (req) => {
       message: "Invalid JWT",
       debug: {
         tokenLength: token.length,
-        expectedLength: ADMIN_BYPASS_TOKEN.length,
+        expectedLength: ADMIN_BYPASS_JWT.length,
         tokenStart: token.substring(0, 5) + "...",
-        expectedStart: ADMIN_BYPASS_TOKEN.substring(0, 5) + "...",
+        expectedStart: ADMIN_BYPASS_JWT.substring(0, 5) + "...",
         firstMismatchAt: firstMismatchPos >= 0 ? firstMismatchPos : "Nenhum (tamanhos diferentes)",
-        usingEnvironmentToken: !!adminToken
+        usingEnvironmentToken: !!Deno.env.get("ADMIN_BYPASS_TOKEN")
       }
     }), {
       headers: corsHeaders,

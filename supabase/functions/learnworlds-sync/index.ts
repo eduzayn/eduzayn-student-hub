@@ -9,8 +9,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
-// Token de bypass para admins
-const ADMIN_BYPASS_JWT = "byZ4yn-#v0lt-2025!SEC";
+// Token de bypass para admins - usando um nome padronizado
+const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 
 // Interface para dados do aluno da LearnWorlds
 interface LearnWorldsUser {
@@ -56,8 +56,10 @@ serve(async (req) => {
   };
 
   try {
-    // Verificar autenticação
-    const authHeader = req.headers.get('Authorization');
+    // Verificação de token JWT
+    const authHeader = req.headers.get("Authorization");
+    console.log("Auth header recebido:", authHeader ? "Sim" : "Não");
+    
     if (!authHeader) {
       console.error("Requisição sem cabeçalho de autorização");
       return new Response(
@@ -69,15 +71,20 @@ serve(async (req) => {
       );
     }
 
-    // Extrair o token do cabeçalho Authorization
-    const token = authHeader.replace('Bearer ', '');
+    // Extrair o token do cabeçalho - agora padronizado para formato Bearer
+    let token = "";
+    if (authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7).trim();
+    } else {
+      token = authHeader.trim();
+    }
     
     // Log para depuração
-    console.log(`Token recebido: ${token.substring(0, 10)}...`);
+    console.log(`Token recebido (primeiros 5 chars): ${token.substring(0, 5)}...`);
+    console.log(`Token esperado (primeiros 5 chars): ${ADMIN_BYPASS_JWT.substring(0, 5)}...`);
 
-    // Verificar o token de bypass admin primeiro
+    // Verificação com o token padronizado
     let isAuthenticated = false;
-    let user = null;
 
     // Verificar se é o token de bypass
     if (token === ADMIN_BYPASS_JWT) {
@@ -114,7 +121,7 @@ serve(async (req) => {
           );
         }
         
-        user = userData.user;
+        const user = userData.user;
         isAuthenticated = true;
         console.log(`Autenticado como: ${user.email}`);
       } catch (authError) {

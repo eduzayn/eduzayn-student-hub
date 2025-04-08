@@ -24,6 +24,16 @@ export const getAdminBypassEmail = () => {
   }
 };
 
+// Nova função para obter o token de bypass de forma consistente
+export const getAdminBypassToken = (): string => {
+  return ADMIN_BYPASS_JWT;
+};
+
+// Função para formatar o token no formato Authorization Bearer
+export const getAuthorizationHeader = (): string => {
+  return `Bearer ${ADMIN_BYPASS_JWT}`;
+};
+
 // Função para verificar autenticação com bypass de admin
 export const checkAdminBypass = (
   setIsLoggedIn: (value: boolean) => void,
