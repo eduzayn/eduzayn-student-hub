@@ -1,16 +1,8 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { formatarMoeda } from "@/utils/formatarMoeda";
-
-interface FormFieldProps {
-  form: UseFormReturn<any>;
-  name: string;
-  label: string;
-  className?: string;
-  children: React.ReactNode;
-}
 
 interface ValorMatriculaFieldProps {
   form: UseFormReturn<any>;
@@ -21,7 +13,15 @@ const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({
   form,
   curso
 }) => {
-  const valorCurso = curso?.valor_mensalidade || 0;
+  // Definir o valor do curso com fallbacks adequados
+  const valorCurso = curso?.valor_mensalidade || curso?.price_final || curso?.price || 0;
+  
+  // Atualizar o valor no formulário quando o curso mudar
+  useEffect(() => {
+    if (valorCurso > 0) {
+      form.setValue("valor_matricula", valorCurso);
+    }
+  }, [curso, valorCurso, form]);
 
   return (
     <div className="flex flex-col">

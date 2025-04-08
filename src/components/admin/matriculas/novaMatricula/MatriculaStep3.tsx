@@ -1,15 +1,36 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import ConfiguracaoMatricula from "../ConfiguracaoMatricula";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import ValorMatriculaField from "../configuracao/ValorMatriculaField";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface MatriculaStep3Props {
   alunoSelecionado: any;
   cursoSelecionado: any;
   matriculaConfig: any;
   onChange: (config: any) => void;
-  onProsseguir: () => Promise<void>;
+  onProsseguir: () => void;
   prevStep: () => void;
   isLoading: boolean;
 }
@@ -23,29 +44,217 @@ const MatriculaStep3: React.FC<MatriculaStep3Props> = ({
   prevStep,
   isLoading
 }) => {
+  const [comPagamento, setComPagamento] = useState(matriculaConfig.com_pagamento);
+  
+  const form = useForm({
+    defaultValues: {
+      data_inicio: matriculaConfig.data_inicio || format(new Date(), 'yyyy-MM-dd'),
+      valor_matricula: matriculaConfig.valor_matricula || (cursoSelecionado?.valor_mensalidade || cursoSelecionado?.price || 0),
+      forma_pagamento: matriculaConfig.forma_pagamento || 'pix',
+      observacoes: matriculaConfig.observacoes || '',
+      status: matriculaConfig.status || 'ativo',
+      com_pagamento: matriculaConfig.com_pagamento
+    }
+  });
+  
+  const handleSubmit = (data: any) => {
+    const novaConfig = {
+      ...data,
+      com_pagamento: comPagamento,
+    };
+    
+    onChange(novaConfig);
+    onProsseguir();
+  };
+  
+  const handleComPagamentoChange = (checked: boolean) => {
+    setComPagamento(checked);
+    form.setValue('com_pagamento', checked);
+  };
+  
   return (
-    <>
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">
-            Aluno: {alunoSelecionado?.nome}
-          </h3>
-          <h3 className="text-lg font-medium mt-1">
-            Curso: {cursoSelecionado?.titulo || cursoSelecionado?.nome}
-          </h3>
-        </div>
-        <Button variant="outline" onClick={prevStep}>Voltar e trocar curso</Button>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-semibold">Configurar Matrícula</h2>
+        <p className="text-sm text-gray-500">
+          Defina os detalhes da matrícula para {alunoSelecionado?.nome} no curso {cursoSelecionado?.titulo || cursoSelecionado?.title}
+        </p>
       </div>
-      <Separator className="my-4" />
       
-      <ConfiguracaoMatricula 
-        config={matriculaConfig}
-        onChange={onChange}
-        valorCurso={cursoSelecionado?.valor_mensalidade || 0}
-        onProsseguir={onProsseguir}
-        isLoading={isLoading}
-      />
-    </>
+      <div className="bg-blue-50 border border-blue-100 rounded-md p-4">
+        <h3 className="font-medium text-blue-800 mb-2">Informações do Curso</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm font-medium text-blue-700">Curso</p>
+            <p className="text-sm">{cursoSelecionado?.titulo || cursoSelecionado?.title}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-700">Código</p>
+            <p className="text-sm">{cursoSelecionado?.codigo || cursoSelecionado?.id}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-700">Modalidade</p>
+            <p className="text-sm">{cursoSelecionado?.modalidade || 'EAD'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-700">Carga Horária</p>
+            <p className="text-sm">{cursoSelecionado?.carga_horaria || cursoSelecionado?.duration || '0'} min</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-700">Valor Total</p>
+            <p className="text-sm">R$ {(cursoSelecionado?.valor_total || cursoSelecionado?.price || 0).toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-700">Mensalidade</p>
+            <p className="text-sm">R$ {(cursoSelecionado?.valor_mensalidade || (cursoSelecionado?.price ? cursoSelecionado.price / 12 : 0)).toFixed(2)}</p>
+          </div>
+          {cursoSelecionado?.learning_worlds_id && (
+            <div className="col-span-2">
+              <p className="text-sm font-medium text-blue-700">ID LearnWorlds</p>
+              <p className="text-sm font-mono">{cursoSelecionado?.learning_worlds_id || cursoSelecionado?.id}</p>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="data_inicio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Início</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="inativo">Inativo</SelectItem>
+                      <SelectItem value="trancado">Trancado</SelectItem>
+                      <SelectItem value="formado">Formado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <Separator />
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Pagamento</h3>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="com-pagamento"
+                  checked={comPagamento}
+                  onCheckedChange={handleComPagamentoChange}
+                />
+                <label
+                  htmlFor="com-pagamento"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Gerar cobrança
+                </label>
+              </div>
+            </div>
+            
+            {comPagamento && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <ValorMatriculaField
+                  form={form}
+                  curso={cursoSelecionado}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="forma_pagamento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pagamento</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a forma de pagamento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="boleto">Boleto</SelectItem>
+                          <SelectItem value="cartao">Cartão de Crédito</SelectItem>
+                          <SelectItem value="isento">Isento</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="observacoes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Informações adicionais sobre a matrícula"
+                    className="h-24"
+                    {...field}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <div className="flex justify-between pt-4">
+            <Button type="button" variant="outline" onClick={prevStep}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  Prosseguir
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
 

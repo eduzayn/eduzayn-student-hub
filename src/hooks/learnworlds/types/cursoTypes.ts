@@ -15,6 +15,9 @@ export interface Course {
   duration?: string;
   access?: 'free' | 'paid' | string;
   categories?: string[];
+  url?: string;
+  enrollmentStatus?: 'not_enrolled' | 'enrolled' | 'completed';
+  enrollmentId?: string;
 }
 
 export interface CoursesResponse {
@@ -36,4 +39,15 @@ export interface SincronizacaoResult {
   failed?: number;
   total?: number;
   logs?: string[];
+}
+
+export interface EnrollmentResponse {
+  id: string;
+  userId: string;
+  courseId: string;
+  status: 'active' | 'inactive' | 'completed';
+  enrollmentDate: string;
+  expirationDate?: string;
+  learnworlds_id?: string;
+  simulatedResponse?: boolean;
 }

@@ -6,9 +6,10 @@ import { useMatricula } from "@/hooks/useMatricula";
 import { useMatriculaFormSteps } from "@/hooks/useMatriculaFormSteps";
 import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
 import { useMatriculaPagamento } from "@/hooks/useMatriculaPagamento";
+import { useNavigate } from "react-router-dom";
 
 export const useNovaMatricula = () => {
-  const navigate = () => window.location.href = "/admin/matriculas";
+  const navigate = useNavigate();
   const { criarMatricula, loading: loadingMatricula } = useMatricula();
   const { formStep, nextStep, prevStep, resetSteps } = useMatriculaFormSteps();
   const { 
@@ -37,17 +38,20 @@ export const useNovaMatricula = () => {
   const [matriculaCriada, setMatriculaCriada] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [learnWorldsMatriculaInfo, setLearnWorldsMatriculaInfo] = useState<any>(null);
+  const [matriculaErro, setMatriculaErro] = useState<string | null>(null);
   
   const handleAlunoSelecionado = (aluno: any) => {
+    console.log("Aluno selecionado:", aluno);
     setAlunoSelecionado(aluno);
     if (aluno) nextStep();
   };
   
   const handleCursoSelecionado = (curso: any) => {
+    console.log("Curso selecionado:", curso);
     setCursoSelecionado(curso);
     setMatriculaConfig(prev => ({
       ...prev,
-      valor_matricula: curso.valor_mensalidade || 0
+      valor_matricula: curso.valor_mensalidade || curso.price_final || curso.price || 0
     }));
     if (curso) nextStep();
   };
@@ -63,8 +67,14 @@ export const useNovaMatricula = () => {
     }
     
     setLoading(true);
+    setMatriculaErro(null);
     
     try {
+      console.log("Iniciando processo de matrícula");
+      console.log("Aluno:", alunoSelecionado);
+      console.log("Curso:", cursoSelecionado);
+      console.log("Configuração:", matriculaConfig);
+      
       const novaMatricula = {
         aluno_id: alunoSelecionado.id,
         curso_id: cursoSelecionado.id,
@@ -81,32 +91,42 @@ export const useNovaMatricula = () => {
       const resultado = await criarMatricula(novaMatricula);
       
       if (!resultado) {
-        throw new Error('Erro ao criar matrícula');
+        throw new Error('Erro ao criar matrícula no banco de dados local');
       }
+      
+      console.log("Matrícula criada localmente:", resultado);
       
       // Guardar a matrícula criada
       setMatriculaCriada(resultado);
       
       // Verificar se podemos matricular no LearnWorlds
-      if (alunoSelecionado.learnworlds_id && cursoSelecionado.learning_worlds_id) {
+      const alunoLearnWorldsId = alunoSelecionado.learnworlds_id; 
+      const cursoLearnWorldsId = cursoSelecionado.learning_worlds_id || cursoSelecionado.id;
+      
+      console.log("ID do aluno no LearnWorlds:", alunoLearnWorldsId);
+      console.log("ID do curso no LearnWorlds:", cursoLearnWorldsId);
+      
+      if (alunoLearnWorldsId && cursoLearnWorldsId) {
         try {
           // Primeiro verificar se o aluno já está matriculado no curso
           const matriculaExistente = await verificarMatricula(
-            alunoSelecionado.learnworlds_id,
-            cursoSelecionado.learning_worlds_id
+            alunoLearnWorldsId,
+            cursoLearnWorldsId
           );
           
           console.log('Verificação de matrícula existente:', matriculaExistente);
           
           // Se a matrícula já existe, exibir mensagem informativa
-          if (matriculaExistente && !matriculaExistente.error) {
+          if (matriculaExistente) {
             setLearnWorldsMatriculaInfo(matriculaExistente);
             toast.info('Aluno já matriculado no LearnWorlds');
           } else {
             // Caso não exista, criar nova matrícula
+            console.log("Criando nova matrícula no LearnWorlds");
+            
             const matriculaLearnWorlds = await matricularAlunoEmCurso(
-              alunoSelecionado.learnworlds_id,
-              cursoSelecionado.learning_worlds_id,
+              alunoLearnWorldsId,
+              cursoLearnWorldsId,
               {
                 status: "active",
                 notifyUser: true
@@ -114,9 +134,10 @@ export const useNovaMatricula = () => {
             );
             
             console.log('Matrícula no LearnWorlds:', matriculaLearnWorlds);
-            setLearnWorldsMatriculaInfo(matriculaLearnWorlds);
             
             if (matriculaLearnWorlds) {
+              setLearnWorldsMatriculaInfo(matriculaLearnWorlds);
+              
               toast.success('Aluno matriculado no LearnWorlds com sucesso!');
               
               // Atualizar a matrícula local com o ID da matrícula no LearnWorlds
@@ -128,16 +149,24 @@ export const useNovaMatricula = () => {
               toast.warning('Não foi possível confirmar a matrícula no LearnWorlds');
             }
           }
-        } catch (learnWorldsError) {
+        } catch (learnWorldsError: any) {
           console.error('Erro ao matricular no LearnWorlds:', learnWorldsError);
-          toast.error('Erro ao matricular aluno no LearnWorlds');
+          setMatriculaErro(learnWorldsError.message || 'Erro ao matricular aluno no LearnWorlds');
+          toast.error('Erro ao matricular aluno no LearnWorlds', {
+            description: learnWorldsError.message
+          });
         }
       } else if (!offlineMode) {
-        toast.warning('IDs do LearnWorlds não disponíveis para matrícula na plataforma');
+        console.log("IDs do LearnWorlds não disponíveis");
+        toast.warning('IDs do LearnWorlds não disponíveis para matrícula na plataforma', {
+          description: 'Verifique se o aluno e o curso possuem IDs válidos no LearnWorlds'
+        });
       }
       
       // Processar pagamento se necessário
-      if (matriculaConfig.com_pagamento) {
+      if (matriculaConfig.com_pagamento && matriculaConfig.forma_pagamento !== 'isento') {
+        console.log("Gerando link de pagamento");
+        
         const pagamentoParams = {
           customerData: {
             name: alunoSelecionado.nome,
@@ -146,7 +175,7 @@ export const useNovaMatricula = () => {
             cpfCnpj: alunoSelecionado.cpf || ''
           },
           curso: {
-            nome: cursoSelecionado.titulo || cursoSelecionado.nome,
+            nome: cursoSelecionado.titulo || cursoSelecionado.nome || cursoSelecionado.title,
             valor: matriculaConfig.valor_matricula
           },
           matriculaId: resultado.id
@@ -162,9 +191,12 @@ export const useNovaMatricula = () => {
       }
       
       nextStep();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao processar matrícula:', error);
-      toast.error('Erro ao processar matrícula');
+      setMatriculaErro(error.message || 'Erro desconhecido ao processar matrícula');
+      toast.error('Erro ao processar matrícula', {
+        description: error.message || 'Tente novamente mais tarde'
+      });
     } finally {
       setLoading(false);
     }
@@ -183,6 +215,7 @@ export const useNovaMatricula = () => {
     offlineMode,
     pagamentoInfo,
     learnWorldsMatriculaInfo,
+    matriculaErro,
     redirecionarParaMatriculas,
     criarNovaMatricula,
     handleAlunoSelecionado,
