@@ -21,9 +21,9 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import ValorMatriculaField from "../configuracao/ValorMatriculaField";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MatriculaStep3Props {
   alunoSelecionado: any;
@@ -45,11 +45,15 @@ const MatriculaStep3: React.FC<MatriculaStep3Props> = ({
   isLoading
 }) => {
   const [comPagamento, setComPagamento] = useState(matriculaConfig.com_pagamento);
+  const [valorTotal, setValorTotal] = useState(matriculaConfig.valor_total || 0);
+  const [valorMensal, setValorMensal] = useState(matriculaConfig.valor_matricula || 0);
   
+  // Use um valor padrão para o formulário
   const form = useForm({
     defaultValues: {
       data_inicio: matriculaConfig.data_inicio || format(new Date(), 'yyyy-MM-dd'),
-      valor_matricula: matriculaConfig.valor_matricula || (cursoSelecionado?.valor_mensalidade || cursoSelecionado?.price || 0),
+      valor_matricula: matriculaConfig.valor_matricula || 0,
+      valor_total: matriculaConfig.valor_total || 0,
       forma_pagamento: matriculaConfig.forma_pagamento || 'pix',
       observacoes: matriculaConfig.observacoes || '',
       status: matriculaConfig.status || 'ativo',
@@ -57,10 +61,38 @@ const MatriculaStep3: React.FC<MatriculaStep3Props> = ({
     }
   });
   
+  // Atualiza os valores quando o valorTotal muda
+  const handleValorTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = Number(e.target.value);
+    setValorTotal(valor);
+    
+    // Calcula o valor da mensalidade (dividido por 12 meses)
+    const mensalidade = valor / 12;
+    setValorMensal(mensalidade);
+    
+    form.setValue('valor_total', valor);
+    form.setValue('valor_matricula', mensalidade);
+  };
+  
+  // Atualiza os valores quando o valorMensal muda
+  const handleValorMensalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = Number(e.target.value);
+    setValorMensal(valor);
+    
+    // Calcula o valor total (multiplicado por 12 meses)
+    const total = valor * 12;
+    setValorTotal(total);
+    
+    form.setValue('valor_matricula', valor);
+    form.setValue('valor_total', total);
+  };
+  
   const handleSubmit = (data: any) => {
     const novaConfig = {
       ...data,
       com_pagamento: comPagamento,
+      valor_total: valorTotal,
+      valor_matricula: valorMensal
     };
     
     onChange(novaConfig);
@@ -100,18 +132,20 @@ const MatriculaStep3: React.FC<MatriculaStep3Props> = ({
             <p className="text-sm font-medium text-blue-700">Carga Horária</p>
             <p className="text-sm">{cursoSelecionado?.carga_horaria || cursoSelecionado?.duration || '0'} min</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-blue-700">Valor Total</p>
-            <p className="text-sm">R$ {(cursoSelecionado?.valor_total || cursoSelecionado?.price || 0).toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-blue-700">Mensalidade</p>
-            <p className="text-sm">R$ {(cursoSelecionado?.valor_mensalidade || (cursoSelecionado?.price ? cursoSelecionado.price / 12 : 0)).toFixed(2)}</p>
-          </div>
           {cursoSelecionado?.learning_worlds_id && (
             <div className="col-span-2">
               <p className="text-sm font-medium text-blue-700">ID LearnWorlds</p>
               <p className="text-sm font-mono">{cursoSelecionado?.learning_worlds_id || cursoSelecionado?.id}</p>
+            </div>
+          )}
+          {cursoSelecionado?.simulado && (
+            <div className="col-span-2 mt-2">
+              <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription>
+                  Este é um curso simulado que não existe no LearnWorlds. Use apenas para fins de teste.
+                </AlertDescription>
+              </Alert>
             </div>
           )}
         </div>
@@ -181,11 +215,38 @@ const MatriculaStep3: React.FC<MatriculaStep3Props> = ({
             </div>
             
             {comPagamento && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <ValorMatriculaField
-                  form={form}
-                  curso={cursoSelecionado}
-                />
+              <div className="space-y-6 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Campo de Valor Total */}
+                  <FormItem>
+                    <FormLabel>Valor Total do Curso (R$)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01"
+                        min="0"
+                        value={valorTotal} 
+                        onChange={handleValorTotalChange}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </FormControl>
+                  </FormItem>
+                  
+                  {/* Campo de Valor da Matrícula/Mensalidade */}
+                  <FormItem>
+                    <FormLabel>Valor da Mensalidade (R$)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        step="0.01" 
+                        min="0"
+                        value={valorMensal}
+                        onChange={handleValorMensalChange}
+                        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </FormControl>
+                  </FormItem>
+                </div>
                 
                 <FormField
                   control={form.control}

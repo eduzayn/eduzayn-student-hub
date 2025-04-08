@@ -29,19 +29,29 @@ const CursoCard: React.FC<CursoCardProps> = ({ curso, selecionado, onSelecionar 
     }
   };
 
+  // Verificar se o curso é simulado (mostrando apenas como informação)
+  const isSimulatedCourse = curso.simulado || curso.simulatedResponse;
+
   return (
     <Card 
       onClick={() => onSelecionar(curso)}
       className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
         selecionado ? "border-2 border-primary" : ""
-      }`}
+      } ${isSimulatedCourse ? "border-dashed border-amber-300 bg-amber-50" : ""}`}
       data-testid="curso-card"
       data-curso-id={curso.id}
       data-lw-id={learnWorldsId}
     >
       <div className="flex justify-between">
         <div>
-          <h3 className="font-medium text-lg">{curso.titulo}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-lg">{curso.titulo}</h3>
+            {isSimulatedCourse && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                Simulado
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             Código: {curso.codigo} {learnWorldsId && `| ID LearnWorlds: ${learnWorldsId}`}
           </p>

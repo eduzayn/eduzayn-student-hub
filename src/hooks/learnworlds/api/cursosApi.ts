@@ -56,19 +56,8 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         // Resposta válida
         console.log("Usando dados reais de cursos da API LearnWorlds");
         
-        // Se a busca não retornou resultados mas temos um termo de busca,
-        // vamos usar dados simulados com o termo para melhor experiência do usuário
-        if (searchTerm && Array.isArray(response.data) && response.data.length === 0) {
-          console.log(`Nenhum resultado encontrado para "${searchTerm}", usando dados simulados filtrados`);
-          const dadosSimulados = getDadosSimulados(page, limit, searchTerm);
-          
-          // Isto manterá o meta original mas usará dados simulados
-          return {
-            ...response,
-            data: dadosSimulados.data
-          };
-        }
-        
+        // Aqui não usaremos dados simulados se não encontrar resultados
+        // O comportamento anterior de misturar resultados reais e simulados foi removido
         setOfflineMode(false);
         return response;
       } else {

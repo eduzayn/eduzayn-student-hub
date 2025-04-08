@@ -57,8 +57,10 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
           codigo: curso.id || slug || (curso.title ? curso.title.substring(0, 8).toUpperCase() : "SEM-COD"),
           modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
           carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-          valor_total: curso.price_final || curso.price_original || curso.price || 0,
-          valor_mensalidade: (curso.price_final || curso.price_original || curso.price || 0) / 12,
+          // Não usaremos mais os valores do LearnWorlds para preço, mas mantemos como referência
+          valor_total_learnworlds: curso.price_final || curso.price_original || curso.price || 0,
+          valor_total: 0, // Zerando para permitir personalização manual
+          valor_mensalidade: 0, // Zerando para permitir personalização manual
           descricao: curso.description || curso.shortDescription || "",
           imagem_url: curso.image || curso.courseImage || "",
           categorias: curso.categories || [],
@@ -128,7 +130,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         valor_total: 3600.00,
         valor_mensalidade: 300.00,
         learning_worlds_id: "pos_graduacao_direito_tributario",
-        url: "https://grupozayneducacional.com.br/course/pos-graduacao-direito-tributario"
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-direito-tributario",
+        simulado: true // Adicionando flag para identificar cursos simulados
       },
       {
         id: "pos_graduacao_em_direito_do_agronegocio",
@@ -139,7 +142,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         valor_total: 5400.00,
         valor_mensalidade: 450.00,
         learning_worlds_id: "pos_graduacao_em_direito_do_agronegocio",
-        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-do-agronegocio"
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-do-agronegocio",
+        simulado: true
       },
       {
         id: "pos_graduacao_em_direito_civil",
@@ -150,7 +154,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         valor_total: 6000.00,
         valor_mensalidade: 500.00,
         learning_worlds_id: "pos_graduacao_em_direito_civil",
-        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-civil"
+        url: "https://grupozayneducacional.com.br/course/pos-graduacao-em-direito-civil",
+        simulado: true
       }
     ];
     
@@ -161,6 +166,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         c.codigo.toLowerCase().includes(termoBusca.toLowerCase())
       ) : dadosSimulados;
     
+    console.log(`Filtrando dados simulados por "${termoBusca}", encontrados: ${filtrados.length}`);
     setCursos(filtrados);
     
     // Aviso sobre dados simulados

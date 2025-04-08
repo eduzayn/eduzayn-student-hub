@@ -21,7 +21,10 @@ const CursosLista: React.FC<CursosListaProps> = ({
     return <CursosLoadingSkeleton />;
   }
 
-  if (cursos.length === 0) {
+  // Filtrar para não mostrar cursos simulados na lista
+  const cursosExibir = cursos.filter(curso => !curso.simulado && !curso.simulatedResponse);
+
+  if (cursosExibir.length === 0) {
     return <CursosEmptyState />;
   }
 
@@ -52,7 +55,7 @@ const CursosLista: React.FC<CursosListaProps> = ({
 
   return (
     <div className="space-y-3">
-      {cursos.map(curso => (
+      {cursosExibir.map(curso => (
         <CursoCard 
           key={getLearnWorldsId(curso)}
           curso={curso} 
