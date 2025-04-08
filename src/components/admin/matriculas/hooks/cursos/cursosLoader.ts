@@ -50,7 +50,7 @@ export const carregarCursos = async (
         setTotalPages(resultado.meta.totalPages);
       }
       
-      // Mapeando os dados retornados para o formato necessário para exibição
+      // CORREÇÃO: Garantir que cursos da API (mesmo com IDs suspeitos) não sejam marcados como simulados
       const cursosFormatados = formatarCursos(resultado.data);
       
       console.log("Cursos formatados:", cursosFormatados);
@@ -78,7 +78,14 @@ const handleFallbackData = (
   termoBusca: string
 ) => {
   const cursos = carregarCursosSimulados(termoBusca);
-  setCursos(cursos);
+  
+  // CORREÇÃO: Garantir que cursos simulados estejam explicitamente marcados
+  const cursosComFlag = cursos.map(curso => ({
+    ...curso,
+    simulado: true
+  }));
+  
+  setCursos(cursosComFlag);
   setTotalPages(1); // Com dados simulados, temos apenas uma página
   
   console.log("Usando dados simulados como fallback, total:", cursos.length);

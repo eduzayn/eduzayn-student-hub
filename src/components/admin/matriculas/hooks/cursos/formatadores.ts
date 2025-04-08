@@ -62,33 +62,15 @@ export const formatarCursos = (cursosData: any[]) => {
   console.log(`Formatando ${cursosData.length} cursos da API`);
   console.log("Dados brutos recebidos:", cursosData);
   
-  return cursosData
+  // CORREÇÃO: Todos os cursos vindos da API real são considerados REAIS por padrão
+  // Mesmo se os IDs parecerem simulados como "course-1", "course-2", etc.
+  // A verificação de simulado só será feita para cursos gerados localmente
+  
+  const cursosFormatados = cursosData
     .filter(curso => curso.title || curso.titulo) // Aceitar ambos os campos de título
     .map((curso: any) => {
-      // IMPORTANTE: Verificação avançada para detectar cursos simulados
-      // Cursos criados manualmente pelo sistema de mock geralmente têm IDs específicos começando com "course-"
-      // Cursos reais do LearnWorlds podem ter diversos formatos de ID, como numéricos, UUIDs ou alfanuméricos
-      let isSimulado = false;
-      
-      // Se o ID começar com "course-" mas tivermos dados completos do curso real, não é simulado
-      if (curso.id?.toString().startsWith('course-')) {
-        // Verificações adicionais para determinar se é um curso real apesar do ID parecer simulado
-        // Se tiver muitos detalhes, provavelmente é real
-        if (curso.description && curso.duration && curso.categories && curso.categories.length > 0) {
-          isSimulado = false;
-          console.log(`Curso com ID "${curso.id}" tem detalhes completos, tratando como REAL apesar do ID.`);
-        } else {
-          isSimulado = true;
-          console.log(`Curso com ID "${curso.id}" parece ser simulado pelo ID e falta de detalhes.`);
-        }
-      }
-      
-      // Log para identificar a origem de cada curso
-      if (isSimulado) {
-        console.log(`O curso ${curso.title || curso.titulo} (${curso.id}) foi identificado como SIMULADO.`);
-      } else {
-        console.log(`O curso ${curso.title || curso.titulo} (${curso.id}) foi identificado como REAL.`);
-      }
+      // Se tiver a flag explícita de simulado, mantenha
+      let isSimulado = curso.simulado === true;
       
       // Extrai o slug da URL se disponível
       let slug = "";
@@ -111,9 +93,18 @@ export const formatarCursos = (cursosData: any[]) => {
         learning_worlds_id: curso.id,
         acesso: curso.access || "pago",
         url: curso.url || `https://grupozayneducacional.com.br/course/${slug || curso.id}`,
-        simulado: isSimulado // Marca explicitamente com nossa nova lógica
+        simulado: isSimulado  // CORREÇÃO: Nunca marcar como simulado os dados vindos da API externa
       };
       
       return cursoFormatado;
     });
+    
+  // Contagem dos cursos reais e simulados para diagnóstico
+  const cursosSimulados = cursosFormatados.filter(c => c.simulado).length;
+  const cursosReais = cursosFormatados.length - cursosSimulados;
+  
+  console.log(`Total de cursos formatados: ${cursosFormatados.length}`);
+  console.log(`Cursos reais: ${cursosReais}, Cursos simulados: ${cursosSimulados}`);
+  
+  return cursosFormatados;
 };

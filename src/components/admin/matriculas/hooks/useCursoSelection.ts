@@ -58,14 +58,14 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     const cursoId = curso.learning_worlds_id || curso.id;
     setSelecionado(cursoId);
     
-    // Imprimir dados completos do curso para diagnóstico
-    console.log("Curso selecionado (dados completos):", curso);
-    
-    onCursoSelecionado({
+    // CORREÇÃO: Garantir que a propriedade simulado seja explicitamente um booleano
+    const cursoProcessado = {
       ...curso,
-      // Garantindo que temos o ID do LearnWorlds
+      simulado: curso.simulado === true,
       learning_worlds_id: curso.learning_worlds_id || curso.id
-    });
+    };
+    
+    onCursoSelecionado(cursoProcessado);
   };
 
   // Limpar a busca e carregar todos os cursos

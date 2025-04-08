@@ -26,22 +26,16 @@ const CursosLista: React.FC<CursosListaProps> = ({
   // Mostrar todos os cursos que têm título válido
   const cursosExibir = cursos.filter(curso => curso.titulo || curso.title); 
   
-  // Dados diagnósticos para debug
-  console.log("Exibindo cursos:", cursosExibir);
-  console.log("Total de cursos para exibição:", cursosExibir.length);
+  // Logs para diagnóstico
+  console.log("Exibindo cursos:", cursosExibir.length);
   console.log("Modo offline?", offlineMode);
   
   // Verificações específicas de origem de dados
-  const cursosSimulados = cursosExibir.filter(c => c.simulado);
-  const cursosReais = cursosExibir.filter(c => !c.simulado);
-  console.log("Cursos simulados:", cursosSimulados.length);
-  console.log("Cursos reais:", cursosReais.length);
-  
-  // Listagem de todos os cursos para diagnóstico
-  console.log("Lista completa de cursos:");
-  cursosExibir.forEach((curso, index) => {
-    console.log(`${index+1}. "${curso.titulo}" - ID: ${curso.id} - LW ID: ${curso.learning_worlds_id} - Simulado: ${curso.simulado}`);
-  });
+  // CORREÇÃO: Identificação correta de cursos simulados
+  const cursosSimulados = cursosExibir.filter(c => c.simulado === true).length;
+  const cursosReais = cursosExibir.length - cursosSimulados;
+  console.log("Cursos simulados:", cursosSimulados);
+  console.log("Cursos reais:", cursosReais);
   
   if (cursosExibir.length === 0) {
     return <CursosEmptyState />;
@@ -72,27 +66,37 @@ const CursosLista: React.FC<CursosListaProps> = ({
            selecionado === curso.id;
   };
 
+  // Verificar se os cursos têm formato de ID suspeito (começando com "course-")
+  const idsSuspeitosComCourse = cursosExibir.filter(curso => 
+    curso.id && curso.id.toString().startsWith('course-')
+  ).length;
+  
+  const percentIdsSuspeitos = idsSuspeitosComCourse / cursosExibir.length * 100;
+  const mostrarAlertaIds = idsSuspeitosComCourse > 0 && percentIdsSuspeitos > 75;
+
   return (
     <div className="space-y-3">
       <div className="text-sm text-muted-foreground mb-2">
         Mostrando {cursosExibir.length} cursos
         {offlineMode && " (usando dados simulados)"}
-        {!offlineMode && cursosSimulados.length > 0 && cursosReais.length === 0 && " (todos os dados são simulados)"}
-        {!offlineMode && cursosSimulados.length > 0 && cursosReais.length > 0 && " (mistura de dados reais e simulados)"}
-        {!offlineMode && cursosReais.length > 0 && cursosSimulados.length === 0 && " (dados reais)"}
       </div>
       
-      {!offlineMode && cursosSimulados.length > 0 && cursosReais.length === 0 && (
-        <div className="p-3 bg-amber-50 border border-amber-300 rounded-md mb-3 text-amber-800 text-sm">
-          <p><strong>Importante:</strong> A API está online, mas todos os cursos foram identificados como simulados.</p>
-          <p>Isso pode indicar um problema de comunicação com o LearnWorlds ou um problema de formato nos dados recebidos.</p>
+      {mostrarAlertaIds && !offlineMode && (
+        <div className="p-3 bg-blue-50 border border-blue-300 rounded-md mb-3 text-gray-700 text-sm">
+          <p className="font-medium">Observação sobre formato de IDs</p>
+          <p>Os IDs dos cursos seguem o padrão "course-X", o que é normal se a instalação do LearnWorlds estiver configurada dessa forma.</p>
+          <p className="mt-1 text-xs text-gray-500">Isso não indica necessariamente que sejam dados simulados.</p>
         </div>
       )}
       
       {cursosExibir.map(curso => (
         <CursoCard 
           key={getLearnWorldsId(curso)}
-          curso={curso} 
+          curso={{
+            ...curso,
+            // CORREÇÃO: Garantir que simulado seja um booleano explícito
+            simulado: curso.simulado === true
+          }} 
           selecionado={isCursoSelecionado(curso)}
           onSelecionar={onSelecionar} 
         />

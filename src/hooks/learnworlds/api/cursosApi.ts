@@ -56,6 +56,8 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       console.log("Estrutura da resposta:", Object.keys(response));
       console.log("Status da resposta:", response.status);
       
+      // CORREÇÃO: Assumir que qualquer array de dados é válido
+      // Não marcar os cursos como simulados mesmo se os IDs parecerem simulados
       if (response.data !== undefined) {
         // Verificar se a resposta contém dados
         if (Array.isArray(response.data)) {
@@ -74,15 +76,20 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
           const allIds = response.data.map(c => c.id).join(", ");
           console.log("Todos os IDs dos cursos:", allIds);
           
-          // Verificar se parece ser uma resposta válida de cursos
-          const temPropriedadesEsperadas = response.data.some(item => 
-            (item.id !== undefined) && (item.title !== undefined || item.name !== undefined)
-          );
+          const dataProperties = response.data.some(item => item.id !== undefined || item.title !== undefined);
           
-          if (temPropriedadesEsperadas) {
+          if (dataProperties) {
             console.log("✅ Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");
             setOfflineMode(false);
-            return response;
+            return {
+              ...response,
+              // IMPORTANTE: Garantir que nenhum curso da API seja marcado como simulado
+              data: response.data.map(curso => {
+                // Remove a propriedade simulado, se existir
+                const { simulado, ...restoCurso } = curso;
+                return restoCurso;
+              })
+            };
           } else {
             console.error("⚠️ Os dados não têm as propriedades esperadas de cursos!");
           }

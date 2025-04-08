@@ -41,17 +41,21 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   useEffect(() => {
     if (!loading && cursos.length > 0) {
       // Verificar se todos os cursos são marcados como simulados
-      const todosSimulados = cursos.every(curso => curso.simulado);
-      setTodosCursosSimulados(todosSimulados);
+      const cursosSimuladosCount = cursos.filter(curso => curso.simulado === true).length;
+      const todosCursosMaradosComoSimulados = cursosSimuladosCount === cursos.length;
+      setTodosCursosSimulados(todosCursosMaradosComoSimulados);
       
       // Verificar se os IDs dos cursos parecem problemáticos
       const idsSuspeitosComCourse = cursos.filter(curso => 
         curso.id && curso.id.toString().startsWith('course-')
       ).length;
       
-      // Se mais de 50% dos cursos têm IDs que começam com "course-"
-      if (idsSuspeitosComCourse > cursos.length * 0.5) {
+      // Se mais de 75% dos cursos têm IDs que começam com "course-"
+      const percentagemSuspeita = (idsSuspeitosComCourse / cursos.length) * 100;
+      if (percentagemSuspeita > 75) {
         setProblemasDeDados(true);
+      } else {
+        setProblemasDeDados(false);
       }
     }
   }, [cursos, loading]);
@@ -97,11 +101,11 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
         </Alert>
       )}
       
-      {!offlineMode && problemaDeDados && !loading && (
+      {!offlineMode && problemaDeDados && !todosCursosSimulados && !loading && (
         <Alert className="bg-blue-50 border-blue-200">
           <AlertDescription>
-            <p>Diagnóstico: Os IDs dos cursos recebidos da API começam com "course-", o que geralmente indica dados de teste.</p>
-            <p className="mt-1">Isso pode ser normal se a instalação do LearnWorlds estiver usando IDs neste formato.</p>
+            <p>Observação: Os IDs dos cursos do LearnWorlds estão no formato "course-X".</p>
+            <p className="mt-1">Isso é normal se a instalação do LearnWorlds estiver configurada para usar esse formato de IDs.</p>
           </AlertDescription>
         </Alert>
       )}
