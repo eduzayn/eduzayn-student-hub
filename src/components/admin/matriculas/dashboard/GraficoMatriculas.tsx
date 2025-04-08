@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DataPoint {
-  name: string;
+  name: string; // Alterado de 'mes' para 'name' para compatibilidade
   matriculas: number;
 }
 

@@ -12,7 +12,7 @@ export interface CardData {
 }
 
 export interface ChartDataPoint {
-  mes: string;
+  name: string; // Alterado de 'mes' para 'name'
   matriculas: number;
 }
 
@@ -55,14 +55,14 @@ export const cardsData: CardData[] = [
 ];
 
 export const matriculasData: ChartDataPoint[] = [
-  { mes: 'Jan', matriculas: 45 },
-  { mes: 'Fev', matriculas: 52 },
-  { mes: 'Mar', matriculas: 49 },
-  { mes: 'Abr', matriculas: 63 },
-  { mes: 'Mai', matriculas: 55 },
-  { mes: 'Jun', matriculas: 67 },
-  { mes: 'Jul', matriculas: 60 },
-  { mes: 'Ago', matriculas: 78 }
+  { name: 'Jan', matriculas: 45 }, // Alterado de 'mes' para 'name'
+  { name: 'Fev', matriculas: 52 },
+  { name: 'Mar', matriculas: 49 },
+  { name: 'Abr', matriculas: 63 },
+  { name: 'Mai', matriculas: 55 },
+  { name: 'Jun', matriculas: 67 },
+  { name: 'Jul', matriculas: 60 },
+  { name: 'Ago', matriculas: 78 }
 ];
 
 export const statusData: PieDataPoint[] = [
