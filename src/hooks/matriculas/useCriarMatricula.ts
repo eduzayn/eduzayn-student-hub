@@ -17,11 +17,23 @@ export const useCriarMatricula = () => {
     setError(null);
     
     try {
+      console.log("Dados recebidos para criar matrícula:", matriculaData);
+      
       // Explicitamente tipando para o tipo esperado pelo banco de dados
       type MatriculaInsert = Database["public"]["Tables"]["matriculas"]["Insert"];
       
       // Converter os dados para o tipo esperado pelo Supabase
-      const dadosParaInserir = matriculaData as unknown as MatriculaInsert;
+      // Remover campos que possam não existir na tabela
+      const dadosParaInserir: MatriculaInsert = {
+        aluno_id: matriculaData.aluno_id,
+        curso_id: matriculaData.curso_id,
+        data_inicio: matriculaData.data_inicio,
+        status: matriculaData.status,
+        observacoes: matriculaData.observacoes || null,
+        forma_ingresso: matriculaData.forma_ingresso || null,
+      };
+      
+      console.log("Dados filtrados para inserir:", dadosParaInserir);
       
       const { data, error } = await supabase
         .from('matriculas')
@@ -29,12 +41,16 @@ export const useCriarMatricula = () => {
         .select('id')
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro do Supabase:", error);
+        throw error;
+      }
       
       toast.success('Matrícula criada com sucesso!');
       return data;
     } catch (err: any) {
       const errorMsg = err.message || 'Erro ao criar matrícula';
+      console.error("Erro detalhado:", err);
       setError(errorMsg);
       toast.error(errorMsg);
       return null;

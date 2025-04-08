@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -66,22 +65,18 @@ const NovaMatriculaForm: React.FC = () => {
     setLoading(true);
     
     try {
-      // Criar a matrícula
+      // Criar a matrícula com apenas os campos existentes na tabela matriculas
       const novaMatricula = {
         aluno_id: alunoSelecionado.id,
         curso_id: cursoSelecionado.id,
-        valor: matriculaConfig.valor_matricula,
         data_inicio: matriculaConfig.data_inicio,
         status: matriculaConfig.status,
         observacoes: matriculaConfig.observacoes,
-        forma_pagamento: matriculaConfig.com_pagamento ? matriculaConfig.forma_pagamento : 'isento',
-        criado_por: 'sistema',
-        aluno_email: alunoSelecionado.email,
-        aluno_nome: alunoSelecionado.nome,
-        curso_nome: cursoSelecionado.titulo || cursoSelecionado.nome,
-        learnworlds_aluno_id: alunoSelecionado.learnworlds_id,
-        learnworlds_curso_id: cursoSelecionado.learning_worlds_id,
+        forma_ingresso: matriculaConfig.forma_pagamento === 'isento' ? 'isento' : matriculaConfig.forma_pagamento,
+        valor: matriculaConfig.valor_matricula, // Armazenar o valor em outra tabela se necessário
       };
+      
+      console.log("Dados da matrícula a criar:", novaMatricula);
       
       // Chamar o hook para criar a matrícula
       const resultado = await criarMatricula(novaMatricula);
