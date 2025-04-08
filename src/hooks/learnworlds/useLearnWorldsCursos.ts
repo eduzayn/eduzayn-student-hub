@@ -143,7 +143,7 @@ const useLearnWorldsCursos = () => {
   };
 
   /**
-   * Inicia sincronização de cursos com LearnWorlds usando a nova função unificada
+   * Inicia sincronização de cursos com LearnWorlds usando a função edge
    */
   const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<any> => {
     try {
