@@ -7,12 +7,9 @@ import NovoAlunoDialog from "./aluno-selection/NovoAlunoDialog";
 import OfflineModeAlert from "./aluno-selection/OfflineModeAlert";
 import ErrorAlert from "./aluno-selection/ErrorAlert";
 import { useAlunoSelection } from "./aluno-selection/useAlunoSelection";
+import { AlunoSelectionProps } from "./aluno-selection/types";
 
-interface SelectAlunoProps {
-  onAlunoSelecionado: (aluno: any) => void;
-}
-
-const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
+const SelectAluno: React.FC<AlunoSelectionProps> = ({ onAlunoSelecionado }) => {
   const {
     busca,
     setBusca,
@@ -28,7 +25,7 @@ const SelectAluno: React.FC<SelectAlunoProps> = ({ onAlunoSelecionado }) => {
     handleSelecionar,
     handleInputChange,
     handleCriarNovoAluno
-  } = useAlunoSelection(onAlunoSelecionado);
+  } = useAlunoSelection({ onAlunoSelecionado });
   
   return (
     <div className="space-y-4">
