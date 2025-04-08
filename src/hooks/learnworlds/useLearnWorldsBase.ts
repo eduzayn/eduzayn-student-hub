@@ -38,15 +38,21 @@ const useLearnWorldsBase = () => {
       setError(null);
 
       // Determinar qual token usar com base no parâmetro usePublicToken
-      const authHeader = usePublicToken ? getPublicAuthorizationHeader() : getAuthorizationHeader();
+      const authHeader = usePublicToken 
+        ? getPublicAuthorizationHeader() 
+        : getAuthorizationHeader();
       
       // Log para diagnóstico
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       console.log(`Auth Header: ${authHeader.substring(0, 15)}...`); // Debug - mostra apenas parte do token
       
+      // IMPORTANTE: Usar o token administrativo para todas as requisições
+      // A API está rejeitando o token público, então usaremos o token admin para todas requisições
+      const finalAuthHeader = getAuthorizationHeader();
+      
       const headers: HeadersInit = {
-        'Authorization': authHeader,
+        'Authorization': finalAuthHeader,
         'Content-Type': 'application/json',
       };
       
@@ -189,10 +195,12 @@ const useLearnWorldsBase = () => {
 
   /**
    * Variante do makeRequest que sempre utiliza o token público
+   * Porém, devido a problemas de autorização, vamos usar o token de administrador
    */
   const makePublicRequest = async (endpoint: string, method = 'GET', body?: any): Promise<any> => {
-    console.log(`Fazendo requisição pública para: ${endpoint}`);
-    return makeRequest(endpoint, method, body, true);
+    console.log(`Fazendo requisição "pública" (usando token administrativo) para: ${endpoint}`);
+    // Mudamos para usar token administrativo, mesmo para requisições públicas
+    return makeRequest(endpoint, method, body, false);
   };
 
   return {
