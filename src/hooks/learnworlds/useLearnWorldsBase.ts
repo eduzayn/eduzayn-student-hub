@@ -4,9 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { getAdminBypassToken, getAuthorizationHeader } from '@/hooks/auth/adminBypass';
 
-// Constante para o token público do LearnWorlds
+// Constantes para tokens do LearnWorlds
 const LEARNWORLDS_PUBLIC_TOKEN = "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
-// School ID do LearnWorlds, definido como valor padrão
 const LEARNWORLDS_SCHOOL_ID = "grupozayneducacional";
 
 /**
@@ -58,8 +57,8 @@ const useLearnWorldsBase = () => {
         'Content-Type': 'application/json'
       };
 
-      // Removemos os cabeçalhos específicos do LearnWorlds para requisições às funções edge
-      // Esses cabeçalhos serão adicionados pela função edge quando fizer requisições para o LearnWorlds
+      // Removemos os cabeçalhos específicos do LearnWorlds que estavam causando problemas de CORS
+      // Como 'Lw-Client' e 'x-school-id'
       
       const options: RequestInit = {
         method,

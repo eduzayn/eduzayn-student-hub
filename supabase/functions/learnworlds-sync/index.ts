@@ -3,6 +3,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
+// Atualizando os cabeçalhos CORS para incluir os cabeçalhos problemáticos
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, lw-client, x-school-id',
@@ -13,8 +14,12 @@ const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-202
 const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 
 serve(async (req) => {
+  // Garantir o tratamento correto das requisições OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
   }
 
   const results = { imported: 0, updated: 0, failed: 0, total: 0, logs: [] };

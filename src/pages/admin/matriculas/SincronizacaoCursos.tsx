@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ import { toast } from "sonner";
 import SincronizacaoLogs from "@/components/admin/matriculas/sincronizacao/SincronizacaoLogs";
 import SincronizacaoAlertas from "@/components/admin/matriculas/sincronizacao/SincronizacaoAlertas";
 import LearnWorldsStatusDetails from "@/components/admin/matriculas/LearnWorldsStatusDetails";
+import OfflineModeAlert from "@/components/admin/matriculas/aluno-selection/OfflineModeAlert";
+import ErrorAlert from "@/components/admin/matriculas/aluno-selection/ErrorAlert";
 
 const SincronizacaoCursos: React.FC = () => {
   const navigate = useNavigate();
@@ -23,19 +24,8 @@ const SincronizacaoCursos: React.FC = () => {
   const [sincronizando, setSincronizando] = useState<boolean>(false);
   const [schoolId, setSchoolId] = useState<string>("grupozayneducacional");
   
-  // Obter o school ID do hook base
   useEffect(() => {
-    try {
-      // Importar dinamicamente para evitar problemas de dependência circular
-      import('@/hooks/learnworlds/useLearnWorldsBase').then(module => {
-        const useLearnWorldsBase = module.default;
-        const { LEARNWORLDS_SCHOOL_ID } = useLearnWorldsBase();
-        setSchoolId(LEARNWORLDS_SCHOOL_ID);
-      });
-    } catch (err) {
-      console.error('Erro ao obter School ID:', err);
-      setSchoolId("grupozayneducacional"); // Fallback
-    }
+    setSchoolId("grupozayneducacional");
   }, []);
   
   const handleSincronizar = async (todos: boolean = false) => {
@@ -57,7 +47,6 @@ const SincronizacaoCursos: React.FC = () => {
         setResultado(result);
         setLogs(result.logs || []);
         
-        // Verificar mensagens de erro específicas nos logs
         const apiErrorLog = result.logs?.find(log => 
           log.includes("API") && 
           log.includes("Erro")
@@ -79,7 +68,6 @@ const SincronizacaoCursos: React.FC = () => {
           });
         }
         
-        // Notificar o usuário sobre o resultado
         if (result.imported > 0 || result.updated > 0) {
           toast.success(
             "Sincronização concluída com sucesso!", 
@@ -104,7 +92,6 @@ const SincronizacaoCursos: React.FC = () => {
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
       
-      // Exibir erro específico relacionado à autenticação
       if (error.message && error.message.includes("API")) {
         setDetalhesErro("Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique a API key.");
         toast.error("Erro de autenticação da API", { 
@@ -144,21 +131,18 @@ const SincronizacaoCursos: React.FC = () => {
         </div>
       </div>
 
-      {/* Status da integração com LearnWorlds */}
       <LearnWorldsStatusDetails 
         schoolId={schoolId}
         offlineMode={offlineMode}
         error={error}
       />
 
-      {/* Alertas de erro ou status */}
       <SincronizacaoAlertas 
         error={error}
         detalhesErro={detalhesErro}
         offlineMode={offlineMode}
       />
       
-      {/* Alerta específico de erro de autenticação API */}
       {detalhesErro && detalhesErro.includes("API") && (
         <Alert variant="destructive" className="mb-4">
           <ShieldAlert className="h-4 w-4" />
@@ -177,7 +161,6 @@ const SincronizacaoCursos: React.FC = () => {
         </Alert>
       )}
 
-      {/* Alerta específico de erro de conexão */}
       {detalhesErro && detalhesErro.includes("Failed to fetch") && (
         <Alert variant="destructive" className="mb-4 border-amber-600">
           <AlertCircle className="h-4 w-4" />
@@ -196,7 +179,6 @@ const SincronizacaoCursos: React.FC = () => {
         </Alert>
       )}
       
-      {/* Alerta específico de erro de acesso */}
       {logs.some(log => log.includes("access_denied")) && (
         <Alert variant="destructive" className="mb-4 border-amber-600">
           <AlertCircle className="h-4 w-4" />
@@ -270,7 +252,6 @@ const SincronizacaoCursos: React.FC = () => {
             </Card>
           </div>
 
-          {/* Resultado da Sincronização */}
           {resultado && (
             <Card className="mt-6">
               <CardHeader>
