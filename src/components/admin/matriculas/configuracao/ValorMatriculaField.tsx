@@ -27,11 +27,18 @@ const ValorMatriculaField: React.FC<ValorMatriculaFieldProps> = ({ form, curso }
     >
       <FormControl>
         <Input
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          value={form.getValues("valor_matricula") || ""}
-          onChange={(e) => form.setValue("valor_matricula", parseFloat(e.target.value))}
+          type="text"
+          placeholder="0,00"
+          value={form.getValues("valor_matricula") === 0 ? "" : form.getValues("valor_matricula")}
+          onChange={(e) => {
+            // Remove caracteres não numéricos, exceto vírgula e ponto
+            const value = e.target.value.replace(/[^\d.,]/g, "");
+            
+            // Converte para número (tratando vírgula como decimal)
+            const numeroFormatado = value ? parseFloat(value.replace(",", ".")) : 0;
+            
+            form.setValue("valor_matricula", numeroFormatado);
+          }}
         />
       </FormControl>
       <FormDescription>

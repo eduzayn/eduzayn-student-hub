@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import SelectField from "./configuracao/SelectField";
 import DatePickerField from "./configuracao/DatePickerField";
 import TextareaField from "./configuracao/TextareaField";
+import ValorMatriculaField from "./configuracao/ValorMatriculaField";
 
 interface ConfiguracaoMatriculaProps {
   config: any;
@@ -94,18 +95,10 @@ const ConfiguracaoMatricula: React.FC<ConfiguracaoMatriculaProps> = ({
           />
           
           {/* Valor da Matrícula */}
-          <div className="flex flex-col space-y-2">
-            <label htmlFor="valor" className="font-medium text-sm">
-              Valor da Matrícula
-            </label>
-            <input
-              type="number"
-              id="valor"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-              value={form.watch("valor_matricula")}
-              onChange={(e) => form.setValue("valor_matricula", Number(e.target.value))}
-            />
-          </div>
+          <ValorMatriculaField 
+            form={form} 
+            curso={{ valor_mensalidade: valorCurso }}
+          />
           
           {/* Observações */}
           <TextareaField
