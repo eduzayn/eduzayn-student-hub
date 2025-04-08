@@ -135,6 +135,7 @@ serve(async (req) => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`,
+            'Lw-Client': schoolId, // Adicionando o cabeçalho Lw-Client exigido pela API
           },
         });
 
@@ -387,3 +388,125 @@ serve(async (req) => {
     );
   }
 });
+
+// Função para processar e sincronizar cursos
+const processCourses = async (courses: LearnWorldsCourse[]): Promise<void> => {
+  if (!courses || courses.length === 0) {
+    addLog(results, "Nenhum curso para processar");
+    return;
+  }
+  
+  addLog(results, `Processando ${courses.length} cursos`);
+  
+  for (const course of courses) {
+    try {
+      // Verificar dados obrigatórios do curso
+      if (!course.id || !course.title) {
+        console.error(`Curso com dados incompletos: ${JSON.stringify(course)}`);
+        results.failed++;
+        addLog(results, `Falha: Curso com dados incompletos (ID: ${course.id || 'desconhecido'})`);
+        continue;
+      }
+
+      // Verificar se o curso já existe no Supabase
+      const { data: existingCourse, error: queryError } = await supabase
+        .from('cursos')
+        .select('id, titulo, data_atualizacao')
+        .eq('learning_worlds_id', course.id)
+        .maybeSingle();
+      
+      if (queryError) {
+        console.error(`Erro ao buscar curso no Supabase: ${queryError.message}`);
+        results.failed++;
+        addLog(results, `Falha ao processar curso ${course.id}: ${queryError.message}`);
+        continue;
+      }
+      
+      // Preparar dados para inserir/atualizar
+      const courseData = {
+        titulo: course.title,
+        descricao: course.description || course.shortDescription || '',
+        learning_worlds_id: course.id,
+        valor_total: course.price || 0,
+        valor_mensalidade: course.price ? course.price / 12 : 0,
+        carga_horaria: parseDuration(course.duration || '0'),
+        imagem_url: course.image || '',
+        codigo: `LW-${course.id.substring(0, 6).toUpperCase()}`,
+        data_atualizacao: new Date().toISOString()
+      };
+      
+      if (existingCourse) {
+        // Atualizar curso existente
+        const { error: updateError } = await supabase
+          .from('cursos')
+          .update(courseData)
+          .eq('id', existingCourse.id);
+          
+        if (updateError) {
+          console.error(`Erro ao atualizar curso no Supabase: ${updateError.message}`);
+          results.failed++;
+          addLog(results, `Falha ao atualizar curso ${course.id}: ${updateError.message}`);
+        } else {
+          results.updated++;
+          addLog(results, `Curso atualizado: ${course.title} (${course.id})`);
+        }
+      } else {
+        // Criar novo curso
+        const { error: insertError } = await supabase
+          .from('cursos')
+          .insert({
+            ...courseData,
+            data_criacao: new Date().toISOString()
+          });
+          
+        if (insertError) {
+          console.error(`Erro ao inserir curso no Supabase: ${insertError.message}`);
+          results.failed++;
+          addLog(results, `Falha ao criar curso ${course.id}: ${insertError.message}`);
+        } else {
+          results.imported++;
+          addLog(results, `Novo curso importado: ${course.title} (${course.id})`);
+        }
+      }
+    } catch (error) {
+      console.error(`Erro ao processar curso ${course.id}:`, error);
+      results.failed++;
+      addLog(results, `Erro não tratado com curso ${course.id}: ${error.message}`);
+    }
+  }
+};
+
+// Helper para converter duração em string para minutos
+function parseDuration(duration: string): number {
+  // Tenta converter a duração para um número de horas
+  try {
+    // Se for apenas um número, assume que são horas
+    if (/^\d+$/.test(duration)) {
+      return parseInt(duration) * 60; // Converte horas para minutos
+    }
+    
+    // Se for no formato "X horas" ou "X h"
+    const hoursMatch = duration.match(/(\d+)\s*(horas|hora|h)/i);
+    if (hoursMatch) {
+      return parseInt(hoursMatch[1]) * 60;
+    }
+    
+    // Se for no formato "X minutos" ou "X min"
+    const minutesMatch = duration.match(/(\d+)\s*(minutos|minuto|min)/i);
+    if (minutesMatch) {
+      return parseInt(minutesMatch[1]);
+    }
+    
+    // Formato desconhecido, retorna 0
+    return 0;
+  } catch (error) {
+    console.error("Erro ao converter duração:", error);
+    return 0;
+  }
+}
+
+// Helper para adicionar logs
+function addLog(results: SyncResults, message: string) {
+  results.logs.push(`[${new Date().toISOString()}] ${message}`);
+  console.log(message);
+}

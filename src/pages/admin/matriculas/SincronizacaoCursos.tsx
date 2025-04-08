@@ -31,10 +31,26 @@ const SincronizacaoCursos: React.FC = () => {
         { description: "Este processo pode demorar alguns instantes." }
       );
       
+      console.log(`Chamando API para sincronização de cursos (todos=${todos})`);
+      
       const result = await sincronizarCursos(todos);
+      console.log("Resposta da sincronização:", result);
+      
       if (result) {
         setResultado(result);
         setLogs(result.logs || []);
+        
+        // Verificar mensagens de erro específicas nos logs
+        const clientIdErrorLog = result.logs?.find(log => 
+          log.includes("client_id") && log.includes("cannot be found")
+        );
+        
+        if (clientIdErrorLog) {
+          setDetalhesErro("Erro de autenticação com a API LearnWorlds: ID de cliente ausente ou inválido. Verifique as configurações da API.");
+          toast.error("Erro na API LearnWorlds", {
+            description: "ID de cliente ausente ou inválido. Verifique as configurações da API."
+          });
+        }
         
         // Notificar o usuário sobre o resultado
         if (result.imported > 0 || result.updated > 0) {
@@ -60,8 +76,17 @@ const SincronizacaoCursos: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Erro ao sincronizar:", error);
-      setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
-      toast.error("Erro na sincronização", { description: error.message });
+      
+      // Exibir erro específico relacionado ao client_id
+      if (error.message && error.message.includes("client_id")) {
+        setDetalhesErro("Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.");
+        toast.error("Erro de configuração da API", { 
+          description: "ID do cliente LearnWorlds ausente ou incorreto nas configurações."
+        });
+      } else {
+        setDetalhesErro(error.message || "Erro desconhecido durante a sincronização");
+        toast.error("Erro na sincronização", { description: error.message });
+      }
     } finally {
       setSincronizando(false);
     }
@@ -88,6 +113,22 @@ const SincronizacaoCursos: React.FC = () => {
         detalhesErro={detalhesErro}
         offlineMode={offlineMode}
       />
+      
+      {detalhesErro && detalhesErro.includes("client_id") && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de configuração da API LearnWorlds</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>A API do LearnWorlds está retornando um erro de "client_id". Isso geralmente significa que:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>O LEARNWORLDS_SCHOOL_ID não está configurado corretamente</li>
+              <li>O cabeçalho 'Lw-Client' não está sendo enviado corretamente</li>
+              <li>O token de API não tem permissões suficientes</li>
+            </ul>
+            <p>Verifique as configurações de API no painel de administração do LearnWorlds.</p>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs defaultValue="sincronizacao">
         <TabsList>

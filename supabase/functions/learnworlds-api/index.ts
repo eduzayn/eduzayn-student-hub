@@ -44,7 +44,7 @@ const callLearnWorldsApi = async (path: string, method = 'GET', body?: any): Pro
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`,
-        'Lw-Client': LEARNWORLDS_SCHOOL_ID
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID  // Adicionando o cabeçalho Lw-Client exigido pela API
       }
     };
 

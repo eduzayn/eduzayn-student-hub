@@ -50,6 +50,15 @@ const useLearnWorldsCursos = () => {
       const response = await makePublicRequest(`learnworlds-api/courses?${queryParams}`);
       console.log("Resposta da API de cursos:", response);
 
+      // Verificação específica para erro de client_id
+      if (response && response.error && response.error.includes('client_id')) {
+        console.error('Erro de configuração da API: client_id ausente ou inválido');
+        toast.error("Erro de configuração da API LearnWorlds", {
+          description: "ID de cliente ausente ou inválido. Verifique as configurações."
+        });
+        return { data: [], total: 0, pages: 1 };
+      }
+
       // Verifica se a resposta está no formato esperado
       if (!response || !response.data || !Array.isArray(response.data)) {
         console.error("Formato de resposta inválido da API de cursos:", response);
@@ -64,9 +73,19 @@ const useLearnWorldsCursos = () => {
       };
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);
-      toast.error("Falha ao buscar cursos", {
-        description: error instanceof Error ? error.message : "Erro desconhecido"
-      });
+      
+      // Verificar se é um erro relacionado ao client_id
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      if (errorMessage.includes('client_id')) {
+        toast.error("Erro de configuração da API", {
+          description: "ID de cliente LearnWorlds ausente ou inválido"
+        });
+      } else {
+        toast.error("Falha ao buscar cursos", {
+          description: errorMessage
+        });
+      }
+      
       return { data: [], total: 0, pages: 1 };
     }
   };
@@ -142,6 +161,17 @@ const useLearnWorldsCursos = () => {
       
       console.log("Resultado da sincronização:", result);
       
+      // Verificamos se há erros específicos nos logs
+      if (result && result.logs) {
+        const clientIdError = result.logs.find((log: string) => 
+          log.includes("client_id") && log.includes("cannot be found")
+        );
+        
+        if (clientIdError) {
+          console.error("Erro de client_id detectado:", clientIdError);
+        }
+      }
+      
       // Notificações com base no resultado
       if (result) {
         if (result.imported > 0 || result.updated > 0) {
@@ -164,9 +194,19 @@ const useLearnWorldsCursos = () => {
       return result;
     } catch (error) {
       console.error('Erro ao sincronizar cursos:', error);
-      toast.error('Erro ao sincronizar cursos com o LearnWorlds', {
-        description: error instanceof Error ? error.message : "Erro desconhecido"
-      });
+      
+      // Verificar se é um erro relacionado ao client_id
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      if (errorMessage.includes('client_id')) {
+        toast.error('Erro de configuração da API LearnWorlds', {
+          description: "ID de cliente ausente ou inválido nas configurações."
+        });
+      } else {
+        toast.error('Erro ao sincronizar cursos com o LearnWorlds', {
+          description: errorMessage
+        });
+      }
+      
       throw error;
     }
   };
