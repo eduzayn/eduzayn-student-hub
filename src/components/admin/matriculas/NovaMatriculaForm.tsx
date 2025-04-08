@@ -16,6 +16,7 @@ const NovaMatriculaForm: React.FC = () => {
     loading,
     offlineMode,
     pagamentoInfo,
+    learnWorldsMatriculaInfo,
     redirecionarParaMatriculas,
     criarNovaMatricula,
     prevStep,
@@ -63,6 +64,7 @@ const NovaMatriculaForm: React.FC = () => {
           cursoSelecionado={cursoSelecionado}
           matriculaConfig={matriculaConfig}
           pagamentoInfo={pagamentoInfo}
+          learnWorldsMatriculaInfo={learnWorldsMatriculaInfo}
           onVoltar={redirecionarParaMatriculas}
           onNova={criarNovaMatricula}
         />

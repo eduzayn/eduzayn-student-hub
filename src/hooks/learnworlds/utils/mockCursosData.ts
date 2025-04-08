@@ -69,6 +69,30 @@ const cursosMock = [
     image: "https://via.placeholder.com/300x200",
     access: "paid",
     categories: ["Psicologia", "Saúde Mental"]
+  },
+  {
+    id: "course-7",
+    title: "Introdução à Teoria Psicanalítica",
+    description: "Fundamentos da teoria psicanalítica de Freud a Lacan",
+    price: 1200,
+    price_final: 1200,
+    price_original: 1200,
+    duration: "80 horas",
+    image: "https://via.placeholder.com/300x200",
+    access: "paid",
+    categories: ["Psicologia", "Saúde Mental", "Teoria"]
+  },
+  {
+    id: "course-8",
+    title: "Psicanálise e Educação",
+    description: "A aplicação dos conceitos psicanalíticos no contexto educacional",
+    price: 1500,
+    price_final: 1500,
+    price_original: 1500,
+    duration: "100 horas",
+    image: "https://via.placeholder.com/300x200",
+    access: "paid",
+    categories: ["Psicologia", "Educação"]
   }
 ];
 
@@ -90,7 +114,7 @@ export const getDadosSimulados = (page: number, limit: number, searchTerm = "") 
     console.log(`Filtrando dados simulados por "${searchTerm}", encontrados: ${dados.length}`);
   }
   
-  // Calcula paginação
+  // Calcular paginação
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedData = dados.slice(startIndex, endIndex);

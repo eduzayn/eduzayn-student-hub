@@ -11,8 +11,17 @@ export const useNovaMatricula = () => {
   const navigate = () => window.location.href = "/admin/matriculas";
   const { criarMatricula, loading: loadingMatricula } = useMatricula();
   const { formStep, nextStep, prevStep, resetSteps } = useMatriculaFormSteps();
-  const { matricularAlunoEmCurso, offlineMode } = useLearnWorldsApi();
-  const { gerarLinkPagamento, pagamentoInfo, redirecionarParaMatriculas, criarNovaMatricula } = useMatriculaPagamento();
+  const { 
+    matricularAlunoEmCurso, 
+    verificarMatricula, 
+    offlineMode 
+  } = useLearnWorldsApi();
+  const { 
+    gerarLinkPagamento, 
+    pagamentoInfo, 
+    redirecionarParaMatriculas, 
+    criarNovaMatricula 
+  } = useMatriculaPagamento();
   
   const [alunoSelecionado, setAlunoSelecionado] = useState<any>(null);
   const [cursoSelecionado, setCursoSelecionado] = useState<any>(null);
@@ -27,6 +36,7 @@ export const useNovaMatricula = () => {
   
   const [matriculaCriada, setMatriculaCriada] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [learnWorldsMatriculaInfo, setLearnWorldsMatriculaInfo] = useState<any>(null);
   
   const handleAlunoSelecionado = (aluno: any) => {
     setAlunoSelecionado(aluno);
@@ -67,27 +77,56 @@ export const useNovaMatricula = () => {
       
       console.log("Dados da matrícula a criar:", novaMatricula);
       
+      // Criar matrícula local
       const resultado = await criarMatricula(novaMatricula);
       
       if (!resultado) {
         throw new Error('Erro ao criar matrícula');
       }
       
+      // Guardar a matrícula criada
       setMatriculaCriada(resultado);
       
+      // Verificar se podemos matricular no LearnWorlds
       if (alunoSelecionado.learnworlds_id && cursoSelecionado.learning_worlds_id) {
         try {
-          const matriculaLearnWorlds = await matricularAlunoEmCurso(
+          // Primeiro verificar se o aluno já está matriculado no curso
+          const matriculaExistente = await verificarMatricula(
             alunoSelecionado.learnworlds_id,
             cursoSelecionado.learning_worlds_id
           );
           
-          console.log('Matrícula no LearnWorlds:', matriculaLearnWorlds);
+          console.log('Verificação de matrícula existente:', matriculaExistente);
           
-          if (matriculaLearnWorlds) {
-            toast.success('Aluno matriculado no LearnWorlds com sucesso!');
-          } else if (!offlineMode) {
-            toast.warning('Não foi possível confirmar a matrícula no LearnWorlds');
+          // Se a matrícula já existe, exibir mensagem informativa
+          if (matriculaExistente && !matriculaExistente.error) {
+            setLearnWorldsMatriculaInfo(matriculaExistente);
+            toast.info('Aluno já matriculado no LearnWorlds');
+          } else {
+            // Caso não exista, criar nova matrícula
+            const matriculaLearnWorlds = await matricularAlunoEmCurso(
+              alunoSelecionado.learnworlds_id,
+              cursoSelecionado.learning_worlds_id,
+              {
+                status: "active",
+                notifyUser: true
+              }
+            );
+            
+            console.log('Matrícula no LearnWorlds:', matriculaLearnWorlds);
+            setLearnWorldsMatriculaInfo(matriculaLearnWorlds);
+            
+            if (matriculaLearnWorlds) {
+              toast.success('Aluno matriculado no LearnWorlds com sucesso!');
+              
+              // Atualizar a matrícula local com o ID da matrícula no LearnWorlds
+              if (matriculaLearnWorlds.id && !matriculaLearnWorlds.simulatedResponse) {
+                // Aqui poderia ser implementada uma atualização da matrícula local
+                console.log('ID da matrícula no LearnWorlds:', matriculaLearnWorlds.id);
+              }
+            } else if (!offlineMode) {
+              toast.warning('Não foi possível confirmar a matrícula no LearnWorlds');
+            }
           }
         } catch (learnWorldsError) {
           console.error('Erro ao matricular no LearnWorlds:', learnWorldsError);
@@ -97,6 +136,7 @@ export const useNovaMatricula = () => {
         toast.warning('IDs do LearnWorlds não disponíveis para matrícula na plataforma');
       }
       
+      // Processar pagamento se necessário
       if (matriculaConfig.com_pagamento) {
         const pagamentoParams = {
           customerData: {
@@ -142,6 +182,7 @@ export const useNovaMatricula = () => {
     loading,
     offlineMode,
     pagamentoInfo,
+    learnWorldsMatriculaInfo,
     redirecionarParaMatriculas,
     criarNovaMatricula,
     handleAlunoSelecionado,

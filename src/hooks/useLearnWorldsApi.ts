@@ -55,7 +55,10 @@ const useLearnWorldsApi = () => {
     sincronizarCursos: cursosApi.sincronizarCursos,
     
     // Funções de matrículas
-    matricularAlunoEmCurso: matriculasApi.matricularAlunoEmCurso
+    matricularAlunoEmCurso: matriculasApi.matricularAlunoEmCurso,
+    verificarMatricula: matriculasApi.verificarMatricula,
+    atualizarStatusMatricula: matriculasApi.atualizarStatusMatricula,
+    matriculaStatus: matriculasApi.matriculaStatus
   };
 };
 

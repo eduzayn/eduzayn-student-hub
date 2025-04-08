@@ -13,7 +13,7 @@ export interface Course {
   price_original?: number;
   price_final?: number;
   duration?: string;
-  access?: 'free' | 'paid';
+  access?: 'free' | 'paid' | string;
   categories?: string[];
 }
 
