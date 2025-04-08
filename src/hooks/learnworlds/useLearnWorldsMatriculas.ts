@@ -25,7 +25,7 @@ const useLearnWorldsMatriculas = () => {
     alunoId: string, 
     cursoId: string, 
     dadosAdicionais?: {
-      status?: string;
+      status?: 'active' | 'inactive' | 'completed';
       expirationDate?: string;
       notifyUser?: boolean;
     }
@@ -35,7 +35,7 @@ const useLearnWorldsMatriculas = () => {
     try {
       if (offlineMode) {
         console.log("Modo offline detectado, usando matricula simulada");
-        const simulatedResponse = {
+        const simulatedResponse: EnrollmentResponse = {
           id: `simulated-enrollment-${Date.now()}`,
           userId: alunoId,
           courseId: cursoId,

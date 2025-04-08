@@ -45,7 +45,7 @@ export interface EnrollmentResponse {
   id: string;
   userId: string;
   courseId: string;
-  status: 'active' | 'inactive' | 'completed';
+  status: 'active' | 'inactive' | 'completed' | string;
   enrollmentDate: string;
   expirationDate?: string;
   learnworlds_id?: string;
