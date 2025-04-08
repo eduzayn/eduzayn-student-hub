@@ -2,12 +2,22 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, AlertCircle, ArrowLeftCircle, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, FileCheck, GitCommitHorizontal } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import LinkPagamentoCard from "../LinkPagamentoCard";
+import LearnWorldsStatusDetails from "../LearnWorldsStatusDetails";
 
 interface MatriculaStep4Props {
   alunoSelecionado: any;
   cursoSelecionado: any;
-  matriculaConfig: any;
+  matriculaConfig: {
+    data_inicio: string;
+    valor_matricula: number;
+    forma_pagamento: string;
+    observacoes: string;
+    com_pagamento: boolean;
+    status: string;
+  };
   pagamentoInfo: any;
   learnWorldsMatriculaInfo: any;
   onVoltar: () => void;
@@ -21,162 +31,130 @@ const MatriculaStep4: React.FC<MatriculaStep4Props> = ({
   pagamentoInfo,
   learnWorldsMatriculaInfo,
   onVoltar,
-  onNova
+  onNova,
 }) => {
-  const pagamentoStatus = pagamentoInfo ? 
-    (pagamentoInfo.status === 'error' ? 'erro' : 'sucesso') : 
-    (matriculaConfig.com_pagamento ? 'pendente' : 'isento');
+  // Determinar status do LearnWorlds
+  const learnWorldsStatus = getLearnWorldsStatus();
   
-  const learnWorldsStatus = learnWorldsMatriculaInfo ? 
-    (learnWorldsMatriculaInfo.simulatedResponse ? 'simulado' : 'sucesso') : 
-    'pendente';
-    
-  const renderStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sucesso':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'erro':
-        return <XCircle className="h-5 w-5 text-red-500" />;
-      case 'pendente':
-        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
-      case 'isento':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'simulado':
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-      default:
-        return <AlertCircle className="h-5 w-5 text-gray-400" />;
+  function getLearnWorldsStatus(): 'sucesso' | 'pendente' | 'simulado' | 'erro' {
+    if (!learnWorldsMatriculaInfo) {
+      return 'pendente';
     }
-  };
+    
+    if (learnWorldsMatriculaInfo.simulatedResponse) {
+      return 'simulado';
+    }
+    
+    return 'sucesso';
+  }
   
+  // Determinar status do pagamento
+  const pagamentoStatus = pagamentoInfo?.status || 'pendente';
+  
+  // Verificar se há um link de pagamento
+  const temLinkPagamento = Boolean(pagamentoInfo?.link_pagamento);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-center">
-        <CheckCircle className="h-12 w-12 text-green-500 mr-3" />
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Matrícula Concluída</h2>
       </div>
-      
-      <Card className="p-6 space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Detalhes da Matrícula</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Aluno</p>
-              <p className="font-medium">{alunoSelecionado?.nome}</p>
-              <p className="text-sm text-gray-600">{alunoSelecionado?.email}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Curso</p>
-              <p className="font-medium">{cursoSelecionado?.titulo || cursoSelecionado?.title}</p>
-              <p className="text-sm text-gray-600">Código: {cursoSelecionado?.codigo || cursoSelecionado?.id}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Data de Início</p>
-              <p>{matriculaConfig?.data_inicio}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Status</p>
-              <p className="capitalize">{matriculaConfig?.status}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Forma de Pagamento</p>
-              <p className="capitalize">{matriculaConfig?.forma_pagamento}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Valor</p>
-              <p>R$ {matriculaConfig?.valor_matricula.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="pt-4 border-t">
-          <h3 className="text-lg font-semibold mb-2">Status</h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Detalhes da matrícula */}
+        <Card className="p-6 shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Detalhes da Matrícula</h3>
           
-          <div className="space-y-3">
-            <div className="flex items-center">
-              {renderStatusIcon('sucesso')}
-              <span className="ml-2">Matrícula criada no sistema local</span>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Aluno</h4>
+              <p>{alunoSelecionado?.nome || `${alunoSelecionado?.firstName} ${alunoSelecionado?.lastName}`}</p>
             </div>
             
-            <div className="flex items-center">
-              {renderStatusIcon(learnWorldsStatus)}
-              <span className="ml-2">
-                {learnWorldsStatus === 'sucesso' && 'Matrícula criada no LearnWorlds'}
-                {learnWorldsStatus === 'simulado' && 'Matrícula simulada no LearnWorlds (modo offline)'}
-                {learnWorldsStatus === 'pendente' && 'Aguardando confirmação do LearnWorlds'}
-                {learnWorldsStatus === 'erro' && 'Erro ao criar matrícula no LearnWorlds'}
-              </span>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Curso</h4>
+              <p>{cursoSelecionado?.titulo || cursoSelecionado?.nome || cursoSelecionado?.title}</p>
             </div>
             
-            {matriculaConfig.com_pagamento && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Data de Início</h4>
+              <p>{matriculaConfig.data_inicio}</p>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Status</h4>
               <div className="flex items-center">
-                {renderStatusIcon(pagamentoStatus)}
-                <span className="ml-2">
-                  {pagamentoStatus === 'sucesso' && 'Link de pagamento gerado'}
-                  {pagamentoStatus === 'pendente' && 'Aguardando geração do link de pagamento'}
-                  {pagamentoStatus === 'erro' && 'Erro ao gerar link de pagamento'}
-                  {pagamentoStatus === 'isento' && 'Matrícula isenta de pagamento'}
-                </span>
+                <span className={`h-2 w-2 rounded-full ${
+                  matriculaConfig.status === 'ativo' ? 'bg-green-500' : 'bg-amber-500'
+                } mr-2`}></span>
+                <span>{matriculaConfig.status.charAt(0).toUpperCase() + matriculaConfig.status.slice(1)}</span>
+              </div>
+            </div>
+            
+            {matriculaConfig.observacoes && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Observações</h4>
+                <p className="text-sm">{matriculaConfig.observacoes}</p>
               </div>
             )}
           </div>
-        </div>
-        
-        {pagamentoInfo?.paymentUrl && (
-          <div className="pt-4 border-t">
-            <h3 className="text-lg font-semibold mb-2">Link de Pagamento</h3>
-            <div className="p-3 bg-blue-50 border border-blue-100 rounded-md mb-2">
-              <a 
-                href={pagamentoInfo.paymentUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-medium break-all flex items-center"
-              >
-                {pagamentoInfo.paymentUrl}
-                <span className="ml-1">↗</span>
-              </a>
-            </div>
-            <p className="text-sm text-gray-500">Compartilhe este link com o aluno para efetuar o pagamento</p>
-          </div>
-        )}
-        
-        {learnWorldsMatriculaInfo && (
-          <div className="pt-4 border-t">
-            <h3 className="text-lg font-semibold mb-2">Informações da Matrícula no LearnWorlds</h3>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm font-medium text-gray-500">ID da Matrícula</p>
-                <p className="font-mono bg-gray-50 p-1 text-sm rounded">{learnWorldsMatriculaInfo.id}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Status</p>
-                <p className="capitalize">{learnWorldsMatriculaInfo.status}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Data da Matrícula</p>
-                <p>{new Date(learnWorldsMatriculaInfo.enrollmentDate).toLocaleString()}</p>
-              </div>
-              {learnWorldsMatriculaInfo.simulatedResponse && (
-                <div className="bg-yellow-50 border border-yellow-100 rounded p-3 mt-2">
-                  <p className="text-sm text-yellow-700">
-                    <AlertCircle className="h-4 w-4 inline mr-1" />
-                    Esta é uma matrícula simulada devido ao modo offline. Quando a conexão com o LearnWorlds for restaurada, 
-                    a matrícula será sincronizada automaticamente.
-                  </p>
-                </div>
-              )}
+          
+          <Separator className="my-4" />
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-500">
+              <FileCheck className="h-4 w-4 mr-1" />
+              <span>Matrícula registrada com sucesso</span>
             </div>
           </div>
-        )}
-      </Card>
+        </Card>
+
+        {/* Status da integração com LearnWorlds */}
+        <Card className="p-6 shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Integração com LearnWorlds</h3>
+          
+          <LearnWorldsStatusDetails 
+            status={learnWorldsStatus} 
+            matriculaInfo={learnWorldsMatriculaInfo} 
+          />
+          
+          <Separator className="my-4" />
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-500">
+              <GitCommitHorizontal className="h-4 w-4 mr-1" />
+              <span>Sincronização {learnWorldsStatus === 'erro' ? 'falhou' : 'concluída'}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
       
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onVoltar}>
-          <ArrowLeftCircle className="h-4 w-4 mr-2" />
-          Voltar para Matrículas
+      {/* Link de pagamento se aplicável */}
+      {matriculaConfig.com_pagamento && matriculaConfig.forma_pagamento !== 'isento' && (
+        <div className="mt-6">
+          <LinkPagamentoCard
+            pagamentoInfo={pagamentoInfo}
+            alunoNome={alunoSelecionado?.nome || `${alunoSelecionado?.firstName} ${alunoSelecionado?.lastName}`}
+            cursoNome={cursoSelecionado?.titulo || cursoSelecionado?.nome || cursoSelecionado?.title}
+            valor={matriculaConfig.valor_matricula}
+            formaPagamento={matriculaConfig.forma_pagamento}
+          />
+        </div>
+      )}
+      
+      {/* Botões de ação */}
+      <div className="flex flex-col sm:flex-row gap-4 pt-6">
+        <Button
+          variant="outline"
+          onClick={onVoltar}
+          className="sm:mr-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para Lista de Matrículas
         </Button>
+        
         <Button onClick={onNova}>
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Nova Matrícula
+          Criar Nova Matrícula
         </Button>
       </div>
     </div>
