@@ -7,13 +7,13 @@ import {
   FormControl,
   FormMessage
 } from "@/components/ui/form";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, ControllerRenderProps } from "react-hook-form";
 
 interface FormFieldProps {
   form: UseFormReturn<any>;
   name: string;
   label: string;
-  children: React.ReactNode;
+  children: React.ReactNode | ((field: ControllerRenderProps) => React.ReactNode);
   className?: string;
 }
 
@@ -32,9 +32,11 @@ const FormField: React.FC<FormFieldProps> = ({
         <FormItem className={className}>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            {React.isValidElement(children)
-              ? React.cloneElement(children as React.ReactElement, { ...field })
-              : children}
+            {typeof children === 'function' 
+              ? children(field)
+              : React.isValidElement(children)
+                ? React.cloneElement(children as React.ReactElement, { ...field })
+                : children}
           </FormControl>
           <FormMessage />
         </FormItem>

@@ -33,8 +33,8 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
         codigo: curso.id.substring(0, 8).toUpperCase(),
         modalidade: "EAD", // Assumindo que todos os cursos do LearnWorlds são EAD
         carga_horaria: obterCargaHorariaEmMinutos(curso.duration || ""),
-        valor_total: curso.price_final || curso.price_original || 0,
-        valor_mensalidade: (curso.price_final || curso.price_original || 0) / 12,
+        valor_total: curso.price_final || curso.price_original || curso.price || 0,
+        valor_mensalidade: (curso.price_final || curso.price_original || curso.price || 0) / 12,
         descricao: curso.description || curso.shortDescription || "",
         imagem_url: curso.image || curso.courseImage || "",
         categorias: curso.categories || [],

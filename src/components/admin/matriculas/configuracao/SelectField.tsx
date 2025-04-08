@@ -34,21 +34,24 @@ const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <FormField form={form} name={name} label={label} className={className}>
-      <Select
-        onValueChange={form.getValues(name) ? undefined : form.setValue.bind(null, name)}
-        defaultValue={form.getValues(name) || ""}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {field => (
+        <Select
+          value={field.value}
+          onValueChange={(value) => field.onChange(value)}
+          defaultValue={field.value || ""}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </FormField>
   );
 };

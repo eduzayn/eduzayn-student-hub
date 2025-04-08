@@ -51,6 +51,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       // Verificar se temos dados no formato esperado
       if (response.data && Array.isArray(response.data)) {
         // Resposta válida
+        console.log("Usando dados reais de cursos da API LearnWorlds");
         setOfflineMode(false);
         return response;
       } else {
