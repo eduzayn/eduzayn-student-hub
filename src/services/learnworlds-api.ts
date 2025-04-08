@@ -1,3 +1,4 @@
+
 /**
  * Serviço de integração com a API da LearnWorlds e Supabase
  * Documentação: https://developers.learnworlds.com/
@@ -59,11 +60,10 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
           descricao,
           imagem_url,
           learning_worlds_id,
-          preco,
+          valor_total,
+          valor_mensalidade,
           modalidade,
-          acesso,
-          duracao,
-          progresso
+          carga_horaria
         )
       `)
       .eq('aluno_id', userId);
@@ -90,10 +90,10 @@ export const getUserCourses = async (userId: string): Promise<LearnWorldsCourse[
         title: curso?.titulo || "Sem título",
         description: curso?.descricao || "Sem descrição",
         thumbnail: curso?.imagem_url || "https://via.placeholder.com/300x180?text=Curso",
-        price: curso?.preco || 0,
-        modalidade: curso?.modalidade || "Sem modalidade",
-        access: curso?.acesso || "Sem acesso",
-        duration: curso?.duracao || "Sem duração",
+        price: curso?.valor_total || 0,
+        modalidade: curso?.modalidade || "EAD",
+        access: "paid", // Valor padrão já que não temos essa coluna
+        duration: curso?.carga_horaria ? `${curso.carga_horaria} horas` : "Sem duração",
         progress: matricula.progresso || 0,
         learnWorldsId: curso?.learning_worlds_id || null
       };

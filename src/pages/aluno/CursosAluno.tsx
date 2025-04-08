@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,13 +13,12 @@ const mapCourseToLearnWorldsCourse = (curso: Course): LearnWorldsCourse => {
     id: curso.id,
     title: curso.title,
     description: curso.description || curso.shortDescription || "",
-    // Removendo 'image' e usando apenas 'thumbnail' que é a propriedade correta em LearnWorldsCourse
+    thumbnail: curso.image || curso.courseImage || "",
     price: curso.price || curso.price_final || 0, 
     modalidade: "EAD",
     access: curso.access || "paid",
     duration: curso.duration || "60 horas",
-    progress: 0,
-    thumbnail: curso.image || curso.courseImage || ""
+    progress: 0
   };
 };
 
