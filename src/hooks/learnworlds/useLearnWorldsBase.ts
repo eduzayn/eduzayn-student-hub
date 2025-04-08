@@ -44,7 +44,7 @@ const useLearnWorldsBase = () => {
       console.log(`Fazendo requisição para endpoint: ${endpoint}`);
       console.log(`Usando token: ${usePublicToken ? 'público' : 'administrativo'}`);
       
-      // URL base específica para o projeto Supabase (usando uma constante direta ao invés de propriedade protegida)
+      // URL base específica para o projeto Supabase
       const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpb2FyemtmbWNvYmN0Ymx6enRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4OTYwMTksImV4cCI6MjA1OTQ3MjAxOX0.VJTJA5hKhVWFA4x-pM7jXetJsCz8-aMuJDOoVAlPeQc";
 
       const headers: HeadersInit = {
@@ -109,7 +109,6 @@ const useLearnWorldsBase = () => {
 
         // Verificar o tipo de conteúdo para melhor tratamento
         const contentType = response.headers.get('content-type') || '';
-        console.log(`Tipo de conteúdo da resposta: ${contentType}`);
         
         if (contentType.includes('application/json')) {
           try {

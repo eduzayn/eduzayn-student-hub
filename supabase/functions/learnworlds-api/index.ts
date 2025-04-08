@@ -14,17 +14,17 @@ const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-202
 // Obtendo a chave API LearnWorlds do ambiente
 const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "";
 // Token público para operações do cliente
-const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "";
+const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 // School ID do LearnWorlds
 const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
 // URL base da API do LearnWorlds
-const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_BASE_URL") || "https://api.learnworlds.com";
+const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
 
 console.log("Inicializando função edge learnworlds-api");
-console.log("Token do ambiente configurado:", Deno.env.get("ADMIN_BYPASS_TOKEN") ? "Sim (✓)" : "Não (usando fallback)");
-console.log("API Key LearnWorlds configurada:", LEARNWORLDS_API_KEY ? "Sim (✓)" : "Não");
-console.log("Token público LearnWorlds configurado:", LEARNWORLDS_PUBLIC_TOKEN ? "Sim (✓)" : "Não");
-console.log("School ID LearnWorlds configurado:", LEARNWORLDS_SCHOOL_ID ? "Sim (✓)" : "Não");
+console.log("Token de administrador:", ADMIN_BYPASS_JWT ? "Configurado ✓" : "Não configurado ✗");
+console.log("API Key LearnWorlds:", LEARNWORLDS_API_KEY ? "Configurado ✓" : "Não configurado ✗");
+console.log("Token público LearnWorlds:", LEARNWORLDS_PUBLIC_TOKEN ? "Configurado ✓" : "Não configurado ✗");
+console.log("School ID LearnWorlds:", LEARNWORLDS_SCHOOL_ID ? "Configurado ✓" : "Não configurado ✗");
 console.log("URL base da API LearnWorlds:", LEARNWORLDS_API_BASE_URL);
 
 // Chamada real para a API LearnWorlds
@@ -86,8 +86,9 @@ serve(async (req) => {
   // Logging para depuração
   console.log(`Requisição recebida: ${method} ${new URL(req.url).pathname}`);
 
-  // Pré-flight CORS - ATUALIZADO para lidar com OPTIONS corretamente
+  // Pré-flight CORS - MELHORADO
   if (method === "OPTIONS") {
+    console.log("Respondendo requisição OPTIONS com CORS headers");
     return new Response(null, {
       status: 204,
       headers: corsHeaders
@@ -119,6 +120,8 @@ serve(async (req) => {
   
   // Log detalhado dos tokens para diagnóstico
   console.log("Token recebido (primeiros 5 chars):", token.substring(0, 5) + "...");
+  console.log("Token público para comparação (primeiros 5 chars):", LEARNWORLDS_PUBLIC_TOKEN.substring(0, 5) + "...");
+  console.log("Token admin para comparação (primeiros 5 chars):", ADMIN_BYPASS_JWT.substring(0, 5) + "...");
   
   // Verificação do token - aceitamos tanto o token de administrador quanto o token público
   const isAdminToken = token === ADMIN_BYPASS_JWT;
@@ -126,6 +129,9 @@ serve(async (req) => {
   
   if (!isAdminToken && !isPublicToken) {
     console.log("Token inválido - nenhuma correspondência encontrada");
+    console.log(`Token recebido: ${token}`);
+    console.log(`Token público esperado: ${LEARNWORLDS_PUBLIC_TOKEN}`);
+    console.log(`Token admin esperado: ${ADMIN_BYPASS_JWT}`);
     
     return new Response(JSON.stringify({
       code: 401,

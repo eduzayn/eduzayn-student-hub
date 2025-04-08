@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useLearnWorldsAlunos from "@/hooks/learnworlds/useLearnWorldsAlunos";
@@ -32,19 +31,17 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
   
   const carregarAlunos = async (termoBusca = "") => {
     try {
-      // Busca alunos da API LearnWorlds
       const resultado = await getUsers(1, 20);
       
       if (!resultado || !resultado.data) {
         throw new Error("Erro ao carregar alunos do LearnWorlds");
       }
       
-      // Mapeando os dados retornados para o formato necessário
       const alunosFormatados = resultado.data.map((aluno: any) => ({
         id: aluno.id,
         nome: `${aluno.firstName || ''} ${aluno.lastName || ''}`.trim(),
         email: aluno.email,
-        cpf: aluno.customField1 || '', // Assumindo que o CPF está no campo customField1
+        cpf: aluno.customField1 || '',
         telefone: aluno.phoneNumber || '',
         learnworlds_id: aluno.id
       }));
@@ -56,12 +53,10 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         description: "Usando dados em modo offline. Algumas funcionalidades podem estar limitadas."
       });
       
-      // Em caso de falha, carrega dados simulados como fallback
       carregarAlunosSimulados(termoBusca);
     }
   };
   
-  // Função de fallback com dados simulados
   const carregarAlunosSimulados = (termoBusca = "") => {
     const dadosSimulados = [
       {
@@ -87,7 +82,6 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
       }
     ];
     
-    // Filtragem pela busca (se houver)
     const filtrados = termoBusca ? 
       dadosSimulados.filter(a => 
         a.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
@@ -106,7 +100,6 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
     setSelecionado(aluno.id);
     onAlunoSelecionado({
       ...aluno,
-      // Garantir que temos o ID do LearnWorlds
       learnworlds_id: aluno.learnworlds_id || aluno.id
     });
   };
@@ -118,38 +111,31 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
 
   const handleCriarNovoAluno = async () => {
     try {
-      // Validação básica
       if (!formNovoAluno.nome || !formNovoAluno.email) {
         toast.error("Nome e e-mail são obrigatórios");
         return;
       }
 
-      // Se estamos no modo offline, simular criação com dados locais
       if (offlineMode) {
         toast.info("Cadastrando aluno em modo offline", {
           description: "O aluno será sincronizado quando a conexão for restaurada."
         });
         
-        // Criar um ID simulado para o aluno offline
         const offlineId = `offline-${Date.now()}`;
         
-        // Criar o novo aluno no formato esperado
         const novoAluno = {
           id: offlineId,
           nome: `${formNovoAluno.nome} ${formNovoAluno.sobrenome}`.trim(),
           email: formNovoAluno.email,
           cpf: formNovoAluno.cpf,
           telefone: formNovoAluno.telefone,
-          // Marcar como um aluno offline para sincronização posterior
           offline: true,
           learnworlds_id: offlineId
         };
 
-        // Adicionar o novo aluno à lista e selecioná-lo
         setAlunos(prev => [novoAluno, ...prev]);
         handleSelecionar(novoAluno);
         
-        // Fechar o diálogo e limpar o formulário
         setDialogAberto(false);
         setFormNovoAluno({
           nome: "",
@@ -163,12 +149,11 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         return;
       }
 
-      // Cadastrar aluno no LearnWorlds
       const resultado = await cadastrarAluno({
         firstName: formNovoAluno.nome,
         lastName: formNovoAluno.sobrenome,
         email: formNovoAluno.email,
-        cpf: formNovoAluno.cpf, // O hook já tem lógica para mapear cpf para customField1
+        cpf: formNovoAluno.cpf,
         phoneNumber: formNovoAluno.telefone
       });
 
@@ -176,7 +161,6 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         throw new Error("Falha ao cadastrar aluno no LearnWorlds");
       }
 
-      // Criar o novo aluno no formato esperado
       const novoAluno = {
         id: resultado.id,
         nome: `${formNovoAluno.nome} ${formNovoAluno.sobrenome}`.trim(),
@@ -186,11 +170,9 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
         learnworlds_id: resultado.id
       };
 
-      // Adicionar o novo aluno à lista e selecioná-lo
       setAlunos(prev => [novoAluno, ...prev]);
       handleSelecionar(novoAluno);
       
-      // Fechar o diálogo e limpar o formulário
       setDialogAberto(false);
       setFormNovoAluno({
         nome: "",
@@ -203,7 +185,25 @@ export const useAlunoSelection = (onAlunoSelecionado: (aluno: any) => void) => {
       toast.success("Aluno cadastrado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao criar novo aluno:", error);
-      toast.error(error.message || "Erro ao criar novo aluno");
+      
+      if (error.message && (
+          error.message.includes("Failed to fetch") || 
+          error.message.includes("Erro de conexão") ||
+          error.message.includes("função edge")
+      )) {
+        setOfflineMode(true);
+        toast.error("Erro de conexão com a API", {
+          description: "Passando para modo offline. Deseja cadastrar o aluno offline?"
+        });
+        
+        setTimeout(() => {
+          if (confirm("Deseja cadastrar o aluno em modo offline? Os dados serão sincronizados quando a conexão for restabelecida.")) {
+            handleCriarNovoAluno();
+          }
+        }, 500);
+      } else {
+        toast.error(error.message || "Erro ao criar novo aluno");
+      }
     }
   };
 
