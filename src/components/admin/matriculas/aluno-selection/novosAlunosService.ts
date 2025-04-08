@@ -74,6 +74,7 @@ export const criarAlunoOffline = (formulario: NovoAlunoForm): Aluno => {
     email: formulario.email,
     cpf: formulario.cpf,
     telefone: formulario.telefone,
+    simulado: true,
     offline: true,
     learnworlds_id: offlineId
   };

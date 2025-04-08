@@ -52,6 +52,7 @@ const SelectAluno: React.FC<AlunoSelectionProps> = ({ onAlunoSelecionado }) => {
             selecionado={selecionado}
             onSelecionar={handleSelecionar}
             loading={loading}
+            offlineMode={offlineMode}
           />
         )}
       </div>
