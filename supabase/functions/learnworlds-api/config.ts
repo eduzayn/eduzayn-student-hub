@@ -1,11 +1,12 @@
 
 // Configurações e constantes para a função edge LearnWorlds API
 
-// Cabeçalhos CORS padrão
+// Cabeçalhos CORS padrão - EXPANDIDOS para aceitar mais origens e cabeçalhos
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, School-Id, X-API-Version, X-Use-OAuth, Lw-Client",
+  "Access-Control-Allow-Credentials": "true",
   "Content-Type": "application/json"
 };
 

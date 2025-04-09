@@ -38,16 +38,17 @@ const verificarToken = (req: Request): boolean => {
 // Configura o manipulador Deno para a função de borda
 Deno.serve(async (req) => {
   try {
+    // Tratar requisições preflight OPTIONS primeiro, antes de qualquer outra lógica
+    if (req.method === "OPTIONS") {
+      console.log("Recebendo requisição OPTIONS - respondendo com cabeçalhos CORS");
+      return handleOptions();
+    }
+
     // Log do caminho da solicitação para diagnóstico
     const url = new URL(req.url);
     console.log(`Recebendo solicitação: ${req.method} ${url.pathname} ${url.search}`);
     console.log(`Usando URL base da API LearnWorlds: ${LEARNWORLDS_API_BASE_URL}`);
     
-    // Responder a solicitações OPTIONS para CORS
-    if (req.method === "OPTIONS") {
-      return handleOptions();
-    }
-
     // Extrair componentes da URL
     let path = url.pathname;
     

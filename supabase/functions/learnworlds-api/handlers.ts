@@ -119,6 +119,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     
+    // Retornar resposta com cabeçalhos CORS adequados
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
