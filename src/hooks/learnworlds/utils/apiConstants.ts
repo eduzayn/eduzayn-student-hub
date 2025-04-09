@@ -8,6 +8,9 @@ export const LEARNWORLDS_API_ENDPOINT = 'https://bioarzkfmcobctblzztm.functions.
 // School ID da escola no LearnWorlds
 export const SCHOOL_ID = 'grupozayneducacional';
 
+// Tokens para acesso à API (quando aplicável)
+export const LEARNWORLDS_PUBLIC_TOKEN = 'public_token'; // Token público para acesso não autenticado
+
 // Headers padrão para requisições
 export const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',

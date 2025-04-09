@@ -13,7 +13,7 @@ export const corsHeaders = {
 export const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC"; // Token de bypass para admin
 export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "YEmshZGseUQgbCuLyb9WeYUnHrpq91yuUk3Dx4nN";
 export const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-export const LEARNWORLDS_API_BASE_URL = "https://api.learnworlds.com/v2";
+export const LEARNWORLDS_API_BASE_URL = "https://api.learnworlds.com/v2"; // URL correta da API V2
 export const LEARNWORLDS_CLIENT_ID = Deno.env.get("LEARNWORLDS_CLIENT_ID");
 export const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET");
 

@@ -1,6 +1,6 @@
 
 import { getAuthorizationHeader } from '@/hooks/auth/adminBypass';
-import { LEARNWORLDS_PUBLIC_TOKEN, LEARNWORLDS_SCHOOL_ID } from './apiConstants';
+import { LEARNWORLDS_PUBLIC_TOKEN, SCHOOL_ID } from './apiConstants';
 
 /**
  * Utilitário para gerenciar headers de requisições para a API LearnWorlds
