@@ -20,7 +20,7 @@ interface DataTableProps {
   columns: {
     accessorKey: string;
     header: string;
-    cell?: (props: { row: any }) => React.ReactNode;
+    cell?: (props: { row: { getValue: (key: string) => any } }) => React.ReactNode;
   }[];
   data: any[];
   pageSize?: number;

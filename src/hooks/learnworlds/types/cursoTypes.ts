@@ -38,3 +38,18 @@ export interface SincronizacaoResult {
   logs: string[];
   syncedItems?: number;
 }
+
+// Adicionando a interface EnrollmentResponse que estava faltando
+export interface EnrollmentResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    id: string;
+    student_id: string;
+    course_id: string;
+    status: string;
+    enrollment_date?: string;
+    completion_date?: string;
+    progress?: number;
+  };
+}

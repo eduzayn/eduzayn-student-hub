@@ -2,19 +2,7 @@
 import useLearnWorldsAlunos from '@/hooks/learnworlds/useLearnWorldsAlunos';
 import useLearnWorldsCursos from '@/hooks/learnworlds/useLearnWorldsCursos';
 import useLearnWorldsMatriculas from '@/hooks/learnworlds/useLearnWorldsMatriculas';
-
-export interface Course {
-  id: string;
-  title: string;
-  description?: string;
-  shortDescription?: string;
-  image?: string;
-  courseImage?: string;
-  price?: number;
-  price_final?: number;
-  access?: string;
-  duration?: string;
-}
+import { Course } from './learnworlds/types/cursoTypes';
 
 /**
  * Hook combinado que fornece todas as funcionalidades da API do LearnWorlds
@@ -57,24 +45,24 @@ const useLearnWorldsApi = () => {
   const offlineMode = offlineAlunos || offlineCursos || offlineMatriculas;
 
   return {
-    // Alunos - mapeamento para compatibilidade
+    // Alunos
+    getUsers,
+    cadastrarAluno,
+    sincronizarAlunos,
     buscarAlunos: getUsers,
     buscarDadosAluno: (id: string) => getUsers(1, 1, `id:${id}`),
     criarAluno: cadastrarAluno,
     atualizarAluno: (id: string, dados: any) => console.log('Função não implementada: atualizarAluno'),
-    getUsers,
-    cadastrarAluno,
-    sincronizarAlunos,
     
-    // Cursos - mapeamento para compatibilidade
-    buscarCursos: getCourses,
-    buscarCursoDetalhes: getCourseDetails,
-    criarCurso: (dados: any) => console.log('Função não implementada: criarCurso'),
-    atualizarCurso: (id: string, dados: any) => console.log('Função não implementada: atualizarCurso'),
+    // Cursos
     getCourses,
     getCourseDetails,
     getAllCourses,
     sincronizarCursos,
+    buscarCursos: getCourses,
+    buscarCursoDetalhes: getCourseDetails,
+    criarCurso: (dados: any) => console.log('Função não implementada: criarCurso'),
+    atualizarCurso: (id: string, dados: any) => console.log('Função não implementada: atualizarCurso'),
     
     // Matrículas
     matricularAlunoEmCurso,
