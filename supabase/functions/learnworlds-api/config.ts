@@ -20,8 +20,9 @@ export const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET
 // 🏫 Identificador da Escola no LearnWorlds
 export const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
 
-// 🌐 Endpoint base da API V2
+// 🌐 URLs da API do LearnWorlds
 export const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
+export const LEARNWORLDS_SCHOOL_API_URL = Deno.env.get("LEARNWORLDS_SCHOOL_API_URL") || "https://grupozayneducacional.com.br/admin/api";
 
 // 📆 Regras de controle de matrícula
 export const PRAZO_BLOQUEIO_DIAS = 30; // dias para bloqueio por inadimplência

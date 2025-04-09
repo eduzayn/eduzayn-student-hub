@@ -13,7 +13,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, AlertCircle } from "lucide-react";
+import { Info, AlertCircle, CheckCircle } from "lucide-react";
 import { NovoAlunoForm } from "./types";
 
 interface NovoAlunoDialogProps {
@@ -64,6 +64,16 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
             <AlertDescription>
               A conexão com a API do LearnWorlds está indisponível. Você pode cadastrar o aluno no modo offline, 
               mas ele será sincronizado apenas quando a conexão for restabelecida.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!offlineMode && (
+          <Alert variant="default" className="mb-4 border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <AlertTitle className="text-green-700">Integração API Direta</AlertTitle>
+            <AlertDescription className="text-green-600">
+              O cadastro será realizado diretamente na API da plataforma LearnWorlds da sua escola.
             </AlertDescription>
           </Alert>
         )}

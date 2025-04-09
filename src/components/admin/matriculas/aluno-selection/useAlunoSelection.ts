@@ -15,6 +15,7 @@ import {
   prepararDadosParaAPI,
   exibirErroAoCadastrar 
 } from "./novosAlunosService";
+import { apiDirectClient } from "@/hooks/learnworlds/utils/apiDirectClient";
 
 export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): UseAlunoSelectionReturn => {
   const [busca, setBusca] = useState("");
@@ -116,15 +117,50 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
         return;
       }
 
-      // Enviar para a API
-      console.log("Enviando dados do aluno:", prepararDadosParaAPI(formNovoAluno));
-      const resultado = await cadastrarAluno(prepararDadosParaAPI(formNovoAluno));
-      console.log("Resposta da API:", resultado);
+      // Preparar dados para a API
+      const dadosAluno = prepararDadosParaAPI(formNovoAluno);
+      
+      // Tentar primeiro a API direta da escola (rota principal solicitada)
+      try {
+        console.log("Tentando cadastrar aluno diretamente na API da escola");
+        
+        // Chamar a API direta da escola
+        const resultadoDireto = await apiDirectClient.createUser(dadosAluno);
+        console.log("Resposta da API direta:", resultadoDireto);
+        
+        // Processar o resultado
+        const { id: novoAlunoId, sucesso } = processarRespostaCadastro(resultadoDireto);
+        
+        if (sucesso) {
+          // Criar objeto do novo aluno para a interface
+          const novoAluno = criarObjetoAluno(formNovoAluno, novoAlunoId);
+          
+          // Adicionar à lista de alunos e selecionar
+          setAlunos(prev => [novoAluno, ...prev]);
+          handleSelecionar(novoAluno);
+          
+          finalizarCadastro();
+          toast.success("Aluno cadastrado com sucesso na plataforma!");
+          return;
+        }
+      } catch (erroApiDireta) {
+        console.error("Erro ao cadastrar aluno na API direta:", erroApiDireta);
+        toast.error("Não foi possível cadastrar o aluno diretamente na plataforma", {
+          description: "Tentando método alternativo via API do Edge Function..."
+        });
+        
+        // Continuar com o método de fallback
+      }
+
+      // Método de fallback: usar a Edge Function do Supabase
+      console.log("Usando método de fallback para cadastrar aluno");
+      const resultado = await cadastrarAluno(dadosAluno);
+      console.log("Resposta da API de fallback:", resultado);
 
       const { id: novoAlunoId, sucesso } = processarRespostaCadastro(resultado);
       
       if (!sucesso) {
-        throw new Error("Resposta inválida da API");
+        throw new Error("Falha em todos os métodos de cadastro de aluno");
       }
 
       // Criar objeto do novo aluno para a interface
@@ -135,7 +171,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       handleSelecionar(novoAluno);
       
       finalizarCadastro();
-      toast.success("Aluno cadastrado com sucesso!");
+      toast.success("Aluno cadastrado com sucesso (via método alternativo)!");
     } catch (error: any) {
       exibirErroAoCadastrar(error);
       
