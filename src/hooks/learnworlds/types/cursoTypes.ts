@@ -19,7 +19,8 @@ export interface Course {
 export interface CoursesResponse {
   data: Course[];
   meta?: {
-    currentPage: number;
+    currentPage?: number;
+    page?: number; // Adicionando compatibilidade com o formato da API
     totalPages: number;
     totalItems: number;
     itemsPerPage: number;
@@ -67,7 +68,8 @@ export interface ApiResponse<T> {
   success?: boolean;
   message?: string;
   meta?: {
-    currentPage: number;
+    currentPage?: number;
+    page?: number;
     totalPages: number;
     totalItems: number;
     itemsPerPage: number;

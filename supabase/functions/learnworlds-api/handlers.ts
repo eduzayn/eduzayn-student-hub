@@ -13,8 +13,10 @@ export async function handleCursos(req: Request, path: string): Promise<Response
     
     // Determinar curso específico se um ID for fornecido
     const pathParts = path.split("/").filter((p) => p);
-    const isSingleCourse = pathParts.length >= 2;
-    const courseId = isSingleCourse ? pathParts[1] : null;
+    const isSingleCourse = pathParts.length >= 1;
+    const courseId = isSingleCourse && pathParts.length > 0 ? pathParts[0] : null;
+    
+    console.log("Path parts:", pathParts, "isSingleCourse:", isSingleCourse, "courseId:", courseId);
     
     let apiPath = "/admin/api/v2/courses";
     if (courseId) {
@@ -24,7 +26,18 @@ export async function handleCursos(req: Request, path: string): Promise<Response
       const page = params.get("page") || "1";
       const limit = params.get("limit") || "20";
       apiPath += `?page=${page}&limit=${limit}`;
+      
+      // Adicionar outros parâmetros de consulta se presentes
+      if (params.has("q")) {
+        apiPath += `&q=${params.get("q")}`;
+      }
+      
+      if (params.has("categories")) {
+        apiPath += `&categories=${params.get("categories")}`;
+      }
     }
+    
+    console.log(`Chamando API LearnWorlds: ${apiPath}`);
     
     // Realizar a chamada à API do LearnWorlds
     // Não usamos OAuth para endpoints de cursos
@@ -54,9 +67,13 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
 
     // Determinar usuário específico se um ID for fornecido
     const pathParts = path.split("/").filter((p) => p);
-    const isUserWithCourse = pathParts.length >= 3 && pathParts[2] === "courses";
-    const isSingleUser = pathParts.length >= 2 && !isUserWithCourse;
-    const userId = isSingleUser || isUserWithCourse ? pathParts[1] : null;
+    console.log("Path parts para usuários:", pathParts);
+    
+    const isUserWithCourse = pathParts.length >= 2 && pathParts[1] === "courses";
+    const isSingleUser = pathParts.length >= 1 && !isUserWithCourse;
+    const userId = isSingleUser || isUserWithCourse ? pathParts[0] : null;
+    
+    console.log("isUserWithCourse:", isUserWithCourse, "isSingleUser:", isSingleUser, "userId:", userId);
     
     // Construir o caminho da API com base na requisição
     let apiPath = "/admin/api/v2/users";
@@ -64,8 +81,8 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     if (isUserWithCourse) {
       // Caso: /users/{userId}/courses/{courseId?}
       apiPath = `/admin/api/v2/users/${userId}/courses`;
-      if (pathParts.length >= 4) {
-        apiPath += `/${pathParts[3]}`; // courseId
+      if (pathParts.length >= 3) {
+        apiPath += `/${pathParts[2]}`; // courseId
       }
     } else if (isSingleUser) {
       // Caso: /users/{userId}
@@ -75,6 +92,11 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
       const page = params.get("page") || "1";
       const limit = params.get("limit") || "20";
       apiPath += `?page=${page}&limit=${limit}`;
+      
+      // Adicionar outros parâmetros se presentes
+      if (params.has("q")) {
+        apiPath += `&q=${params.get("q")}`;
+      }
     }
     
     // Processar corpo da requisição para métodos não-GET

@@ -7,6 +7,40 @@ import { getDadosSimulados, getDetalhesCursoSimulado } from '../utils/mockCursos
  */
 export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMode: any) => {
   /**
+   * Adapta o formato da resposta da API para o formato esperado
+   */
+  const adaptApiResponse = (response: any): CoursesResponse => {
+    if (!response || !response.data) {
+      return { data: [] };
+    }
+    
+    // Mapear os dados para o formato esperado
+    const formattedData = Array.isArray(response.data) 
+      ? response.data.map((curso: any) => {
+          const { simulado, ...restoCurso } = curso;
+          return { 
+            ...restoCurso,
+            api_oauth: true 
+          };
+        })
+      : [];
+    
+    // Adaptar metadados
+    const metaData = response.meta || {};
+    return {
+      data: formattedData,
+      meta: {
+        currentPage: metaData.page || metaData.currentPage || 1,
+        totalPages: metaData.totalPages || 1,
+        totalItems: metaData.totalItems || formattedData.length,
+        itemsPerPage: metaData.itemsPerPage || response.limit || 20
+      },
+      total: response.total || formattedData.length,
+      success: true
+    };
+  };
+
+  /**
    * Busca cursos do LearnWorlds com paginação
    */
   const getCourses = async (
@@ -72,26 +106,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
             setOfflineMode(false);
             
             // Adaptar formato de resposta para o esperado por CoursesResponse
-            const metaData = response.meta || {};
-            const formattedResponse: CoursesResponse = {
-              data: response.data.map((curso: any) => {
-                const { simulado, ...restoCurso } = curso;
-                return { 
-                  ...restoCurso,
-                  api_oauth: true 
-                };
-              }),
-              meta: {
-                currentPage: metaData.page || page,
-                totalPages: metaData.totalPages || 1,
-                totalItems: metaData.totalItems || response.data.length,
-                itemsPerPage: metaData.itemsPerPage || limit
-              },
-              total: response.total || response.data.length,
-              success: true
-            };
-            
-            return formattedResponse;
+            return adaptApiResponse(response);
           } else {
             console.error("⚠️ Os dados não têm as propriedades esperadas de cursos!");
           }

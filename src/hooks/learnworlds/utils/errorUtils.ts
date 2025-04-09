@@ -20,10 +20,12 @@ export const handleLearnWorldsApiError = (err: any, endpoint: string): string =>
   } else if (errorMessage.includes('No API key found')) {
     errorMessage = 'Chave de API do Supabase não encontrada na requisição. Verifique a configuração do cliente Supabase.';
   } else if (errorMessage.includes('HTML recebida') || errorMessage.includes('não-JSON') || errorMessage.includes('API retornou conteúdo')) {
-    errorMessage = 'A API retornou HTML em vez de JSON. Ativando modo offline para usar dados simulados.';
+    errorMessage = 'A API retornou HTML em vez de JSON. Isso pode indicar um problema de roteamento ou configuração da API.';
   } else if (errorMessage.includes('Lw-Client')) {
     errorMessage = 'Cabeçalho Lw-Client ausente ou incorreto. Verifique se o LEARNWORLDS_SCHOOL_ID está configurado corretamente.';
-  } 
+  } else if (errorMessage.includes('URL incorreta')) {
+    errorMessage = 'A URL da API está incorreta. Verifique se está usando /learnworlds-api/ em vez de /api/learnworlds-api/.';
+  }
   
   return errorMessage;
 };
@@ -59,4 +61,17 @@ export const handleApiError = (error: any, endpoint: string, showToast = true): 
   }
   
   return errorMessage;
+};
+
+/**
+ * Verifica se a resposta da API contém dados válidos
+ * @param response Resposta da API
+ * @returns Verdadeiro se a resposta contiver dados válidos
+ */
+export const hasValidData = (response: any): boolean => {
+  return response && 
+         response.data && 
+         Array.isArray(response.data) && 
+         response.data.length > 0 &&
+         !isHtmlResponse(JSON.stringify(response));
 };

@@ -38,26 +38,33 @@ const verificarToken = (req: Request): boolean => {
 // Configura o manipulador Deno para a função de borda
 Deno.serve(async (req) => {
   try {
+    // Log do caminho da solicitação para diagnóstico
+    const url = new URL(req.url);
+    console.log(`Recebendo solicitação: ${req.method} ${url.pathname}`);
+    
     // Responder a solicitações OPTIONS para CORS
     if (req.method === "OPTIONS") {
       return handleOptions();
     }
 
     // Extrair componentes da URL
-    const url = new URL(req.url);
-    
-    // Corrigir o problema de duplicação de path normalizando o path
     let path = url.pathname;
     
-    // Remover duplicação de "/learnworlds-api"
-    if (path.startsWith("/learnworlds-api/learnworlds-api")) {
-      path = path.replace("/learnworlds-api/learnworlds-api", "/learnworlds-api");
+    // Log do path original para diagnóstico
+    console.log("Path original:", path);
+    
+    // Remover duplicação de "/learnworlds-api" e variações
+    if (path.includes("learnworlds-api")) {
+      path = path.replace(/.*\/learnworlds-api\/?/, "/");
+      if (!path.startsWith("/")) {
+        path = "/" + path;
+      }
     }
     
-    // Remover o prefixo "/learnworlds-api" para processamento
-    path = path.replace("/learnworlds-api", "");
+    // Log do path normalizado
+    console.log("Path normalizado:", path);
     
-    console.log(`Recebendo requisição: ${req.method} ${path}`);
+    console.log(`Processando requisição: ${req.method} ${path}`);
 
     // Verificar autenticação
     if (!verificarToken(req)) {
@@ -75,7 +82,7 @@ Deno.serve(async (req) => {
       return await handleCursos(req, path);
     }
     else {
-      return new Response(JSON.stringify({ error: "Endpoint não encontrado" }), {
+      return new Response(JSON.stringify({ error: "Endpoint não encontrado", path: path }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
