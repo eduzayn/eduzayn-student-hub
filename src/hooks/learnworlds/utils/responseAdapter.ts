@@ -31,7 +31,8 @@ export const adaptApiResponse = (response: any): CoursesResponse => {
   // Adaptar metadados para o formato esperado de CoursesResponse
   const responseMeta = response.meta || {};
   
-  // Garantir que os campos sejam mapeados corretamente
+  // Mapear diretamente os campos para o formato esperado
+  // Se tiver o formato da API LearnWorlds (page, totalItems, etc.) adapta para o formato interno
   const meta = {
     total: responseMeta.totalItems || responseMeta.total || formattedData.length,
     pages: responseMeta.totalPages || responseMeta.pages || 1,

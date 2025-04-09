@@ -20,7 +20,7 @@ export const handleCourseRequest = async (
     const response = await makePublicRequest(endpoint);
     console.log("Resposta de cursos do LearnWorlds:", response);
     
-    // Processar e validar resposta
+    // Processar e adaptar resposta usando o adaptador
     return processApiResponse(response, setOfflineMode);
   } catch (error) {
     console.error("Erro ao buscar cursos:", error);
