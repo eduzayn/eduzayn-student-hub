@@ -19,7 +19,7 @@ export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "8BtSu
 // School ID da escola no LearnWorlds
 export const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
 
-// URL base correta da API mostrada na imagem
+// URL base correta da API conforme documentação
 export const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://grupozayneducacional.com.br/admin/api";
 
 // Credenciais OAuth (ID do cliente e Segredo do cliente vistos na imagem)

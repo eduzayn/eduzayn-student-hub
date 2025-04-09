@@ -1,7 +1,7 @@
 
 // Função de borda para interagir com a API do LearnWorlds
 import { corsHeaders } from "./config.ts";
-import { handleCursos, handleUsuarios } from "./handlers.ts";
+import { handleCursos, handleUsuarios, handleMatriculas } from "./handlers.ts";
 import { ADMIN_BYPASS_JWT, LEARNWORLDS_API_BASE_URL } from "./config.ts";
 
 // Responde às requisições OPTIONS para CORS
@@ -84,6 +84,10 @@ Deno.serve(async (req) => {
     else if (path.startsWith("/courses")) {
       // Adicionar parâmetros de consulta ao path passado para o manipulador
       return await handleCursos(req, `${path}${url.search}`);
+    }
+    else if (path.startsWith("/enrollments") || path.includes("/enrollments")) {
+      // Manipular requisições de matrícula
+      return await handleMatriculas(req, `${path}${url.search}`);
     }
     else {
       return new Response(JSON.stringify({ error: "Endpoint não encontrado", path: path }), {

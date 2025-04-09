@@ -34,6 +34,7 @@ export const buildRequestOptions = (
   body?: any, 
   useOAuth = false
 ): RequestInit => {
+  // Garantir que o Lw-Client esteja presente em todos os cabeçalhos
   const headers = {
     ...DEFAULT_HEADERS,
     'Lw-Client': DEFAULT_HEADERS['School-Id'] // Garantir que o Lw-Client esteja presente

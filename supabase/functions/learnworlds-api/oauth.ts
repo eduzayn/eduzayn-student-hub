@@ -8,6 +8,7 @@ let oauthTokenExpiry = 0;
 
 /**
  * Obtém um token OAuth para endpoints que precisam desse método de autenticação
+ * seguindo a especificação da API LearnWorlds para concessão de credenciais do cliente
  */
 export async function getOAuthToken(): Promise<string> {
   try {
@@ -35,14 +36,14 @@ export async function getOAuthToken(): Promise<string> {
     console.log(`CLIENT_ID configurado: ${LEARNWORLDS_CLIENT_ID ? "Sim (primeiros 4 caracteres: " + LEARNWORLDS_CLIENT_ID.substring(0, 4) + "...)" : "Não"}`);
     console.log(`CLIENT_SECRET configurado: ${LEARNWORLDS_CLIENT_SECRET ? "Sim (tamanho: " + LEARNWORLDS_CLIENT_SECRET.length + ")" : "Não"}`);
     
-    // Montar o corpo da requisição no formato URL-encoded
-    const body = new URLSearchParams();
-    body.append("grant_type", "client_credentials");
-    body.append("client_id", LEARNWORLDS_CLIENT_ID);
-    body.append("client_secret", LEARNWORLDS_CLIENT_SECRET);
+    // Seguindo o formato exato do exemplo da documentação
+    const requestBody = {
+      client_id: LEARNWORLDS_CLIENT_ID,
+      client_secret: LEARNWORLDS_CLIENT_SECRET,
+      grant_type: "client_credentials"
+    };
     
-    // Construir a URL correta do endpoint de token OAuth
-    // Com base na URL da página de API: https://grupozayneducacional.com.br/admin/api/oauth2/access_token
+    // Construir a URL correta do endpoint de token OAuth conforme documentação
     const tokenUrl = `${LEARNWORLDS_API_BASE_URL}/oauth2/access_token`;
     
     console.log(`Solicitando token OAuth em: ${tokenUrl}`);
@@ -50,10 +51,10 @@ export async function getOAuthToken(): Promise<string> {
     const tokenResponse = await fetch(tokenUrl, {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
         "Lw-Client": LEARNWORLDS_SCHOOL_ID // Adicionar o cabeçalho Lw-Client que é obrigatório
       },
-      body: body.toString(),
+      body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(10000)
     });
     

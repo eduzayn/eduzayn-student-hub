@@ -29,7 +29,6 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
     // Construir a URL completa com base no formato da API
-    // URL base correta: https://grupozayneducacional.com.br/admin/api
     let url = `${LEARNWORLDS_API_BASE_URL}`;
     
     // Verificar se o caminho já inclui / no início

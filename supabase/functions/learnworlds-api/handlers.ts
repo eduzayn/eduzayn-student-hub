@@ -99,6 +99,12 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
         const searchTerm = params.get("q") || params.get("search");
         apiPath += `&search=${searchTerm}`;
       }
+      
+      // Adicionar parâmetros para e-mail específico se fornecido
+      if (params.has("email")) {
+        const email = params.get("email");
+        apiPath += `&email=${email}`;
+      }
     }
     
     // Processar corpo da requisição para métodos não-GET
@@ -109,7 +115,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log(`Chamando API LearnWorlds: ${apiPath} (método: ${req.method})`);
     
-    // Usuários geralmente exigem OAuth na API v2
+    // Usuários sempre exigem OAuth na API v2
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     
@@ -119,6 +125,76 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     });
   } catch (error) {
     console.error(`Erro ao processar requisição de usuários: ${error.message}`);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+}
+
+/**
+ * Gerencia requisições de matrículas
+ */
+export async function handleMatriculas(req: Request, path: string): Promise<Response> {
+  try {
+    console.log(`Processando requisição de matrículas: ${req.method} ${path}`);
+    
+    // Determinar tipo de operação baseado no path e método
+    const pathParts = path.split("/").filter((p) => p);
+    
+    // Para endpoints de matrículas, sempre usamos OAuth
+    const useOAuth = true;
+    
+    // Caso: matrícula de usuário em curso (POST /enrollments)
+    if (req.method === "POST") {
+      const body = await req.json().catch(() => null);
+      if (!body) {
+        throw new Error("Corpo da requisição inválido");
+      }
+      
+      // Endpoint para matrícula de usuário em curso
+      const apiPath = "enrollments";
+      
+      console.log(`Chamando API LearnWorlds para matrícula: ${apiPath}`);
+      console.log("Dados da matrícula:", JSON.stringify(body));
+      
+      const result = await callLearnWorldsApi(apiPath, "POST", body, useOAuth);
+      
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    // Caso: verificar matrícula de usuário em curso
+    else if (req.method === "GET" && pathParts.includes("enrollments")) {
+      const url = new URL(req.url);
+      const userId = url.searchParams.get("user_id");
+      const courseId = url.searchParams.get("course_id");
+      
+      if (!userId || !courseId) {
+        throw new Error("Parâmetros user_id e course_id são obrigatórios");
+      }
+      
+      // Endpoint para verificar matrícula
+      const apiPath = `users/${userId}/enrollments?course_id=${courseId}`;
+      
+      console.log(`Chamando API LearnWorlds para verificar matrícula: ${apiPath}`);
+      
+      const result = await callLearnWorldsApi(apiPath, "GET", null, useOAuth);
+      
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    
+    // Endpoint não reconhecido
+    return new Response(JSON.stringify({ error: "Endpoint de matrícula não suportado" }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  } catch (error) {
+    console.error(`Erro ao processar requisição de matrícula: ${error.message}`);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
