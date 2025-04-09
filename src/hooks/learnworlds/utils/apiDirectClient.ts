@@ -29,18 +29,30 @@ export const apiDirectClient = {
     customField1?: string;
   }) {
     try {
-      console.log("📝 Enviando dados para API da escola:", userData);
+      console.log("📝 Enviando dados para API direta da escola:", userData);
+      
+      // Garantindo que temos todos os cabeçalhos necessários
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `OAuth ${this.credentials.clientId}:${this.credentials.clientSecret}`,
+        'School-Id': LEARNWORLDS_SCHOOL_ID,
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID,
+      };
+
+      console.log("🔑 Cabeçalhos da requisição:", {
+        ...headers,
+        'Authorization': 'OAuth [CREDENCIAIS]' // Log sem expor credenciais completas
+      });
       
       const response = await fetch(`${this.baseUrl}/users`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `OAuth ${this.credentials.clientId}:${this.credentials.clientSecret}`,
-          'School-Id': LEARNWORLDS_SCHOOL_ID,
-          'Lw-Client': LEARNWORLDS_SCHOOL_ID,
-        },
+        headers,
         body: JSON.stringify(userData),
       });
+
+      // Log detalhado da resposta para depuração
+      console.log("📡 Status da resposta:", response.status);
+      console.log("📡 Headers da resposta:", Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();

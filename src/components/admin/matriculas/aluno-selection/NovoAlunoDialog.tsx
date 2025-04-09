@@ -13,7 +13,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, AlertCircle, CheckCircle } from "lucide-react";
+import { Info, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { NovoAlunoForm } from "./types";
 
 interface NovoAlunoDialogProps {
@@ -73,7 +73,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
             <CheckCircle className="h-4 w-4 text-green-500" />
             <AlertTitle className="text-green-700">Integração API Direta</AlertTitle>
             <AlertDescription className="text-green-600">
-              O cadastro será realizado diretamente na API da plataforma LearnWorlds da sua escola.
+              O cadastro será realizado diretamente na API da plataforma LearnWorlds da sua escola (grupozayneducacional.com.br/admin/api).
             </AlertDescription>
           </Alert>
         )}
@@ -92,6 +92,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
                 className="mt-1"
                 required
                 placeholder="Nome"
+                disabled={loading}
               />
             </div>
             <div className="col-span-1">
@@ -105,6 +106,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
                 onChange={handleInputChange}
                 className="mt-1"
                 placeholder="Sobrenome"
+                disabled={loading}
               />
             </div>
           </div>
@@ -122,6 +124,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               className={`mt-1 ${formData.email && !isEmailValid(formData.email) ? 'border-red-500' : ''}`}
               required
               placeholder="aluno@exemplo.com"
+              disabled={loading}
             />
             {formData.email && !isEmailValid(formData.email) && (
               <p className="text-red-500 text-sm mt-1">Email inválido</p>
@@ -139,6 +142,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               onChange={handleInputChange}
               className="mt-1"
               placeholder="000.000.000-00"
+              disabled={loading}
             />
             <p className="text-xs text-muted-foreground mt-1">
               O CPF será armazenado no campo customField1 do LearnWorlds
@@ -156,6 +160,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
               onChange={handleInputChange}
               className="mt-1"
               placeholder="(00) 00000-0000"
+              disabled={loading}
             />
           </div>
         </div>
@@ -169,7 +174,7 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
         
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" disabled={loading}>
               Cancelar
             </Button>
           </DialogClose>
@@ -177,8 +182,16 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
             type="button" 
             onClick={handleCriarNovoAluno}
             disabled={loading || !isFormValid()}
+            className="min-w-[150px]"
           >
-            {loading ? "Cadastrando..." : offlineMode ? "Cadastrar Offline" : "Cadastrar Aluno"}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {offlineMode ? "Cadastrando..." : "Enviando..."}
+              </>
+            ) : (
+              offlineMode ? "Cadastrar Offline" : "Cadastrar Aluno"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

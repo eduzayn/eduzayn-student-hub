@@ -119,14 +119,16 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
 
       // Preparar dados para a API
       const dadosAluno = prepararDadosParaAPI(formNovoAluno);
+      console.log("🚀 Iniciando cadastro de aluno com dados:", dadosAluno);
       
       // Tentar primeiro a API direta da escola (rota principal solicitada)
       try {
-        console.log("Tentando cadastrar aluno diretamente na API da escola");
+        console.log("🔄 Tentando cadastrar aluno diretamente na API da escola");
+        toast.loading("Cadastrando aluno na plataforma...");
         
         // Chamar a API direta da escola
         const resultadoDireto = await apiDirectClient.createUser(dadosAluno);
-        console.log("Resposta da API direta:", resultadoDireto);
+        console.log("✅ Resposta da API direta:", resultadoDireto);
         
         // Processar o resultado
         const { id: novoAlunoId, sucesso } = processarRespostaCadastro(resultadoDireto);
@@ -144,7 +146,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
           return;
         }
       } catch (erroApiDireta) {
-        console.error("Erro ao cadastrar aluno na API direta:", erroApiDireta);
+        console.error("❌ Erro ao cadastrar aluno na API direta:", erroApiDireta);
         toast.error("Não foi possível cadastrar o aluno diretamente na plataforma", {
           description: "Tentando método alternativo via API do Edge Function..."
         });
@@ -153,9 +155,11 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       }
 
       // Método de fallback: usar a Edge Function do Supabase
-      console.log("Usando método de fallback para cadastrar aluno");
+      console.log("🔄 Usando método de fallback para cadastrar aluno");
+      toast.loading("Tentando método alternativo de cadastro...");
+      
       const resultado = await cadastrarAluno(dadosAluno);
-      console.log("Resposta da API de fallback:", resultado);
+      console.log("📄 Resposta da API de fallback:", resultado);
 
       const { id: novoAlunoId, sucesso } = processarRespostaCadastro(resultado);
       

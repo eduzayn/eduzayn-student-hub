@@ -6,17 +6,21 @@ import { Aluno, NovoAlunoForm } from "./types";
  * Processa resposta da API ao cadastrar novo aluno
  */
 export const processarRespostaCadastro = (resultado: any): { id: string; sucesso: boolean } => {
+  console.log("🔄 Processando resposta da API:", resultado);
+  
   let novoAlunoId: string;
   
   if (resultado && resultado.id) {
     // Formato esperado da API
     novoAlunoId = resultado.id;
+    console.log("✅ ID do usuário criado:", novoAlunoId);
     return { id: novoAlunoId, sucesso: true };
   } 
   
   if (resultado && typeof resultado === 'object' && 'text' in resultado) {
     // Formato alternativo (resposta HTML ou outro formato)
     novoAlunoId = `local-${Date.now()}`;
+    console.log("⚠️ Resposta da API em formato não-padrão, usando ID local:", novoAlunoId);
     
     toast.info("Resposta da API em formato não-padrão, usando ID local", {
       description: "A sincronização completa pode ser necessária mais tarde."
@@ -27,6 +31,7 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
   if (resultado && typeof resultado === 'object') {
     // Quando recebemos um objeto, mas sem o ID esperado
     novoAlunoId = `local-${Date.now()}`;
+    console.log("⚠️ Resposta da API sem ID, usando ID local:", novoAlunoId, "Resposta:", resultado);
     
     toast.info("Resposta da API sem ID, usando ID local", {
       description: "A sincronização completa pode ser necessária mais tarde."
@@ -37,6 +42,7 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
   if (resultado === null || resultado === undefined) {
     // Quando a resposta é nula, possível erro na API
     novoAlunoId = `local-${Date.now()}`;
+    console.log("⚠️ Resposta nula da API, usando ID local:", novoAlunoId);
     
     toast.warning("Resposta nula da API, usando ID local", {
       description: "O cadastro pode não ter sido concluído no servidor."
@@ -45,6 +51,7 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
   }
   
   // Quando a resposta não se enquadra em nenhum dos casos acima
+  console.error("❌ Formato de resposta desconhecido:", resultado);
   return { id: '', sucesso: false };
 };
 
@@ -109,6 +116,7 @@ export const prepararDadosParaAPI = (formulario: NovoAlunoForm): any => {
     Object.assign(dadosAluno, { customField1: formulario.cpf });
   }
   
+  console.log("📝 Dados formatados para API:", dadosAluno);
   return dadosAluno;
 };
 
@@ -116,7 +124,7 @@ export const prepararDadosParaAPI = (formulario: NovoAlunoForm): any => {
  * Exibe mensagem de erro adequada ao cadastrar aluno
  */
 export const exibirErroAoCadastrar = (error: any): void => {
-  console.error("Erro ao criar novo aluno:", error);
+  console.error("❌ Erro ao criar novo aluno:", error);
   
   if (error.message && (
       error.message.includes("Failed to fetch") || 
