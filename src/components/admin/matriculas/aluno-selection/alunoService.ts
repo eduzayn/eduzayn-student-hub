@@ -4,49 +4,6 @@ import { AlunoDTO } from "@/hooks/learnworlds/useLearnWorldsAlunos";
 import { toast } from "sonner";
 
 /**
- * Carrega uma lista de alunos simulados para uso em modo offline
- */
-export const carregarAlunosSimulados = (termoBusca = ""): Aluno[] => {
-  const alunosSimulados: Aluno[] = [
-    {
-      id: "sim-1",
-      nome: "João Silva",
-      email: "joao@exemplo.com.br",
-      cpf: "123.456.789-00",
-      telefone: "(11) 98765-4321",
-      simulado: true
-    },
-    {
-      id: "sim-2",
-      nome: "Maria Oliveira",
-      email: "maria@exemplo.com.br",
-      cpf: "987.654.321-00",
-      telefone: "(11) 91234-5678",
-      simulado: true
-    },
-    {
-      id: "sim-3",
-      nome: "Carlos Santos",
-      email: "carlos@exemplo.com.br",
-      cpf: "456.789.123-00",
-      telefone: "(21) 98765-4321",
-      simulado: true
-    }
-  ];
-
-  if (!termoBusca) return alunosSimulados;
-
-  // Filtrar alunos simulados pelo termo de busca
-  const termoBuscaLower = termoBusca.toLowerCase();
-  return alunosSimulados.filter(
-    aluno =>
-      aluno.nome?.toLowerCase().includes(termoBuscaLower) ||
-      aluno.email?.toLowerCase().includes(termoBuscaLower) ||
-      aluno.cpf?.toLowerCase().includes(termoBuscaLower)
-  );
-};
-
-/**
  * Mapeia alunos da API para o formato interno
  */
 export const mapearAlunosDeAPI = (alunosAPI: AlunoDTO[]): Aluno[] => {

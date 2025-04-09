@@ -13,7 +13,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Info, CheckCircle, Loader2 } from "lucide-react";
 import { NovoAlunoForm } from "./types";
 
 interface NovoAlunoDialogProps {
@@ -33,7 +33,6 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
   handleInputChange,
   handleCriarNovoAluno,
   loading,
-  offlineMode,
 }) => {
   // Função para validar o email
   const isEmailValid = (email: string): boolean => {
@@ -51,32 +50,17 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
           <DialogDescription>
-            {offlineMode 
-              ? "Você está em modo offline. Os dados serão armazenados localmente até que a conexão seja restabelecida."
-              : "Preencha os dados do aluno para cadastrá-lo na plataforma LearnWorlds e no sistema."}
+            Preencha os dados do aluno para cadastrá-lo na plataforma LearnWorlds e no sistema.
           </DialogDescription>
         </DialogHeader>
         
-        {offlineMode && (
-          <Alert variant="warning" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Modo Offline Ativo</AlertTitle>
-            <AlertDescription>
-              A conexão com a API do LearnWorlds está indisponível. Você pode cadastrar o aluno no modo offline, 
-              mas ele será sincronizado apenas quando a conexão for restabelecida.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {!offlineMode && (
-          <Alert variant="default" className="mb-4 border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <AlertTitle className="text-green-700">Integração API Direta</AlertTitle>
-            <AlertDescription className="text-green-600">
-              O cadastro será realizado diretamente na API da plataforma LearnWorlds da sua escola (grupozayneducacional.com.br/admin/api).
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert variant="default" className="mb-4 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-700">Integração API Direta</AlertTitle>
+          <AlertDescription className="text-green-600">
+            O cadastro será realizado diretamente na API da plataforma LearnWorlds da sua escola (grupozayneducacional.com.br/admin/api).
+          </AlertDescription>
+        </Alert>
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -187,10 +171,10 @@ const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {offlineMode ? "Cadastrando..." : "Enviando..."}
+                Enviando...
               </>
             ) : (
-              offlineMode ? "Cadastrar Offline" : "Cadastrar Aluno"
+              "Cadastrar Aluno"
             )}
           </Button>
         </DialogFooter>

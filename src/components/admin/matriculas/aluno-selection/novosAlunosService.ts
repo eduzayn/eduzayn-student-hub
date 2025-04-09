@@ -70,24 +70,6 @@ export const criarObjetoAluno = (formulario: NovoAlunoForm, id: string): Aluno =
 };
 
 /**
- * Cria objeto de aluno para modo offline
- */
-export const criarAlunoOffline = (formulario: NovoAlunoForm): Aluno => {
-  const offlineId = `offline-${Date.now()}`;
-  
-  return {
-    id: offlineId,
-    nome: `${formulario.nome} ${formulario.sobrenome}`.trim(),
-    email: formulario.email,
-    cpf: formulario.cpf,
-    telefone: formulario.telefone,
-    simulado: true,
-    offline: true,
-    learnworlds_id: offlineId
-  };
-};
-
-/**
  * Prepara dados do aluno para envio à API
  * 
  * Formato exigido pela LearnWorlds:
@@ -128,13 +110,10 @@ export const exibirErroAoCadastrar = (error: any): void => {
   
   if (error.message && (
       error.message.includes("Failed to fetch") || 
-      error.message.includes("Erro de conexão") ||
-      error.message.includes("função edge") ||
-      error.message.includes("API retornou conteúdo não-JSON") ||
-      error.message.includes("HTML recebida")
+      error.message.includes("Erro de conexão")
   )) {
     toast.error("Erro de conexão com a API", {
-      description: "A API está retornando dados no formato incorreto. Ativando modo offline."
+      description: "Verifique sua conexão com a internet e tente novamente."
     });
     
     return;
