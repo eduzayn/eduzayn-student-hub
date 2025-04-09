@@ -28,8 +28,16 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     // Remover qualquer barra inicial para não criar URLs malformadas
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
-    // Construir a URL completa
-    const url = `${LEARNWORLDS_API_BASE_URL}/${cleanPath}`;
+    // Construir a URL completa com base no formato da API
+    // URL base correta: https://grupozayneducacional.com.br/admin/api
+    let url = `${LEARNWORLDS_API_BASE_URL}`;
+    
+    // Verificar se o caminho já inclui / no início
+    if (!url.endsWith('/') && !cleanPath.startsWith('/')) {
+      url += '/';
+    }
+    url += cleanPath;
+    
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     
     let authToken;
@@ -48,11 +56,11 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       console.log("Usando token de acesso API Key para autenticação");
     }
     
-    // Configurar os headers com School ID
+    // Configurar os headers com School ID (Lw-Client é obrigatório!)
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${authToken}`,
-      'School-Id': LEARNWORLDS_SCHOOL_ID
+      'Lw-Client': LEARNWORLDS_SCHOOL_ID
     };
     
     const options: RequestInit = {

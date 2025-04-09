@@ -17,7 +17,7 @@ export const getRequestHeaders = (usePublicToken: boolean, apiToken: string, sch
   return {
     'Authorization': finalAuthHeader,
     'Content-Type': 'application/json',
-    'Lw-Client': schoolId // Cabeçalho Lw-Client obrigatório
+    'Lw-Client': schoolId // Cabeçalho Lw-Client obrigatório conforme documentação
   };
 };
 

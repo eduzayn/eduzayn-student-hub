@@ -35,7 +35,8 @@ export const buildRequestOptions = (
   useOAuth = false
 ): RequestInit => {
   const headers = {
-    ...DEFAULT_HEADERS
+    ...DEFAULT_HEADERS,
+    'Lw-Client': DEFAULT_HEADERS['School-Id'] // Garantir que o Lw-Client esteja presente
   };
   
   // Não adicionar Authorization aqui - será adicionado posteriormente
@@ -85,7 +86,7 @@ export const makeApiRequest = async (
   // Normalizar endpoint
   const normalizedEndpoint = normalizeEndpoint(endpoint);
   
-  // Construir URL completa
+  // Construir URL completa - com v1 correto na URL
   const url = `${LEARNWORLDS_API_ENDPOINT}/${normalizedEndpoint}`;
   console.log(`Fazendo requisição para: ${url}`);
   
