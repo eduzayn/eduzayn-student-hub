@@ -28,8 +28,18 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     // Remover qualquer barra inicial para não criar URLs malformadas
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     
+    // Determinar versão da API: endpoints de usuários usam v2, o resto usa admin/api
+    let baseApiUrl = LEARNWORLDS_API_BASE_URL;
+    if (cleanPath.startsWith('users') || cleanPath.includes('/users')) {
+      baseApiUrl = `${LEARNWORLDS_API_BASE_URL}/v2`;
+      console.log("Usando endpoint v2 para usuários:", baseApiUrl);
+    } else {
+      baseApiUrl = `${LEARNWORLDS_API_BASE_URL}/admin/api`;
+      console.log("Usando endpoint admin/api para outras chamadas:", baseApiUrl);
+    }
+    
     // Construir a URL completa com base no formato da API
-    let url = `${LEARNWORLDS_API_BASE_URL}`;
+    let url = baseApiUrl;
     
     // Verificar se o caminho já inclui / no início
     if (!url.endsWith('/') && !cleanPath.startsWith('/')) {

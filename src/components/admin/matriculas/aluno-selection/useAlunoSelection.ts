@@ -37,32 +37,43 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
   
   const carregarAlunos = async (termoBusca = "") => {
     try {
-      const resultado = await getUsers(1, 20);
-      
-      if (!resultado || !resultado.data) {
-        throw new Error("Erro ao carregar alunos do LearnWorlds");
-      }
-      
-      // Mapear alunos da API e marcar como não simulados
-      const alunosFormatados = mapearAlunosDeAPI(resultado.data)
-        .map(aluno => ({
-          ...aluno,
-          simulado: false,
-          simulatedResponse: false
-        }));
-        
-      setAlunos(alunosFormatados);
-      
-      // Se estamos em modo offline, carregamos dados simulados em vez de misturar
       if (offlineMode) {
-        setAlunos(carregarAlunosSimulados(termoBusca));
+        console.log("Usando modo offline para carregar alunos");
+        const alunosSimulados = carregarAlunosSimulados(termoBusca);
+        setAlunos(alunosSimulados);
         toast.warning("Usando dados simulados para alunos", {
           description: "A API do LearnWorlds está indisponível."
         });
+        return;
       }
+      
+      console.log("Carregando alunos do LearnWorlds com termo:", termoBusca);
+      const resultado = await getUsers(1, 20, termoBusca);
+      
+      if (!resultado || !resultado.data) {
+        console.warn("Nenhum dado retornado pela API");
+        setAlunos([]);
+        return;
+      }
+      
+      console.log("Dados obtidos da API:", resultado.data);
+      
+      // Mapear alunos da API para o formato esperado pelo componente
+      const alunosFormatados = mapearAlunosDeAPI(resultado.data);
+      console.log("Alunos formatados:", alunosFormatados);
+      
+      setAlunos(alunosFormatados);
     } catch (error) {
+      console.error("Erro ao carregar alunos:", error);
       tratarErroCarregamento(error);
-      setAlunos(carregarAlunosSimulados(termoBusca));
+      
+      // Se ocorrer erro, usar dados simulados
+      const alunosSimulados = carregarAlunosSimulados(termoBusca);
+      setAlunos(alunosSimulados);
+      
+      if (setOfflineMode) {
+        setOfflineMode(true);
+      }
     }
   };
   

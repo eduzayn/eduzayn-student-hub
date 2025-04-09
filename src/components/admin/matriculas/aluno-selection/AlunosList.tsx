@@ -17,20 +17,18 @@ const AlunosList: React.FC<AlunosListProps> = ({ alunos, selecionado, onSelecion
     return null; // O componente de loading é tratado pelo componente pai
   }
   
-  // Filtrar alunos simulados - apenas se não estiver em modo offline
-  const alunosExibir = offlineMode 
-    ? alunos.filter(aluno => aluno.nome) // Em modo offline, mostramos os simulados também, mas filtramos os sem nome
-    : alunos.filter(aluno => 
-        !aluno.simulado && 
-        !aluno.simulatedResponse && 
-        aluno.nome // Garantir que tenha um nome
-      );
+  // Filtrar apenas alunos válidos
+  const alunosExibir = alunos.filter(aluno => 
+    // Aluno precisa ter email ou nome para ser exibido
+    aluno.email || aluno.nome
+  );
   
   if (alunosExibir.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         <User className="mx-auto h-12 w-12 opacity-20 mb-2" />
         <p>Nenhum aluno encontrado</p>
+        <p className="text-xs mt-1">Verifique os critérios de busca ou cadastre um novo aluno</p>
       </div>
     );
   }

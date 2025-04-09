@@ -79,6 +79,15 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     // Construir o caminho da API baseado na requisição (adaptado para API v2)
     let apiPath = "users";
     
+    // Parâmetros da API v2 para listagem de usuários
+    const page = params.get("page") || "1";
+    const itemsPerPage = params.get("limit") || params.get("per_page") || "20";
+    const role = params.get("role") || params.get("role");
+    const status = params.get("status") || params.get("status");
+    const searchTerm = params.get("q") || params.get("search") || params.get("email");
+    const tags = params.get("tags");
+    const includeSuspended = params.get("include_suspended");
+    
     if (isUserWithCourse) {
       // Caso: /users/{userId}/courses/{courseId?}
       apiPath = `users/${userId}/enrollments`;
@@ -89,21 +98,28 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
       // Caso: /users/{userId}
       apiPath += `/${userId}`;
     } else {
-      // Caso: /users (listar todos) - API v2 usa per_page em vez de limit
-      const page = params.get("page") || "1";
-      const perPage = params.get("limit") || params.get("per_page") || "20";
-      apiPath += `?page=${page}&per_page=${perPage}`;
+      // Caso: /users (listar todos) - utilizando parâmetros da API v2
+      apiPath += `?page=${page}&items_per_page=${itemsPerPage}`;
       
       // Adicionar outros parâmetros se presentes
-      if (params.has("q") || params.has("search")) {
-        const searchTerm = params.get("q") || params.get("search");
-        apiPath += `&search=${searchTerm}`;
+      if (searchTerm) {
+        apiPath += `&email=${encodeURIComponent(searchTerm)}`;
       }
       
-      // Adicionar parâmetros para e-mail específico se fornecido
-      if (params.has("email")) {
-        const email = params.get("email");
-        apiPath += `&email=${email}`;
+      if (role) {
+        apiPath += `&role=${role}`;
+      }
+      
+      if (status) {
+        apiPath += `&status=${status}`;
+      }
+      
+      if (tags) {
+        apiPath += `&tags=${encodeURIComponent(tags)}`;
+      }
+      
+      if (includeSuspended) {
+        apiPath += `&include_suspended=${includeSuspended}`;
       }
     }
     
@@ -119,8 +135,22 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     
+    // Padronizar formato da resposta para compatibilidade com frontend
+    let responseData = result;
+    
+    // Se for listagem de usuários, adaptar para o formato esperado pelo frontend
+    if (!isSingleUser && !isUserWithCourse && result.data) {
+      responseData = {
+        data: result.data,
+        total: result.meta?.totalItems || result.data.length,
+        page: result.meta?.page || 1,
+        per_page: result.meta?.itemsPerPage || 20,
+        total_pages: result.meta?.totalPages || 1
+      };
+    }
+    
     // Retornar resposta com cabeçalhos CORS adequados
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(responseData), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
