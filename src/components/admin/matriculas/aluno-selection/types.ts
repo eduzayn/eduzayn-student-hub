@@ -44,7 +44,7 @@ export interface NovoAlunoForm {
   nome: string;
   sobrenome: string;
   email: string;
-  cpf?: string;
+  cpf?: string; // Alterado para opcional
   telefone?: string;
 }
 

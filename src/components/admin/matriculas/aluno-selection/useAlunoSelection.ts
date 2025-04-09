@@ -25,7 +25,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
     nome: "",
     sobrenome: "",
     email: "",
-    cpf: "",
+    cpf: "", // Será tratado como opcional
     telefone: ""
   });
   
