@@ -61,66 +61,64 @@ const DetalheCurso: React.FC = () => {
     toast.error(`Curso com ID ${courseId} não encontrado`);
     console.warn(`Curso com ID ${courseId} não encontrado na lista de cursos disponíveis`);
     return (
-      <MainLayout>
+      <div className="bg-gray-50 py-8">
         <CourseNotFound courseId={courseId || ""} />
-      </MainLayout>
+      </div>
     );
   }
   
   const curso = mockCourses[courseId];
   
   return (
-    <MainLayout>
-      <div className="bg-gray-50 py-8">
-        <div className="eduzayn-container">
-          {/* Breadcrumb */}
-          <div className="text-sm text-gray-500 mb-6">
-            <Link to="/" className="hover:text-primary">Home</Link>
-            <span className="mx-2">/</span>
-            <Link to="/cursos" className="hover:text-primary">Cursos</Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-700">{curso.title}</span>
-          </div>
-          
-          {/* Seção principal */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Informações do curso */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <CourseImage 
-                  image={courseImage || curso.image}
-                  title={curso.title}
-                  category={curso.category}
-                  loading={loading}
-                />
-                
-                <CourseHeader 
-                  title={curso.title}
-                  duration={curso.duration}
-                  modalidade={curso.modalidade}
-                  certification={curso.certification}
-                />
-                
-                <CourseDescription 
-                  description={curso.description}
-                  loading={loading}
-                />
-              </div>
-            </div>
-            
-            {/* Card de matrícula */}
-            <div className="lg:col-span-1">
-              <CourseEnrollCard 
-                id={courseId}
-                price={curso.price}
-                modalidade={curso.modalidade}
+    <div className="bg-gray-50 py-8">
+      <div className="eduzayn-container">
+        {/* Breadcrumb */}
+        <div className="text-sm text-gray-500 mb-6">
+          <Link to="/" className="hover:text-primary">Home</Link>
+          <span className="mx-2">/</span>
+          <Link to="/cursos" className="hover:text-primary">Cursos</Link>
+          <span className="mx-2">/</span>
+          <span className="text-gray-700">{curso.title}</span>
+        </div>
+        
+        {/* Seção principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Informações do curso */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <CourseImage 
+                image={courseImage || curso.image}
+                title={curso.title}
+                category={curso.category}
+                loading={loading}
+              />
+              
+              <CourseHeader 
+                title={curso.title}
                 duration={curso.duration}
+                modalidade={curso.modalidade}
+                certification={curso.certification}
+              />
+              
+              <CourseDescription 
+                description={curso.description}
+                loading={loading}
               />
             </div>
           </div>
+          
+          {/* Card de matrícula */}
+          <div className="lg:col-span-1">
+            <CourseEnrollCard 
+              id={courseId}
+              price={curso.price}
+              modalidade={curso.modalidade}
+              duration={curso.duration}
+            />
+          </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
