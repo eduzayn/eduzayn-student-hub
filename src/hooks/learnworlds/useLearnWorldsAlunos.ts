@@ -1,3 +1,4 @@
+
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import useLearnWorldsBase from "./useLearnWorldsBase";
 
@@ -42,14 +43,17 @@ const useLearnWorldsAlunos = () => {
 
   /**
    * Obtém a lista de usuários/alunos do LearnWorlds
+   * Importante: Este endpoint requer autenticação OAuth
    */
   const getUsers = useCallback(async (page = 1, limit = 10, query = ""): Promise<{ total: number; data: AlunoDTO[] }> => {
     try {
+      console.log("Buscando usuários com autenticação OAuth...");
       const endpoint = `learnworlds-api/users?page=${page}&limit=${limit}${query ? `&q=${encodeURIComponent(query)}` : ''}`;
       
       const response = await makeRequest(endpoint, 'GET');
       
       if (response && response.data) {
+        console.log("Usuários carregados com sucesso via OAuth");
         setDadosListagem({
           total: response.total || response.data.length,
           data: response.data
@@ -69,14 +73,16 @@ const useLearnWorldsAlunos = () => {
 
   /**
    * Cadastra um novo aluno no LearnWorlds
+   * Importante: Este endpoint requer autenticação OAuth
    */
   const cadastrarAluno = useCallback(async (dados: CadastrarAlunoDTO): Promise<AlunoDTO | null> => {
     try {
-      console.log("Tentando cadastrar aluno:", dados);
+      console.log("Tentando cadastrar aluno via OAuth:", dados);
       
       const response = await makeRequest('learnworlds-api/users', 'POST', dados);
       
       if (response) {
+        console.log("Aluno cadastrado com sucesso via OAuth");
         return response;
       }
       
@@ -90,10 +96,11 @@ const useLearnWorldsAlunos = () => {
   /**
    * Sincroniza alunos do LearnWorlds com o sistema
    * @param todos Se verdadeiro, sincroniza todos os alunos. Caso contrário, apenas os novos ou modificados.
+   * Importante: Este endpoint requer autenticação OAuth
    */
   const sincronizarAlunos = useCallback(async (todos: boolean = false): Promise<any> => {
     try {
-      console.log(`Iniciando sincronização de alunos. Sincronizar todos: ${todos}`);
+      console.log(`Iniciando sincronização de alunos via OAuth. Sincronizar todos: ${todos}`);
       
       // Parâmetros para a função de sincronização
       const params = todos ? { completa: true } : {};

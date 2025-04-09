@@ -34,10 +34,12 @@ const CursosLista: React.FC<CursosListaProps> = ({
   // Verificações específicas de origem de dados
   const cursosSimulados = cursosExibir.filter(c => c.simulado === true).length;
   const cursosAPI = cursosExibir.filter(c => c.api_token === true).length;
+  const cursosOAuth = cursosExibir.filter(c => c.api_oauth === true).length;
   const cursosReais = cursosExibir.length - cursosSimulados;
   
   console.log("Cursos simulados:", cursosSimulados);
   console.log("Cursos API com token:", cursosAPI);
+  console.log("Cursos API com OAuth:", cursosOAuth);
   console.log("Cursos reais:", cursosReais);
   
   if (cursosExibir.length === 0) {
@@ -80,6 +82,9 @@ const CursosLista: React.FC<CursosListaProps> = ({
         {cursosAPI > 0 && (
           <span className="text-green-600"> ({cursosAPI} via API Token)</span>
         )}
+        {cursosOAuth > 0 && (
+          <span className="text-blue-600"> ({cursosOAuth} via OAuth)</span>
+        )}
       </div>
       
       {cursosExibir.map(curso => (
@@ -89,7 +94,8 @@ const CursosLista: React.FC<CursosListaProps> = ({
             ...curso,
             // Garantir que simulado seja um booleano explícito usando o valor existente
             simulado: curso.simulado === true,
-            api_token: curso.api_token === true
+            api_token: curso.api_token === true,
+            api_oauth: curso.api_oauth === true
           }} 
           selecionado={isCursoSelecionado(curso)}
           onSelecionar={onSelecionar} 

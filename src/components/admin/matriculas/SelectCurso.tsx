@@ -7,7 +7,7 @@ import OfflineModeIndicator from "./OfflineModeIndicator";
 import useCursoSelection from "./hooks/useCursoSelection";
 import CursosPagination from "./cursos/lista/CursosPagination";
 import { Button } from "@/components/ui/button";
-import { X, AlertTriangle, ExternalLink, RefreshCw, CheckCircle2 } from "lucide-react";
+import { X, AlertTriangle, ExternalLink, RefreshCw, CheckCircle2, Lock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -37,6 +37,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   const [todosCursosSimulados, setTodosCursosSimulados] = useState<boolean>(false);
   const [problemaDeDados, setProblemasDeDados] = useState<boolean>(false);
   const [cursosAPI, setCursosAPI] = useState<number>(0);
+  const [cursosOAuth, setCursosOAuth] = useState<number>(0);
   
   // Verificar quando os cursos são carregados
   useEffect(() => {
@@ -46,9 +47,12 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       const todosCursosMaradosComoSimulados = cursosSimuladosCount === cursos.length;
       setTodosCursosSimulados(todosCursosMaradosComoSimulados);
       
-      // Contar cursos API
+      // Contar cursos API e OAuth
       const countAPI = cursos.filter(curso => curso.api_token === true).length;
       setCursosAPI(countAPI);
+      
+      const countOAuth = cursos.filter(curso => curso.api_oauth === true).length;
+      setCursosOAuth(countOAuth);
       
       // Verificar se os IDs dos cursos parecem problemáticos
       const idsSuspeitosComCourse = cursos.filter(curso => 
@@ -115,6 +119,25 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
             </p>
             <p className="mt-1">
               {cursosAPI} cursos carregados via API do LearnWorlds com token de acesso.
+              {cursosOAuth > 0 && (
+                <span className="ml-1 text-blue-600">
+                  ({cursosOAuth} via OAuth)
+                </span>
+              )}
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!offlineMode && !todosCursosSimulados && cursosOAuth > 0 && cursosAPI === 0 && !loading && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <Lock className="h-4 w-4 text-blue-500" />
+          <AlertDescription>
+            <p className="font-medium text-blue-700">
+              Conexão OAuth com LearnWorlds estabelecida!
+            </p>
+            <p className="mt-1">
+              {cursosOAuth} cursos carregados via autenticação OAuth segura.
             </p>
           </AlertDescription>
         </Alert>

@@ -10,7 +10,7 @@ export const getPublicAuthorizationHeader = (publicToken: string): string => {
 
 export const getRequestHeaders = (usePublicToken: boolean, publicToken: string, schoolId: string): HeadersInit => {
   // IMPORTANTE: Usar o token administrativo para todas as requisições
-  // A API está rejeitando o token público, então usaremos o token admin para todas requisições
+  // A API está configurada para usar diferentes métodos de autenticação dependendo do endpoint
   const finalAuthHeader = getAuthorizationHeader();
   
   return {

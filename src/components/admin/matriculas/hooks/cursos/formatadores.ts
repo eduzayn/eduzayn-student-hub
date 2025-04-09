@@ -51,7 +51,9 @@ export const formatarCursos = (cursosAPI: any[]): any[] => {
       simulado: false,
       simulatedResponse: false,
       // Atributo para identificar a origem dos dados (API direta com token)
-      api_token: true
+      api_token: true,
+      // Campo para identificar dados obtidos via OAuth
+      api_oauth: true
     };
   });
 };
