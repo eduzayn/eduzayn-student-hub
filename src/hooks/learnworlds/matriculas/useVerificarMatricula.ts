@@ -20,11 +20,17 @@ const useVerificarMatricula = () => {
         console.log("Modo offline detectado, retornando status simulado");
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: "active",
+            enrollment_date: new Date().toISOString()
+          }
         };
       }
 
@@ -35,12 +41,18 @@ const useVerificarMatricula = () => {
       if (result && !result.error) {
         return {
           id: result.id || `${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: result.status || "active",
           enrollmentDate: result.enrollmentDate || new Date().toISOString(),
           expirationDate: result.expirationDate,
-          learnworlds_id: result.id
+          learnworlds_id: result.id,
+          data: {
+            id: result.id || `${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: result.status || "active",
+            enrollment_date: result.enrollmentDate || new Date().toISOString()
+          }
         };
       } else if (result && result.error && result.error.includes("not enrolled")) {
         // Aluno não está matriculado
@@ -54,11 +66,17 @@ const useVerificarMatricula = () => {
       if (offlineMode) {
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: "active",
+            enrollment_date: new Date().toISOString()
+          }
         };
       }
       

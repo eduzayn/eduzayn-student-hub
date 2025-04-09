@@ -39,12 +39,17 @@ export interface SincronizacaoResult {
   syncedItems?: number;
 }
 
-// Interface EnrollmentResponse corrigida com id e simulatedResponse
 export interface EnrollmentResponse {
-  success: boolean;
+  success?: boolean;
   error?: string;
-  id?: string; // Adicionado id como opcional
-  simulatedResponse?: boolean; // Adicionado para identificar respostas simuladas
+  id?: string;
+  simulatedResponse?: boolean;
+  userId?: string;
+  courseId?: string;
+  status?: string;
+  enrollmentDate?: string;
+  expirationDate?: string;
+  learnworlds_id?: string;
   data?: {
     id: string;
     student_id: string;
@@ -54,4 +59,18 @@ export interface EnrollmentResponse {
     completion_date?: string;
     progress?: number;
   };
+}
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  success?: boolean;
+  message?: string;
+  meta?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+  total?: number;
 }

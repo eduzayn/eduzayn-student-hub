@@ -37,12 +37,18 @@ const useMatricularAluno = () => {
         console.log("Modo offline detectado, usando matricula simulada");
         const simulatedResponse: EnrollmentResponse = {
           id: `simulated-enrollment-${Date.now()}`,
-          userId: alunoId,
           courseId: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
           learnworlds_id: `lw-${alunoId}-${cursoId}`,
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${Date.now()}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: "active",
+            enrollment_date: new Date().toISOString()
+          }
         };
         
         setMatriculaStatus({
@@ -56,8 +62,6 @@ const useMatricularAluno = () => {
 
       // Preparar os dados para envio
       const matriculaData = {
-        userId: alunoId,
-        courseId: cursoId,
         status: dadosAdicionais?.status || "active",
         expirationDate: dadosAdicionais?.expirationDate,
         notifyUser: dadosAdicionais?.notifyUser ?? true
@@ -81,12 +85,18 @@ const useMatricularAluno = () => {
         
         return {
           id: result.id || `${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: result.status || "active",
           enrollmentDate: result.enrollmentDate || new Date().toISOString(),
           expirationDate: result.expirationDate,
-          learnworlds_id: result.id
+          learnworlds_id: result.id,
+          data: {
+            id: result.id || `${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: result.status || "active",
+            enrollment_date: result.enrollmentDate || new Date().toISOString()
+          }
         };
       } else {
         throw new Error(result?.error || "Erro desconhecido ao matricular aluno");
@@ -108,12 +118,18 @@ const useMatricularAluno = () => {
         console.log("Modo offline - gerando matrícula simulada mesmo com erro");
         return {
           id: `simulated-enrollment-${Date.now()}`,
-          userId: alunoId,
           courseId: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
           learnworlds_id: `lw-${alunoId}-${cursoId}`,
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${Date.now()}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: "active",
+            enrollment_date: new Date().toISOString()
+          }
         };
       }
       

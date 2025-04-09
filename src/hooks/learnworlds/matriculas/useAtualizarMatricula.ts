@@ -25,11 +25,17 @@ const useAtualizarMatricula = () => {
         console.log("Modo offline detectado, simulando atualização de status");
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: novoStatus,
           enrollmentDate: new Date().toISOString(),
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: novoStatus,
+            enrollment_date: new Date().toISOString()
+          }
         };
       }
 
@@ -46,12 +52,18 @@ const useAtualizarMatricula = () => {
         
         return {
           id: result.id || `${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: novoStatus,
           enrollmentDate: result.enrollmentDate || new Date().toISOString(),
           expirationDate: result.expirationDate,
-          learnworlds_id: result.id
+          learnworlds_id: result.id,
+          data: {
+            id: result.id || `${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: novoStatus,
+            enrollment_date: result.enrollmentDate || new Date().toISOString()
+          }
         };
       } else {
         throw new Error(result?.error || "Erro ao atualizar status da matrícula");
@@ -64,11 +76,17 @@ const useAtualizarMatricula = () => {
       if (offlineMode) {
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          userId: alunoId,
           courseId: cursoId,
           status: novoStatus,
           enrollmentDate: new Date().toISOString(),
-          simulatedResponse: true
+          simulatedResponse: true,
+          data: {
+            id: `simulated-enrollment-${alunoId}-${cursoId}`,
+            student_id: alunoId,
+            course_id: cursoId,
+            status: novoStatus,
+            enrollment_date: new Date().toISOString()
+          }
         };
       }
       

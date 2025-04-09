@@ -2,16 +2,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-
-interface ApiOptions {
-  endpoint: string;
-  method?: string;
-  body?: any;
-  useOAuth?: boolean;
-  baseUrl?: string;
-  headers?: Record<string, string>;
-  showErrors?: boolean;
-}
+import { normalizeEndpoint, buildRequestOptions, parseResponse, makeApiRequest } from './utils/requestUtils';
+import { handleApiError, isHtmlResponse } from './utils/errorUtils';
 
 /**
  * Hook base para realizar chamadas à API do LearnWorlds
@@ -24,7 +16,7 @@ const useLearnWorldsBase = () => {
   const { getAuthToken } = useAuth();
 
   /**
-   * Faz uma requisição para a API do LearnWorlds
+   * Faz uma requisição para a API do LearnWorlds com autenticação
    */
   const makeRequest = async (
     endpoint: string, 
@@ -36,13 +28,8 @@ const useLearnWorldsBase = () => {
     setError(null);
 
     try {
-      // Remover duplicação de 'learnworlds-api' no caminho
-      const normalizedEndpoint = endpoint.startsWith('/learnworlds-api') 
-        ? endpoint
-        : endpoint.startsWith('/') 
-          ? `/learnworlds-api${endpoint}`
-          : `/learnworlds-api/${endpoint}`;
-          
+      // Normalizar endpoint para evitar duplicação
+      const normalizedEndpoint = normalizeEndpoint(endpoint);
       console.log(`Realizando requisição: ${method} ${normalizedEndpoint}`);
       
       // Obter token de autenticação
@@ -52,81 +39,16 @@ const useLearnWorldsBase = () => {
         throw new Error('Você precisa estar autenticado para realizar esta ação');
       }
 
-      // Configurar cabeçalhos
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      };
-      
-      if (useOAuth) {
-        headers['X-Use-OAuth'] = 'true';
-      }
-
-      // Construir opções da requisição
-      const options: RequestInit = {
-        method,
-        headers,
-        credentials: 'include'
-      };
-
-      if (body && (method === 'POST' || method === 'PUT')) {
-        options.body = JSON.stringify(body);
-      }
-
-      // Fazer a requisição
+      // Preparar opções de requisição
+      const options = buildRequestOptions(method, body, useOAuth);
       console.log(`Enviando requisição para ${normalizedEndpoint}`, { 
         method, 
-        headers: { ...headers, Authorization: 'Bearer xxxxx' },
+        headers: { ...options.headers, Authorization: 'Bearer xxxxx' },
         body: options.body
       });
       
-      const response = await fetch(normalizedEndpoint, options);
-      console.log(`Resposta HTTP status: ${response.status}`);
-      
-      const responseText = await response.text();
-      
-      // Verificar se a resposta é JSON válido
-      let data;
-      try {
-        // Se a resposta está vazia, retornar objeto vazio
-        if (!responseText || responseText.trim() === '') {
-          console.warn('Resposta vazia recebida');
-          return {};
-        }
-        
-        // Se a resposta contém HTML ao invés de JSON
-        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
-          console.error('Resposta HTML detectada:', responseText.substring(0, 200));
-          setOfflineMode(true);
-          throw new Error('API retornou conteúdo não-JSON (HTML). Ativando modo offline.');
-        }
-        
-        data = JSON.parse(responseText);
-        console.log(`Dados da resposta:`, data);
-      } catch (e) {
-        console.error(`Resposta não é JSON válido:`, responseText.substring(0, 200));
-        
-        // Verificar se é HTML e ativar modo offline
-        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
-          setOfflineMode(true);
-          throw new Error('API retornou HTML. Ativando modo offline.');
-        }
-        
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
-      }
-      
-      // Verificar por erros na resposta
-      if (!response.ok) {
-        console.error(`Erro na resposta:`, `Status ${response.status}, Corpo:`, data);
-        
-        // Se a resposta tem um erro específico
-        if (data && data.error) {
-          throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
-        } else {
-          throw new Error(`Erro ${response.status}: ${responseText.substring(0, 100)}`);
-        }
-      }
-      
+      // Fazer a requisição
+      const data = await makeApiRequest(normalizedEndpoint, options);
       return data;
     } catch (error: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, error);
@@ -141,7 +63,7 @@ const useLearnWorldsBase = () => {
         return null;
       }
       
-      setError(error.message || 'Erro ao comunicar com a API do LearnWorlds');
+      setError(handleApiError(error, endpoint, false));
       throw error;
     } finally {
       setLoading(false);
@@ -160,79 +82,18 @@ const useLearnWorldsBase = () => {
     setError(null);
 
     try {
-      // Remover duplicação de 'learnworlds-api' no caminho
-      const normalizedEndpoint = endpoint.startsWith('/learnworlds-api') 
-        ? endpoint
-        : endpoint.startsWith('/') 
-          ? `/learnworlds-api${endpoint}`
-          : `/learnworlds-api/${endpoint}`;
-          
+      // Normalizar endpoint para evitar duplicação
+      const normalizedEndpoint = normalizeEndpoint(endpoint);
       console.log(`Realizando requisição pública: ${method} ${normalizedEndpoint}`);
       
-      // Configurar cabeçalhos
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Construir opções da requisição
-      const options: RequestInit = {
-        method,
-        headers,
-        credentials: 'include'
-      };
-
-      if (body && (method === 'POST' || method === 'PUT')) {
-        options.body = JSON.stringify(body);
-      }
-
-      // Fazer a requisição
+      // Preparar opções de requisição sem autorização
+      const options = buildRequestOptions(method, body, false);
+      delete options.headers['Authorization']; // Remover cabeçalho de autorização
+      
       console.log(`Enviando requisição pública para ${normalizedEndpoint}`);
       
-      const response = await fetch(normalizedEndpoint, options);
-      console.log(`Resposta HTTP status: ${response.status}`);
-      
-      const responseText = await response.text();
-      
-      // Verificar se a resposta é JSON válido
-      let data;
-      try {
-        // Se a resposta está vazia, retornar objeto vazio
-        if (!responseText || responseText.trim() === '') {
-          console.warn('Resposta vazia recebida');
-          return {};
-        }
-        
-        // Se a resposta contém HTML ao invés de JSON
-        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
-          console.error('Resposta HTML detectada:', responseText.substring(0, 200));
-          setOfflineMode(true);
-          throw new Error('API retornou conteúdo não-JSON (HTML). Ativando modo offline.');
-        }
-        
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.error(`Resposta não é JSON válido:`, responseText.substring(0, 200));
-        
-        // Verificar se é HTML e ativar modo offline
-        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
-          setOfflineMode(true);
-          throw new Error('API retornou HTML. Ativando modo offline.');
-        }
-        
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
-      }
-      
-      // Verificar por erros na resposta
-      if (!response.ok) {
-        console.error(`Erro na resposta:`, data);
-        
-        if (data && data.error) {
-          throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
-        } else {
-          throw new Error(`Erro ${response.status}: ${responseText.substring(0, 100)}`);
-        }
-      }
-      
+      // Fazer a requisição
+      const data = await makeApiRequest(normalizedEndpoint, options);
       return data;
     } catch (error: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, error);
@@ -246,7 +107,7 @@ const useLearnWorldsBase = () => {
         return null;
       }
       
-      setError(error.message || 'Erro ao comunicar com a API do LearnWorlds');
+      setError(handleApiError(error, endpoint, false));
       throw error;
     } finally {
       setLoading(false);
