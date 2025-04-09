@@ -68,6 +68,7 @@ export async function getOAuthToken(): Promise<string> {
     console.log("Resposta do token OAuth:", JSON.stringify(tokenData));
     
     // Na resposta do exemplo, o acesso está em tokenData.tokenData.access_token
+    // Tentaremos os dois formatos conforme a documentação
     const accessToken = tokenData.tokenData?.access_token || tokenData.access_token;
     
     if (!accessToken) {

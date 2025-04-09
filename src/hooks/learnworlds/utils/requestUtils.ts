@@ -40,7 +40,7 @@ export const buildRequestOptions = (
     'Lw-Client': DEFAULT_HEADERS['School-Id'] // Garantir que o Lw-Client esteja presente
   };
   
-  // Não adicionar Authorization aqui - será adicionado posteriormente
+  // Não adicionar Authorization aqui - será adicionado posteriormente na função edge
   
   const options: RequestInit = {
     method,

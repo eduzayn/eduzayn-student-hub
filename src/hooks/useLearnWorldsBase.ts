@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { normalizeEndpoint, buildRequestOptions, parseResponse, makeApiRequest } from './learnworlds/utils/requestUtils';
 import { handleApiError, isHtmlResponse } from './learnworlds/utils/errorUtils';
-import { LEARNWORLDS_API_ENDPOINT, LEARNWORLDS_PUBLIC_TOKEN } from './learnworlds/utils/apiConstants';
+import { LEARNWORLDS_API_ENDPOINT } from './learnworlds/utils/apiConstants';
 
 /**
  * Hook base para realizar chamadas à API do LearnWorlds

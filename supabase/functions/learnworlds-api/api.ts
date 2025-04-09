@@ -59,7 +59,7 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${authToken}`,
-      'Lw-Client': LEARNWORLDS_SCHOOL_ID
+      'Lw-Client': LEARNWORLDS_SCHOOL_ID // Cabeçalho obrigatório conforme documentação
     };
     
     const options: RequestInit = {

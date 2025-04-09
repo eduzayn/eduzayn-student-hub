@@ -13,16 +13,15 @@ export const corsHeaders = {
 export const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 
 // Credenciais e configurações do LearnWorlds
-// Token de API mostrado na imagem: 8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR
 export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 
 // School ID da escola no LearnWorlds
 export const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
 
-// URL base correta da API conforme documentação
+// URL base da API conforme documentação - CORRIGIDA
 export const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://grupozayneducacional.com.br/admin/api";
 
-// Credenciais OAuth (ID do cliente e Segredo do cliente vistos na imagem)
+// Credenciais OAuth (Client ID e Client Secret)
 export const LEARNWORLDS_CLIENT_ID = Deno.env.get("LEARNWORLDS_CLIENT_ID") || "66abb5fdf8655b4b800c7278";
 export const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET") || "835mPsiAJ6jqdQJNdnBeyfggOd7VAAOavPFxluR86D48xXOAPp";
 
