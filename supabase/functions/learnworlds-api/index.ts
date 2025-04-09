@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   try {
     // Log do caminho da solicitação para diagnóstico
     const url = new URL(req.url);
-    console.log(`Recebendo solicitação: ${req.method} ${url.pathname}`);
+    console.log(`Recebendo solicitação: ${req.method} ${url.pathname} ${url.search}`);
     console.log(`Usando URL base da API LearnWorlds: ${LEARNWORLDS_API_BASE_URL}`);
     
     // Responder a solicitações OPTIONS para CORS
@@ -64,8 +64,9 @@ Deno.serve(async (req) => {
     
     // Log do path normalizado
     console.log("Path normalizado:", path);
+    console.log("Parâmetros de consulta:", url.search);
     
-    console.log(`Processando requisição: ${req.method} ${path}`);
+    console.log(`Processando requisição: ${req.method} ${path}${url.search}`);
 
     // Verificar autenticação
     if (!verificarToken(req)) {
@@ -77,10 +78,12 @@ Deno.serve(async (req) => {
 
     // Processar requisição com base no path normalizado
     if (path.startsWith("/users")) {
-      return await handleUsuarios(req, path);
+      // Adicionar parâmetros de consulta ao path passado para o manipulador
+      return await handleUsuarios(req, `${path}${url.search}`);
     } 
     else if (path.startsWith("/courses")) {
-      return await handleCursos(req, path);
+      // Adicionar parâmetros de consulta ao path passado para o manipulador
+      return await handleCursos(req, `${path}${url.search}`);
     }
     else {
       return new Response(JSON.stringify({ error: "Endpoint não encontrado", path: path }), {

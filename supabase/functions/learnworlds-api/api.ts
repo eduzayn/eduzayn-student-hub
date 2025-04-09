@@ -58,7 +58,7 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     const options: RequestInit = {
       method,
       headers,
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(15000) // Aumentado para 15 segundos
     };
 
     if (body && (method === 'POST' || method === 'PUT')) {
