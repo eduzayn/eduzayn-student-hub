@@ -7,6 +7,7 @@ import MatriculasPage from "./pages/admin/matriculas/MatriculasPage";
 import EmConstrucao from "./pages/EmConstrucao";
 import Login from "./pages/Login";
 import { Toaster } from "sonner";
+import Admin from "./pages/Admin";
 
 // Páginas públicas
 import Index from "./pages/Index";
@@ -48,8 +49,10 @@ function App() {
           <Route path="/chamados" element={<EmConstrucao title="Chamados" />} />
           <Route path="/comunicados" element={<EmConstrucao title="Comunicados" />} />
           <Route path="/agenda" element={<EmConstrucao title="Agenda" />} />
-          <Route path="/admin" element={<EmConstrucao title="Administração" />} />
         </Route>
+        
+        {/* Rota Admin */}
+        <Route path="/admin" element={<Admin />} />
         
         {/* Rota 404 */}
         <Route path="*" element={<NotFound />} />
