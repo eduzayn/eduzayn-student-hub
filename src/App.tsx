@@ -1,74 +1,52 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./components/layout/Layout";
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import MatriculasPage from "./pages/admin/matriculas/MatriculasPage";
+import Alunos from "./pages/Alunos";
+import Cursos from "./pages/Cursos";
+import Usuarios from "./pages/Usuarios";
+import Configuracoes from "./pages/Configuracoes";
+import Contratos from "./pages/Contratos";
+import Financeiro from "./pages/Financeiro";
+import Chamados from "./pages/Chamados";
+import Comunicados from "./pages/Comunicados";
+import Agenda from "./pages/Agenda";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+import { AuthProvider } from "./context/AuthContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import { AuthProvider } from './hooks/use-auth';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import Admin from './pages/Admin';
-import AlunoLayout from './components/layout/AlunoLayout';
-import EsqueciSenha from "./pages/EsqueciSenha";
-import RedefinirSenha from "./pages/RedefinirSenha";
-import MainLayout from './components/layout/MainLayout';
-import AlunoDashboard from './pages/aluno/Dashboard';
-import Cursos from './pages/Cursos'; // Importando a página de cursos
-
-// Importação dos componentes do Módulo de Matrículas
-import ModuloMatriculas from './pages/admin/ModuloMatriculas';
-import MatriculasLista from './pages/admin/matriculas/MatriculasLista';
-import NovaMatricula from './pages/admin/matriculas/NovaMatricula';
-import MatriculasAlunos from './pages/admin/matriculas/MatriculasAlunos';
-import MatriculasCursos from './pages/admin/matriculas/MatriculasCursos';
-import MatriculasContratos from './pages/admin/matriculas/MatriculasContratos';
-import MatriculasPagamentos from './pages/admin/matriculas/MatriculasPagamentos';
-import MatriculasConfiguracoes from './pages/admin/matriculas/MatriculasConfiguracoes';
-import SincronizacaoLearnWorlds from './pages/admin/matriculas/SincronizacaoLearnWorlds';
-import SincronizacaoAlunos from './pages/admin/matriculas/SincronizacaoAlunos';
-import SincronizacaoCursosPage from './pages/admin/matriculas/SincronizacaoCursos';
-
-const App = () => {
+function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Toaster position="top-center" />
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<Index />} />
-            {/* Adicionar a rota para cursos */}
-            <Route path="/cursos" element={<Cursos />} />
-            <Route path="/cursos/:categoria" element={<Cursos />} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Dashboard />} />
           
-          {/* Redirecionar /dashboard para o dashboard do aluno */}
-          <Route path="/dashboard" element={<Navigate to="/aluno" replace />} />
+          {/* Módulo de Matrículas */}
+          <Route path="/admin/matriculas" element={<MatriculasPage />} />
+          <Route path="/admin/matriculas/sincronizacao" element={<MatriculasPage />} />
+          <Route path="/admin/matriculas/nova" element={<MatriculasPage />} />
           
-          {/* Utilizar AlunoLayout para todas as páginas do aluno */}
-          <Route path="/aluno" element={<AlunoLayout />}>
-            <Route index element={<AlunoDashboard />} />
-            {/* Outras rotas do aluno podem ser adicionadas aqui */}
-          </Route>
-          
+          <Route path="/alunos" element={<Alunos />} />
+          <Route path="/cursos" element={<Cursos />} />
+          <Route path="/usuarios" element={<Usuarios />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/contratos" element={<Contratos />} />
+          <Route path="/financeiro" element={<Financeiro />} />
+          <Route path="/chamados" element={<Chamados />} />
+          <Route path="/comunicados" element={<Comunicados />} />
+          <Route path="/agenda" element={<Agenda />} />
           <Route path="/admin" element={<Admin />} />
           
-          {/* Rotas para o Módulo de Matrículas */}
-          <Route path="/admin/matriculas" element={<ModuloMatriculas />} />
-          <Route path="/admin/matriculas/lista" element={<MatriculasLista />} />
-          <Route path="/admin/matriculas/nova" element={<NovaMatricula />} />
-          <Route path="/admin/matriculas/alunos" element={<MatriculasAlunos />} />
-          <Route path="/admin/matriculas/cursos" element={<MatriculasCursos />} />
-          <Route path="/admin/matriculas/contratos" element={<MatriculasContratos />} />
-          <Route path="/admin/matriculas/pagamentos" element={<MatriculasPagamentos />} />
-          <Route path="/admin/matriculas/configuracoes" element={<MatriculasConfiguracoes />} />
-          <Route path="/admin/matriculas/sincronizacao" element={<SincronizacaoLearnWorlds />} />
-          <Route path="/admin/matriculas/sincronizacao/alunos" element={<SincronizacaoAlunos />} />
-          <Route path="/admin/matriculas/sincronizacao/cursos" element={<SincronizacaoCursosPage />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
