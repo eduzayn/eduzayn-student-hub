@@ -10,34 +10,31 @@ import { isHtmlResponse } from './errorUtils';
  * Normaliza um endpoint para evitar duplicação de caminhos
  */
 export const normalizeEndpoint = (endpoint: string): string => {
-  // Remover barras duplicadas
-  const cleanEndpoint = endpoint.replace(/\/+/g, '/');
-
-  // URL completa da função edge do Supabase
-  const baseUrl = window.location.origin;
-  
   // Se o endpoint já contém uma URL completa, retorne-o como está
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
     return endpoint;
   }
   
-  // Se o endpoint já começar com /learnworlds-api, apenas certifique-se de que está no formato correto
+  // URL completa da função edge do Supabase para Lovable
+  const baseUrl = window.location.origin;
+  
+  // Remover barras duplicadas e limpar o endpoint
+  let cleanEndpoint = endpoint.replace(/\/+/g, '/');
+  
+  // Remover 'api/' do caminho se estiver presente
+  cleanEndpoint = cleanEndpoint.replace(/^\/api\//, '/');
+  
+  // Se o endpoint já começa com /learnworlds-api, certifique-se de que está no formato correto
   if (cleanEndpoint.startsWith('/learnworlds-api')) {
-    return cleanEndpoint;
+    return `${baseUrl}${cleanEndpoint}`;
   }
   
-  // Remover api/ do caminho se estiver presente
-  let normalizedEndpoint = cleanEndpoint.replace(/^\/api\/learnworlds-api/, '/learnworlds-api');
+  // Caso contrário, adicione o prefixo /learnworlds-api
+  const finalEndpoint = cleanEndpoint.startsWith('/') 
+    ? `/learnworlds-api${cleanEndpoint}`
+    : `/learnworlds-api/${cleanEndpoint}`;
   
-  // Se ainda não começar com /learnworlds-api, adicione o prefixo
-  if (!normalizedEndpoint.startsWith('/learnworlds-api')) {
-    normalizedEndpoint = normalizedEndpoint.startsWith('/') 
-      ? `/learnworlds-api${normalizedEndpoint}`
-      : `/learnworlds-api/${normalizedEndpoint}`;
-  }
-  
-  // Retornar a URL completa para a função edge
-  return `${baseUrl}${normalizedEndpoint}`;
+  return `${baseUrl}${finalEndpoint}`;
 };
 
 /**
@@ -52,8 +49,8 @@ export const buildRequestOptions = (
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': getAuthorizationHeader(),
-    'School-Id': LEARNWORLDS_SCHOOL_ID, // Alterado de Lw-Client para School-Id
-    'X-API-Version': '2.0' // Adicionado para compatibilidade com API v2
+    'School-Id': LEARNWORLDS_SCHOOL_ID,
+    'X-API-Version': '2.0'
   };
   
   if (useOAuth) {
@@ -78,14 +75,8 @@ export const buildRequestOptions = (
  * Verifica se a URL está sendo direcionada corretamente
  */
 export const checkApiUrl = (url: string): boolean => {
-  // Verificar se estamos usando a URL correta para a API LearnWorlds
-  const isEdgeFunction = url.includes('/learnworlds-api/') && 
-                        !url.includes('/api/learnworlds-api/');
-  
-  // Log para diagnóstico
-  console.log(`Verificando URL API: ${url}, isEdgeFunction: ${isEdgeFunction}`);
-  
-  return isEdgeFunction;
+  // Verificar se estamos usando a URL correta para a API LearnWorlds via função edge
+  return url.includes('/learnworlds-api/');
 };
 
 /**
@@ -108,11 +99,6 @@ export const parseResponse = async (response: Response): Promise<any> => {
     console.error('Resposta HTML detectada:', responseText.substring(0, 200));
     console.error('URL da requisição:', response.url);
     
-    // Verificar se estamos tentando acessar a API através da URL incorreta
-    if (response.url.includes('/api/learnworlds-api/')) {
-      throw new Error('API retornou HTML. A URL está incorreta, deveria ser /learnworlds-api/ diretamente.');
-    }
-    
     throw new Error('API retornou conteúdo não-JSON (HTML). Ativando modo offline.');
   }
   
@@ -124,6 +110,27 @@ export const parseResponse = async (response: Response): Promise<any> => {
   } catch (e) {
     console.error(`Resposta não é JSON válido:`, responseText.substring(0, 200));
     throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
+  }
+};
+
+/**
+ * Faz uma requisição para a API do LearnWorlds
+ */
+export const makeApiRequest = async (
+  url: string, 
+  options: RequestInit
+): Promise<any> => {
+  try {
+    console.log(`Fazendo requisição para: ${url}`);
+    
+    const response = await fetch(url, options);
+    return await parseResponse(response);
+  } catch (error: any) {
+    if (error.message.includes('HTML')) {
+      console.error(`Erro de resposta HTML: ${url}`);
+    }
+    
+    throw error;
   }
 };
 
@@ -203,66 +210,6 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
   
   // Se não precisar de adaptação, retornar dados originais
   return data;
-};
-
-/**
- * Faz uma requisição para a API do LearnWorlds
- */
-export const makeApiRequest = async (
-  url: string, 
-  options: RequestInit
-): Promise<any> => {
-  // Verificar se estamos usando a URL correta
-  const isValidUrl = checkApiUrl(url);
-  
-  if (!isValidUrl) {
-    console.warn(`URL possivelmente incorreta: ${url}. Deveria ser /learnworlds-api/ em vez de /api/learnworlds-api/.`);
-  }
-  
-  try {
-    const response = await fetch(url, options);
-    const data = await parseResponse(response);
-    
-    // Verificar por erros na resposta
-    if (!response.ok) {
-      console.error(`Erro na resposta:`, `Status ${response.status}, Corpo:`, data);
-      
-      // Se a resposta tem um erro específico
-      if (data && data.error) {
-        throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
-      } else {
-        throw new Error(`Erro ${response.status}: ${JSON.stringify(data).substring(0, 100)}`);
-      }
-    }
-    
-    // Adaptar resposta para compatibilidade com código existente
-    const adaptedData = adaptApiResponseToLegacyFormat(data, url);
-    
-    return adaptedData;
-  } catch (error: any) {
-    if (error.message.includes('HTML')) {
-      // Se o erro está relacionado a resposta HTML, vamos sugerir checagem da URL
-      console.error(`Erro possível de URL incorreta: ${url}`);
-      
-      // Tentar corrigir a URL e fazer nova tentativa
-      if (url.includes('/api/learnworlds-api/')) {
-        const correctedUrl = url.replace('/api/learnworlds-api/', '/learnworlds-api/');
-        console.log(`Tentando novamente com URL corrigida: ${correctedUrl}`);
-        
-        // Fazer nova tentativa com URL corrigida
-        // Esta é uma solução temporária - idealmente devemos corrigir todas as chamadas
-        try {
-          const response = await fetch(correctedUrl, options);
-          return await parseResponse(response);
-        } catch (retryError) {
-          console.error('Falha na segunda tentativa:', retryError);
-          throw error; // Lançar o erro original se a segunda tentativa falhar
-        }
-      }
-    }
-    
-    throw error;
-  }
 };
 
 /**

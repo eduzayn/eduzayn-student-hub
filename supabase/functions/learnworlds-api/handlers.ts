@@ -17,12 +17,12 @@ export async function handleCursos(req: Request, path: string): Promise<Response
     
     console.log("Path parts:", pathParts, "courseId:", courseId);
     
-    // Adaptar para a nova estrutura de API v2
-    let apiPath = "/courses";
+    // Adaptar para a estrutura de API v2
+    let apiPath = "courses";
     if (courseId) {
       apiPath += `/${courseId}`;
     } else {
-      // Adicionar parâmetros de consulta para listagem
+      // Adaptar parâmetros de consulta para API v2
       const page = params.get("page") || "1";
       const perPage = params.get("limit") || params.get("per_page") || "20";
       apiPath += `?page=${page}&per_page=${perPage}`;
@@ -76,20 +76,20 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log("isUserWithCourse:", isUserWithCourse, "isSingleUser:", isSingleUser, "userId:", userId);
     
-    // Construir o caminho da API com base na requisição (adaptado para APIv2)
-    let apiPath = "/users";
+    // Construir o caminho da API baseado na requisição (adaptado para API v2)
+    let apiPath = "users";
     
     if (isUserWithCourse) {
       // Caso: /users/{userId}/courses/{courseId?}
-      apiPath = `/users/${userId}/enrollments`;
+      apiPath = `users/${userId}/enrollments`;
       if (pathParts.length >= 3) {
-        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na API
+        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na API v2
       }
     } else if (isSingleUser) {
       // Caso: /users/{userId}
       apiPath += `/${userId}`;
     } else {
-      // Caso: /users (listar todos)
+      // Caso: /users (listar todos) - API v2 usa per_page em vez de limit
       const page = params.get("page") || "1";
       const perPage = params.get("limit") || params.get("per_page") || "20";
       apiPath += `?page=${page}&per_page=${perPage}`;
@@ -109,7 +109,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log(`Chamando API LearnWorlds: ${apiPath} (método: ${req.method})`);
     
-    // Usuários geralmente exigem OAuth
+    // Usuários geralmente exigem OAuth na API v2
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     

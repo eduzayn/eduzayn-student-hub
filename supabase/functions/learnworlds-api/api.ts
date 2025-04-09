@@ -24,14 +24,12 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     if (!LEARNWORLDS_SCHOOL_ID) {
       throw new Error("LEARNWORLDS_SCHOOL_ID não configurado");
     }
-
-    // Construir a URL completa usando a base de API v2
-    // Remover "api/" da URL se já estiver presente na base
-    const baseUrl = LEARNWORLDS_API_BASE_URL.endsWith('/api') 
-      ? LEARNWORLDS_API_BASE_URL.substring(0, LEARNWORLDS_API_BASE_URL.length - 4)
-      : LEARNWORLDS_API_BASE_URL;
+    
+    // Remover qualquer barra inicial para não criar URLs malformadas
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
       
-    const url = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+    // Construir a URL completa usando a base de API v2
+    const url = `${LEARNWORLDS_API_BASE_URL}/${cleanPath}`;
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     
     let authToken;
