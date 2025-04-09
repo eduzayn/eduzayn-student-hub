@@ -6,7 +6,7 @@
 /**
  * Formata cursos da API do LearnWorlds para o formato interno
  */
-export const formatarCursos = (cursosAPI: any[]): any[] => {
+export const formatarCursos = (cursosAPI: any[], usouApiKey: boolean = true, usouOAuth: boolean = false): any[] => {
   if (!Array.isArray(cursosAPI) || cursosAPI.length === 0) {
     console.warn("Lista de cursos vazia ou inválida");
     return [];
@@ -50,10 +50,9 @@ export const formatarCursos = (cursosAPI: any[]): any[] => {
       // Dados vindos da API são explicitamente marcados como não simulados
       simulado: false,
       simulatedResponse: false,
-      // Atributo para identificar a origem dos dados (API direta com token)
-      api_token: true,
-      // Campo para identificar dados obtidos via OAuth
-      api_oauth: true
+      // Atributos para identificar a origem dos dados
+      api_token: usouApiKey,
+      api_oauth: usouOAuth
     };
   });
 };
