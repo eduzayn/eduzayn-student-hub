@@ -2,7 +2,7 @@
 // Função de borda para interagir com a API do LearnWorlds
 import { corsHeaders } from "./config.ts";
 import { handleCursos, handleUsuarios } from "./handlers.ts";
-import { ADMIN_BYPASS_JWT } from "./config.ts";
+import { ADMIN_BYPASS_JWT, LEARNWORLDS_API_BASE_URL } from "./config.ts";
 
 // Responde às requisições OPTIONS para CORS
 const handleOptions = () => {
@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
     // Log do caminho da solicitação para diagnóstico
     const url = new URL(req.url);
     console.log(`Recebendo solicitação: ${req.method} ${url.pathname}`);
+    console.log(`Usando URL base da API LearnWorlds: ${LEARNWORLDS_API_BASE_URL}`);
     
     // Responder a solicitações OPTIONS para CORS
     if (req.method === "OPTIONS") {

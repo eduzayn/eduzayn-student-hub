@@ -13,34 +13,33 @@ export async function handleCursos(req: Request, path: string): Promise<Response
     
     // Determinar curso específico se um ID for fornecido
     const pathParts = path.split("/").filter((p) => p);
-    const isSingleCourse = pathParts.length >= 1;
-    const courseId = isSingleCourse && pathParts.length > 0 ? pathParts[0] : null;
+    const courseId = pathParts.length > 0 ? pathParts[0] : null;
     
-    console.log("Path parts:", pathParts, "isSingleCourse:", isSingleCourse, "courseId:", courseId);
+    console.log("Path parts:", pathParts, "courseId:", courseId);
     
-    let apiPath = "/admin/api/v2/courses";
+    // Adaptar para a nova estrutura de API v2
+    let apiPath = "/courses";
     if (courseId) {
       apiPath += `/${courseId}`;
     } else {
       // Adicionar parâmetros de consulta para listagem
       const page = params.get("page") || "1";
       const limit = params.get("limit") || "20";
-      apiPath += `?page=${page}&limit=${limit}`;
+      apiPath += `?page=${page}&per_page=${limit}`; // Atualizado para usar per_page em vez de limit
       
       // Adicionar outros parâmetros de consulta se presentes
       if (params.has("q")) {
-        apiPath += `&q=${params.get("q")}`;
+        apiPath += `&search=${params.get("q")}`; // Atualizado para usar search
       }
       
       if (params.has("categories")) {
-        apiPath += `&categories=${params.get("categories")}`;
+        apiPath += `&category=${params.get("categories")}`; // Atualizado para usar category
       }
     }
     
     console.log(`Chamando API LearnWorlds: ${apiPath}`);
     
     // Realizar a chamada à API do LearnWorlds
-    // Não usamos OAuth para endpoints de cursos
     const result = await callLearnWorldsApi(apiPath, "GET", null, false);
     
     return new Response(JSON.stringify(result), {
@@ -75,14 +74,14 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log("isUserWithCourse:", isUserWithCourse, "isSingleUser:", isSingleUser, "userId:", userId);
     
-    // Construir o caminho da API com base na requisição
-    let apiPath = "/admin/api/v2/users";
+    // Construir o caminho da API com base na requisição (adaptado para APIv2)
+    let apiPath = "/users";
     
     if (isUserWithCourse) {
       // Caso: /users/{userId}/courses/{courseId?}
-      apiPath = `/admin/api/v2/users/${userId}/courses`;
+      apiPath = `/users/${userId}/enrollments`;
       if (pathParts.length >= 3) {
-        apiPath += `/${pathParts[2]}`; // courseId
+        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na nova API
       }
     } else if (isSingleUser) {
       // Caso: /users/{userId}
@@ -91,11 +90,11 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
       // Caso: /users (listar todos)
       const page = params.get("page") || "1";
       const limit = params.get("limit") || "20";
-      apiPath += `?page=${page}&limit=${limit}`;
+      apiPath += `?page=${page}&per_page=${limit}`; // Atualizado para usar per_page
       
       // Adicionar outros parâmetros se presentes
       if (params.has("q")) {
-        apiPath += `&q=${params.get("q")}`;
+        apiPath += `&search=${params.get("q")}`; // Atualizado para usar search
       }
     }
     
@@ -107,7 +106,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log(`Chamando API LearnWorlds: ${apiPath} (método: ${req.method})`);
     
-    // Usuários exigem OAuth
+    // Usuários podem exigir OAuth dependendo da implementação da API
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     

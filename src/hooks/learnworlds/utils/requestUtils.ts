@@ -54,7 +54,8 @@ export const buildRequestOptions = (
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': getAuthorizationHeader(),
-    'Lw-Client': LEARNWORLDS_SCHOOL_ID
+    'School-Id': LEARNWORLDS_SCHOOL_ID, // Alterado de Lw-Client para School-Id
+    'X-API-Version': '2.0' // Adicionado para compatibilidade com API v2
   };
   
   if (useOAuth) {
@@ -129,6 +130,64 @@ export const parseResponse = async (response: Response): Promise<any> => {
 };
 
 /**
+ * Adapta os dados para compatibilidade com a antiga estrutura da API
+ */
+export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any => {
+  // Se não temos dados, não há o que adaptar
+  if (!data) return data;
+  
+  // Log para diagnóstico
+  console.log('Adaptando resposta da APIv2 para formato legado:', endpoint);
+  
+  // Adaptar dados de usuários
+  if (endpoint.includes('/users')) {
+    if (Array.isArray(data)) {
+      return {
+        data: data.map(user => ({
+          id: user.id,
+          email: user.email,
+          firstName: user.first_name || user.firstName,
+          lastName: user.last_name || user.lastName,
+          // Outros campos necessários
+        })),
+        meta: {
+          currentPage: data.meta?.page || 1,
+          totalPages: data.meta?.total_pages || 1,
+          totalItems: data.meta?.total || data.length,
+          itemsPerPage: data.meta?.per_page || 20
+        }
+      };
+    }
+  }
+  
+  // Adaptar dados de cursos
+  if (endpoint.includes('/courses')) {
+    if (Array.isArray(data)) {
+      return {
+        data: data.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          shortDescription: course.short_description,
+          image: course.image_url,
+          price: course.price,
+          // Outros campos necessários
+        })),
+        meta: {
+          currentPage: data.meta?.page || 1,
+          totalPages: data.meta?.total_pages || 1,
+          totalItems: data.meta?.total || data.length,
+          itemsPerPage: data.meta?.per_page || 20
+        }
+      };
+    }
+  }
+  
+  // Se não precisar de adaptação, retornar dados originais
+  return data;
+};
+
+/**
  * Faz uma requisição para a API do LearnWorlds
  */
 export const makeApiRequest = async (
@@ -158,7 +217,10 @@ export const makeApiRequest = async (
       }
     }
     
-    return data;
+    // Adaptar resposta para compatibilidade com código existente
+    const adaptedData = adaptApiResponseToLegacyFormat(data, url);
+    
+    return adaptedData;
   } catch (error: any) {
     if (error.message.includes('HTML')) {
       // Se o erro está relacionado a resposta HTML, vamos sugerir checagem da URL

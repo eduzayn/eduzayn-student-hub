@@ -25,8 +25,8 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       throw new Error("LEARNWORLDS_SCHOOL_ID não configurado");
     }
 
-    const baseUrl = LEARNWORLDS_API_BASE_URL || "https://api.learnworlds.com";
-    const url = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
+    // Construir a URL completa usando a nova base de API
+    const url = `${LEARNWORLDS_API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     
     let authToken;
@@ -45,10 +45,12 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       console.log("Usando token de acesso API Key para autenticação");
     }
     
+    // Configurar os headers com School ID como parâmetro, não mais como parte da URL
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${authToken}`,
-      'Lw-Client': LEARNWORLDS_SCHOOL_ID
+      'School-Id': LEARNWORLDS_SCHOOL_ID, // Agora como header em vez de parte da URL
+      'X-API-Version': '2.0' // Adicionar versão para compatibilidade com API v2
     };
     
     const options: RequestInit = {
