@@ -25,7 +25,7 @@ const useAtualizarMatricula = () => {
         console.log("Modo offline detectado, simulando atualização de status");
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: novoStatus,
           enrollmentDate: new Date().toISOString(),
           simulatedResponse: true,
@@ -52,7 +52,7 @@ const useAtualizarMatricula = () => {
         
         return {
           id: result.id || `${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: novoStatus,
           enrollmentDate: result.enrollmentDate || new Date().toISOString(),
           expirationDate: result.expirationDate,
@@ -76,7 +76,7 @@ const useAtualizarMatricula = () => {
       if (offlineMode) {
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: novoStatus,
           enrollmentDate: new Date().toISOString(),
           simulatedResponse: true,

@@ -17,7 +17,7 @@ const LearnWorldsStatusDetails: React.FC<LearnWorldsStatusDetailsProps> = ({
   if (status === 'sucesso') {
     return (
       <div className="space-y-4">
-        <Alert variant="success" className="bg-green-50 border-green-300">
+        <Alert variant="default" className="bg-green-50 border-green-300">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Matrícula Concluída</AlertTitle>
           <AlertDescription className="text-green-700">

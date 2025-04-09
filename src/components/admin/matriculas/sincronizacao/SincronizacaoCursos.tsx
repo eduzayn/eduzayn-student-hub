@@ -7,167 +7,88 @@ import { CheckCircle, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import LearnWorldsErrorAlert from "@/components/admin/matriculas/LearnWorldsErrorAlert";
-import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import useSincronizacaoCursos from "@/hooks/sincronizacao/useSincronizacaoCursos";
 
 interface SincronizacaoCursosProps {
   // Props if needed
 }
 
 const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
-  const { sincronizarCursos, loading, error, offlineMode } = useLearnWorldsApi();
-  const [resultado, setResultado] = useState<any>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  const { sincronizarCursos, loading, resultado, logs } = useSincronizacaoCursos();
   
-  const handleSincronizar = async (todos: boolean = false) => {
+  const handleSincronizar = async () => {
     try {
-      const result = await sincronizarCursos(todos);
-      if (result) {
-        setResultado(result);
-        setLogs(result.logs || []);
+      const result = await sincronizarCursos();
+      
+      if (result && result.success) {
+        toast.success("Sincronização concluída com sucesso!");
       }
     } catch (error) {
-      console.error("Erro ao sincronizar:", error);
-      toast.error("Erro ao sincronizar cursos com LearnWorlds");
+      console.error("Erro ao sincronizar cursos:", error);
+      toast.error("Falha ao sincronizar cursos");
     }
   };
 
   return (
-    <div className="p-4">
-      {error && <LearnWorldsErrorAlert errorMessage={error} />}
-      
-      {offlineMode && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Modo Offline</AlertTitle>
-          <AlertDescription>
-            O sistema está operando em modo offline. Algumas funcionalidades podem estar limitadas.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Sincronização Incremental</CardTitle>
-            <CardDescription>
-              Sincroniza apenas os cursos que foram modificados ou são novos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              className="w-full" 
-              onClick={() => handleSincronizar(false)}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              {loading ? "Sincronizando..." : "Sincronizar Novos Cursos"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Sincronização Completa</CardTitle>
-            <CardDescription>
-              Sincroniza todos os cursos do LearnWorlds. Isso pode demorar mais.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="secondary" 
-              className="w-full" 
-              onClick={() => handleSincronizar(true)}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              {loading ? "Sincronizando..." : "Sincronizar Todos os Cursos"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {resultado && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Resultado da Sincronização</CardTitle>
-            <CardDescription>
-              Concluído em {new Date().toLocaleTimeString()}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                  <div className="text-xs text-green-700 font-semibold">NOVOS CURSOS</div>
-                  <div className="text-2xl font-bold text-green-600">{resultado.imported}</div>
-                </div>
-                <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                  <div className="text-xs text-blue-700 font-semibold">ATUALIZADOS</div>
-                  <div className="text-2xl font-bold text-blue-600">{resultado.updated}</div>
-                </div>
-                <div className="p-4 rounded-lg bg-amber-50 border border-amber-100">
-                  <div className="text-xs text-amber-700 font-semibold">FALHAS</div>
-                  <div className="text-2xl font-bold text-amber-600">{resultado.failed}</div>
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <div className="text-sm font-medium mb-1">Total processado: {resultado.total}</div>
-              </div>
-
-              {resultado.failed > 0 && (
-                <Alert variant="destructive" className="mt-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Atenção</AlertTitle>
-                  <AlertDescription>
-                    {resultado.failed} cursos não puderam ser sincronizados. 
-                    Verifique os logs para mais detalhes.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {resultado.imported === 0 && resultado.updated === 0 && resultado.failed === 0 && (
-                <Alert className="mt-4">
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertTitle>Tudo em dia</AlertTitle>
-                  <AlertDescription>
-                    Nenhuma alteração foi necessária. Todos os cursos já estão sincronizados.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="mt-6">
+    <div className="space-y-6">
+      <Card>
         <CardHeader>
-          <CardTitle>Logs de Sincronização</CardTitle>
+          <CardTitle>Sincronização de Cursos</CardTitle>
           <CardDescription>
-            Registro detalhado do processo de sincronização
+            Sincronize os cursos da plataforma LearnWorlds com o sistema de matrículas.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {logs.length > 0 ? (
-            <ScrollArea className="h-[400px] rounded border p-4">
-              {logs.map((log, index) => (
-                <div key={index} className="pb-2 text-xs font-mono">
-                  {log}
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              onClick={handleSincronizar} 
+              disabled={loading}
+              className="space-x-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Sincronizando...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Iniciar Sincronização</span>
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {resultado && (
+            <Alert 
+              variant={resultado.success ? "default" : "destructive"}
+              className={resultado.success ? "bg-green-50 border-green-200" : ""}
+            >
+              {resultado.success ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <AlertTitle>{resultado.success ? "Sucesso" : "Erro"}</AlertTitle>
+              <AlertDescription>{resultado.message}</AlertDescription>
+            </Alert>
+          )}
+          
+          {logs && logs.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm">Logs de Sincronização</CardTitle>
+              </CardHeader>
+              <ScrollArea className="h-[200px] rounded-md border">
+                <div className="p-4 font-mono text-sm">
+                  {logs.map((log, index) => (
+                    <div key={index} className={`pb-1 ${log.includes("Erro") ? "text-red-500" : ""}`}>
+                      {log}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </ScrollArea>
-          ) : (
-            <div className="text-center p-6 text-gray-500">
-              Nenhum log disponível. Execute uma sincronização para ver os logs.
-            </div>
+              </ScrollArea>
+            </Card>
           )}
         </CardContent>
       </Card>

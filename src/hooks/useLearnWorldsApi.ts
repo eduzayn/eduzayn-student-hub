@@ -1,74 +1,223 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { SincronizacaoResult, CoursesResponse } from './learnworlds/types/cursoTypes';
 
-/**
- * Hook simplificado para comunicação com a API LearnWorlds - Versão temporária
- * Este é um placeholder enquanto a integração com LearnWorlds é reformulada
- */
-const useLearnWorldsApi = () => {
+export default function useLearnWorldsApi() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const offlineMode = true; // Sempre offline durante a reformulação
-  
-  // Funções simplificadas que retornam dados simulados
-  const buscarCursos = async (page = 1, limit = 10) => {
+  const [offlineMode, setOfflineMode] = useState(false);
+
+  // Função para buscar cursos
+  const buscarCursos = async (page = 1, limit = 10): Promise<CoursesResponse> => {
     setLoading(true);
+    setError(null);
+    
     try {
-      console.log(`Simulando busca de cursos (página ${page}, limite ${limit})`);
-      // Retorna uma estrutura vazia mas válida
+      if (offlineMode) {
+        // Retornar dados simulados se estiver em modo offline
+        return {
+          data: simulatedCourses,
+          meta: {
+            total: simulatedCourses.length,
+            pages: 1,
+            currentPage: 1
+          }
+        };
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('Você precisa estar autenticado para realizar esta ação');
+      }
+
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: { 
+          path: '/courses',
+          method: 'GET',
+          query: { page, limit }
+        }
+      });
+
+      if (error) throw error;
+      
+      return data as CoursesResponse;
+    } catch (error: any) {
+      setError(error.message || 'Erro ao buscar cursos');
+      console.error('Erro ao buscar cursos:', error);
+      
+      // Se houver erro de conexão, ativar modo offline
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network error')
+      )) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: Usando dados simulados');
+      }
+      
+      // Retornar dados simulados em caso de erro
       return {
-        data: [],
-        meta: { 
-          total: 0,
-          pages: 0,
-          currentPage: page
+        data: simulatedCourses,
+        meta: {
+          total: simulatedCourses.length,
+          pages: 1,
+          currentPage: 1
         }
       };
-    } catch (e) {
-      console.error("Erro ao buscar cursos:", e);
-      setError("Erro ao buscar cursos");
-      throw new Error("Erro ao buscar cursos");
     } finally {
       setLoading(false);
     }
   };
   
+  // Função para sincronizar cursos
+  const sincronizarCursos = async (): Promise<SincronizacaoResult> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (offlineMode) {
+        return {
+          success: true,
+          message: 'Simulação de sincronização bem-sucedida!',
+          imported: 5,
+          updated: 10,
+          failed: 0,
+          total: 15,
+          logs: ['Sincronização simulada concluída']
+        };
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('Você precisa estar autenticado para realizar esta ação');
+      }
+
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: { 
+          path: '/sync/courses',
+          method: 'POST'
+        }
+      });
+
+      if (error) throw error;
+      
+      return data as SincronizacaoResult;
+    } catch (error: any) {
+      setError(error.message || 'Erro ao sincronizar cursos');
+      console.error('Erro ao sincronizar cursos:', error);
+      
+      // Se houver erro de conexão, ativar modo offline
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network error')
+      )) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: Usando dados simulados');
+      }
+      
+      return {
+        success: false,
+        message: error.message || 'Erro ao sincronizar cursos'
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Função para matricular aluno em curso
   const matricularAlunoEmCurso = async (alunoId: string, cursoId: string, options: any) => {
     setLoading(true);
+    setError(null);
+    
     try {
-      console.log(`Simulando matrícula do aluno ${alunoId} no curso ${cursoId}`);
-      return {
-        id: `sim-${Date.now()}`,
-        status: "active",
-        simulatedResponse: true
-      };
-    } catch (e) {
-      console.error("Erro ao matricular aluno:", e);
-      setError("Erro ao matricular aluno");
-      throw new Error("Erro ao matricular aluno");
+      if (offlineMode) {
+        return {
+          id: `simulated-${Date.now()}`,
+          success: true,
+          message: 'Matrícula simulada realizada com sucesso'
+        };
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('Você precisa estar autenticado para realizar esta ação');
+      }
+
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: { 
+          path: `/users/${alunoId}/courses/${cursoId}`,
+          method: 'POST',
+          body: options
+        }
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error: any) {
+      setError(error.message || 'Erro ao matricular aluno');
+      console.error('Erro ao matricular aluno:', error);
+      
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network error')
+      )) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: Usando dados simulados');
+      }
+      
+      throw error;
     } finally {
       setLoading(false);
     }
   };
   
+  // Função para verificar matrícula
   const verificarMatricula = async (alunoId: string, cursoId: string) => {
     setLoading(true);
+    setError(null);
+    
     try {
-      console.log(`Simulando verificação de matrícula: aluno ${alunoId}, curso ${cursoId}`);
-      return null; // Sem matrícula existente
-    } catch (e) {
-      console.error("Erro ao verificar matrícula:", e);
-      setError("Erro ao verificar matrícula");
-      throw new Error("Erro ao verificar matrícula");
+      if (offlineMode) {
+        return {
+          id: `simulated-${Date.now()}`,
+          status: 'active',
+          enrollmentDate: new Date().toISOString()
+        };
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('Você precisa estar autenticado para realizar esta ação');
+      }
+
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: { 
+          path: `/users/${alunoId}/courses/${cursoId}`,
+          method: 'GET'
+        }
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error: any) {
+      setError(error.message || 'Erro ao verificar matrícula');
+      console.error('Erro ao verificar matrícula:', error);
+      
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network error')
+      )) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: Usando dados simulados');
+      }
+      
+      return null;
     } finally {
       setLoading(false);
     }
-  };
-  
-  const sincronizarCursos = async () => {
-    toast.info("Sincronização de cursos não disponível durante a reformulação");
-    return { success: false, message: "Funcionalidade em reformulação" };
   };
   
   return {
@@ -80,6 +229,35 @@ const useLearnWorldsApi = () => {
     verificarMatricula,
     sincronizarCursos
   };
-};
+}
 
-export default useLearnWorldsApi;
+// Dados simulados para modo offline
+const simulatedCourses = [
+  {
+    id: 'sim-course-1',
+    title: 'Desenvolvimento Web Fullstack',
+    description: 'Aprenda a desenvolver aplicações web completas.',
+    image: '/placeholder.svg',
+    price: 997,
+    access: 'paid',
+    duration: '120 horas'
+  },
+  {
+    id: 'sim-course-2',
+    title: 'Design UX/UI',
+    description: 'Aprenda a criar interfaces intuitivas e atraentes.',
+    image: '/placeholder.svg',
+    price: 897,
+    access: 'paid',
+    duration: '80 horas'
+  },
+  {
+    id: 'sim-course-3',
+    title: 'Marketing Digital',
+    description: 'Estratégias para divulgação online.',
+    image: '/placeholder.svg',
+    price: 697,
+    access: 'paid',
+    duration: '60 horas'
+  }
+];

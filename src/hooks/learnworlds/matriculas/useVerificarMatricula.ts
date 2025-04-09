@@ -20,7 +20,7 @@ const useVerificarMatricula = () => {
         console.log("Modo offline detectado, retornando status simulado");
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
           simulatedResponse: true,
@@ -41,7 +41,7 @@ const useVerificarMatricula = () => {
       if (result && !result.error) {
         return {
           id: result.id || `${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: result.status || "active",
           enrollmentDate: result.enrollmentDate || new Date().toISOString(),
           expirationDate: result.expirationDate,
@@ -66,7 +66,7 @@ const useVerificarMatricula = () => {
       if (offlineMode) {
         return {
           id: `simulated-enrollment-${alunoId}-${cursoId}`,
-          courseId: cursoId,
+          course_id: cursoId,
           status: "active",
           enrollmentDate: new Date().toISOString(),
           simulatedResponse: true,

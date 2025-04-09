@@ -6,21 +6,30 @@ export interface Course {
   shortDescription?: string;
   image?: string;
   courseImage?: string;
+  thumbnail?: string;
   price?: number;
   price_final?: number;
   access?: string;
   duration?: string;
+  progress?: number;
+  modalidade?: string;
 }
 
 export interface EnrollmentResponse {
   id: string;
-  user_id: string;
   course_id: string;
   status: string;
-  created_at: string;
-  progress?: number;
-  completed?: boolean;
-  certificate?: string;
+  enrollmentDate: string;
+  expirationDate?: string;
+  learnworlds_id?: string;
+  simulatedResponse?: boolean;
+  data?: {
+    id: string;
+    student_id: string;
+    course_id: string;
+    status: string;
+    enrollment_date: string;
+  };
 }
 
 export interface CourseSyncResponse {
@@ -50,6 +59,7 @@ export interface LearnWorldsLesson {
   duration?: number;
   type: string;
   url?: string;
+  videoUrl?: string;
   completed?: boolean;
   locked?: boolean;
   order?: number;
@@ -63,6 +73,7 @@ export interface SincronizacaoResult {
   failed?: number;
   total?: number;
   logs?: string[];
+  syncedItems?: any[];
 }
 
 export interface CoursesResponse {
@@ -73,3 +84,6 @@ export interface CoursesResponse {
     currentPage: number;
   };
 }
+
+// Exportando os tipos para serem usados por outros componentes
+export type { Course as LearnWorldsCourse, LearnWorldsLesson };

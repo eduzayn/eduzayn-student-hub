@@ -1,5 +1,4 @@
-
-import { LearnWorldsCourse } from "@/types/curso";
+import { Course as LearnWorldsCourse } from "@/hooks/learnworlds/types/cursoTypes";
 import { LearnWorldsLesson } from "@/hooks/learnworlds/types/cursoTypes";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -267,3 +266,6 @@ export async function getRotaAprendizagem(userId: string): Promise<any> {
     };
   }
 }
+
+// Re-exportando tipos para uso em componentes
+export type { LearnWorldsCourse, LearnWorldsLesson };
