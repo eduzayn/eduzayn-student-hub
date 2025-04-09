@@ -27,10 +27,46 @@ export interface CourseSyncResponse {
   success: boolean;
   message: string;
   data?: Course[];
+  imported?: number;
+  updated?: number;
+  failed?: number;
+  total?: number;
+  logs?: string[];
 }
 
 export interface PaginatedResponse<T> {
   data: T[];
+  meta: {
+    total: number;
+    pages: number;
+    currentPage: number;
+  };
+}
+
+export interface LearnWorldsLesson {
+  id: string;
+  title: string;
+  description?: string;
+  duration?: number;
+  type: string;
+  url?: string;
+  completed?: boolean;
+  locked?: boolean;
+  order?: number;
+}
+
+export interface SincronizacaoResult {
+  success: boolean;
+  message: string;
+  imported?: number;
+  updated?: number;
+  failed?: number;
+  total?: number;
+  logs?: string[];
+}
+
+export interface CoursesResponse {
+  data: Course[];
   meta: {
     total: number;
     pages: number;
