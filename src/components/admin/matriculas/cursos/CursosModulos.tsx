@@ -40,18 +40,18 @@ const CursosModulos: React.FC<CursosModulosProps> = ({ cursoId }) => {
   const carregarModulos = async () => {
     setLoading(true);
     try {
+      // Usar a tabela correta modulos_curso em vez de curso_modulos
       const { data, error } = await supabase
-        .from('curso_modulos')
+        .from('modulos_curso')
         .select(`
           id,
           titulo,
           ordem,
-          aulas:curso_aulas(
+          aulas(
             id,
             titulo,
             tipo,
             duracao,
-            bloqueada,
             ordem
           )
         `)
@@ -60,10 +60,14 @@ const CursosModulos: React.FC<CursosModulosProps> = ({ cursoId }) => {
 
       if (error) throw error;
 
-      // Ordenar aulas dentro de cada módulo
+      // Processar os módulos e adicionar propriedades necessárias às aulas
       const modulosProcessados = data?.map(modulo => ({
         ...modulo,
-        aulas: (modulo.aulas || []).sort((a, b) => a.ordem - b.ordem)
+        aulas: (modulo.aulas || []).map(aula => ({
+          ...aula,
+          bloqueada: false, // Valor padrão, ajuste conforme necessário
+          ordem: aula.ordem || 0
+        })).sort((a, b) => a.ordem - b.ordem)
       })) || [];
 
       setModulos(modulosProcessados);

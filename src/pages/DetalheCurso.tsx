@@ -97,7 +97,7 @@ const DetalheCurso: React.FC = () => {
                   certification={curso.certification}
                 />
                 
-                <CourseDescription curso={curso} />
+                <CourseDescription description={curso.description} />
               </div>
             </div>
             

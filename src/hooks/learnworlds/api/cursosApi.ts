@@ -32,7 +32,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         })
       : [];
     
-    // Adaptar metadados
+    // Adaptar metadados para o formato esperado
     return {
       data: formattedData,
       meta: {

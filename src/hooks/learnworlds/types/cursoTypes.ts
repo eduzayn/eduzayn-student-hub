@@ -90,7 +90,7 @@ export interface CoursesResponse {
   success?: boolean;
 }
 
-// Exportando os tipos para outros componentes
+// Exportando os tipos para componentes externos
 export type LearnWorldsCourse = Course;
 
-// Removendo a exportação duplicada de LearnWorldsLesson que causava conflito
+// Não exportar LearnWorldsLesson novamente pois já foi exportado acima
