@@ -5,24 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, BookOpen, Grid3X3, ListFilter } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
-import { getUserCourses, getCurrentUserId, type LearnWorldsCourse } from "@/services/learnworlds-api";
-import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
-import { type Course } from "@/hooks/learnworlds/types/cursoTypes";
+import { getUserCourses, getCurrentUserId } from "@/services/learnworlds-api";
 import { toast } from "sonner";
-
-const mapCourseToLearnWorldsCourse = (curso: Course): LearnWorldsCourse => {
-  return {
-    id: curso.id,
-    title: curso.title,
-    description: curso.description || curso.shortDescription || "",
-    thumbnail: curso.image || curso.courseImage || "",
-    price: curso.price || curso.price_final || 0, 
-    modalidade: "EAD",
-    access: curso.access || "paid",
-    duration: curso.duration || "60 horas",
-    progress: 0
-  };
-};
+import { LearnWorldsCourse } from "@/types/curso";
 
 const CursosAluno: React.FC = () => {
   const [cursos, setCursos] = useState<LearnWorldsCourse[]>([]);
@@ -31,19 +16,17 @@ const CursosAluno: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  const { buscarCursos } = useLearnWorldsApi();
-  
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         const id = await getCurrentUserId();
-        setUserId(id || "user123"); // Fallback para "user123" se não estiver autenticado
+        setUserId(id || "user123");
       } catch (err) {
         console.error("Erro ao buscar ID do usuário:", err);
         toast.error("Erro ao identificar usuário", { 
           description: "Usando perfil padrão para demonstração" 
         });
-        setUserId("user123"); // Fallback em caso de erro
+        setUserId("user123");
       }
     };
     
@@ -56,16 +39,8 @@ const CursosAluno: React.FC = () => {
       
       try {
         setLoading(true);
-        
-        const response = await buscarCursos(1, 50);
-        if (response && response.data && Array.isArray(response.data)) {
-          const cursosFormatados = response.data.map(mapCourseToLearnWorldsCourse);
-          setCursos(cursosFormatados);
-        } else {
-          const data = await getUserCourses(userId);
-          setCursos(data);
-        }
-        
+        const data = await getUserCourses(userId);
+        setCursos(data);
         setError(null);
       } catch (err) {
         console.error("Erro ao buscar cursos:", err);
@@ -87,7 +62,7 @@ const CursosAluno: React.FC = () => {
     };
     
     fetchCursos();
-  }, [userId, buscarCursos]);
+  }, [userId]);
   
   const cursosEmAndamento = cursos.filter(curso => curso.progress > 0 && curso.progress < 100);
   const cursosNaoIniciados = cursos.filter(curso => curso.progress === 0);
