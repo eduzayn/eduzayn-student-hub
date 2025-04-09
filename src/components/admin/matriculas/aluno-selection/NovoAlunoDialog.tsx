@@ -14,14 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, AlertCircle } from "lucide-react";
-
-interface NovoAlunoForm {
-  nome: string;
-  sobrenome: string;
-  email: string;
-  cpf: string;
-  telefone: string;
-}
+import { NovoAlunoForm } from "./types";
 
 interface NovoAlunoDialogProps {
   aberto: boolean;
