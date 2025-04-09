@@ -20,9 +20,13 @@ const MatriculasPage: React.FC = () => {
 
   // Função para lidar com botões ainda não implementados
   const handleConfigurarClick = (tipo: string) => {
-    toast.info(`Configurações de ${tipo} serão implementadas em breve`, {
-      duration: 3000,
-    });
+    if (tipo === "LearnWorlds" || tipo === "e-mail" || tipo === "gerais") {
+      navigate("/admin/matriculas/configuracoes");
+    } else {
+      toast.info(`Configurações de ${tipo} serão implementadas em breve`, {
+        duration: 3000,
+      });
+    }
   };
 
   return (
@@ -182,7 +186,7 @@ const MatriculasPage: React.FC = () => {
                   </div>
                   <Button 
                     variant="outline"
-                    onClick={irParaConfiguracoes}
+                    onClick={() => handleConfigurarClick("gerais")}
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Configurar

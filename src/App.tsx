@@ -16,6 +16,7 @@ import DetalheCurso from "./pages/DetalheCurso";
 import NavBarLayout from "./components/layout/NavBarLayout";
 import MatriculasAlunos from "./pages/admin/matriculas/MatriculasAlunos";
 import NovaMatricula from "./pages/admin/matriculas/NovaMatricula";
+import MatriculasConfiguracoes from "./pages/admin/matriculas/MatriculasConfiguracoes";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
           <Route path="/admin/matriculas/sincronizacao" element={<MatriculasPage />} />
           <Route path="/admin/matriculas/nova" element={<NovaMatricula />} />
           <Route path="/admin/matriculas/alunos" element={<MatriculasAlunos />} />
+          <Route path="/admin/matriculas/configuracoes" element={<MatriculasConfiguracoes />} />
           
           {/* Páginas em construção */}
           <Route path="/alunos" element={<EmConstrucao title="Alunos" />} />
