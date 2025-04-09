@@ -143,13 +143,14 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
   if (endpoint.includes('/users')) {
     // Verificar se estamos lidando com um array ou objeto único
     if (Array.isArray(data)) {
-      // Criar objeto de metadados padrão se não existir
-      const metaData = typeof data === 'object' && data.meta ? data.meta : {
-        page: 1,
-        total_pages: 1,
-        total: data.length,
-        per_page: 20
-      };
+      // Criar objeto de metadados padrão
+      const metaData = data && typeof data === 'object' && 'meta' in data ? 
+        (data as any).meta : {
+          page: 1,
+          total_pages: 1,
+          total: data.length,
+          per_page: 20
+        };
 
       return {
         data: data.map(user => ({
@@ -173,13 +174,14 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
   if (endpoint.includes('/courses')) {
     // Verificar se estamos lidando com um array ou objeto único
     if (Array.isArray(data)) {
-      // Criar objeto de metadados padrão se não existir
-      const metaData = typeof data === 'object' && data.meta ? data.meta : {
-        page: 1,
-        total_pages: 1,
-        total: data.length,
-        per_page: 20
-      };
+      // Criar objeto de metadados padrão
+      const metaData = data && typeof data === 'object' && 'meta' in data ? 
+        (data as any).meta : {
+          page: 1,
+          total_pages: 1,
+          total: data.length,
+          per_page: 20
+        };
 
       return {
         data: data.map(course => ({
