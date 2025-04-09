@@ -141,7 +141,16 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
   
   // Adaptar dados de usuários
   if (endpoint.includes('/users')) {
+    // Verificar se estamos lidando com um array ou objeto único
     if (Array.isArray(data)) {
+      // Criar objeto de metadados padrão se não existir
+      const metaData = typeof data === 'object' && data.meta ? data.meta : {
+        page: 1,
+        total_pages: 1,
+        total: data.length,
+        per_page: 20
+      };
+
       return {
         data: data.map(user => ({
           id: user.id,
@@ -151,10 +160,10 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
           // Outros campos necessários
         })),
         meta: {
-          currentPage: data.meta?.page || 1,
-          totalPages: data.meta?.total_pages || 1,
-          totalItems: data.meta?.total || data.length,
-          itemsPerPage: data.meta?.per_page || 20
+          currentPage: metaData.page || 1,
+          totalPages: metaData.total_pages || 1,
+          totalItems: metaData.total || data.length,
+          itemsPerPage: metaData.per_page || 20
         }
       };
     }
@@ -162,7 +171,16 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
   
   // Adaptar dados de cursos
   if (endpoint.includes('/courses')) {
+    // Verificar se estamos lidando com um array ou objeto único
     if (Array.isArray(data)) {
+      // Criar objeto de metadados padrão se não existir
+      const metaData = typeof data === 'object' && data.meta ? data.meta : {
+        page: 1,
+        total_pages: 1,
+        total: data.length,
+        per_page: 20
+      };
+
       return {
         data: data.map(course => ({
           id: course.id,
@@ -174,10 +192,10 @@ export const adaptApiResponseToLegacyFormat = (data: any, endpoint: string): any
           // Outros campos necessários
         })),
         meta: {
-          currentPage: data.meta?.page || 1,
-          totalPages: data.meta?.total_pages || 1,
-          totalItems: data.meta?.total || data.length,
-          itemsPerPage: data.meta?.per_page || 20
+          currentPage: metaData.page || 1,
+          totalPages: metaData.total_pages || 1,
+          totalItems: metaData.total || data.length,
+          itemsPerPage: metaData.per_page || 20
         }
       };
     }
