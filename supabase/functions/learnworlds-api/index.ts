@@ -2,7 +2,8 @@
 // Função de borda para interagir com a API do LearnWorlds
 import { corsHeaders } from "./config.ts";
 import { handleCursos, handleUsuarios, handleMatriculas } from "./handlers.ts";
-import { ADMIN_BYPASS_JWT, LEARNWORLDS_API_BASE_URL } from "./config.ts";
+import { ADMIN_BYPASS_JWT, LEARNWORLDS_API_BASE_URL, LEARNWORLDS_PUBLIC_TOKEN } from "./config.ts";
+import { getOAuthToken } from "./oauth.ts";
 
 // Responde às requisições OPTIONS para CORS
 const handleOptions = () => {
@@ -23,11 +24,16 @@ const verificarToken = (req: Request): boolean => {
 
   const token = authHeader.substring(7); // Remover "Bearer "
   console.log("Token recebido:", token.substring(0, 4) + "...");
-  console.log("Token esperado:", ADMIN_BYPASS_JWT.substring(0, 4) + "...");
   
   // Verificar se o token corresponde ao token bypass do administrador
   if (token === ADMIN_BYPASS_JWT) {
     console.log("Token de administrador válido");
+    return true;
+  }
+  
+  // Verificar se o token corresponde ao token público (para chamadas GET)
+  if (token === LEARNWORLDS_PUBLIC_TOKEN && req.method === "GET") {
+    console.log("Token público válido para chamada GET");
     return true;
   }
 
@@ -48,6 +54,15 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     console.log(`Recebendo solicitação: ${req.method} ${url.pathname} ${url.search}`);
     console.log(`Usando URL base da API LearnWorlds: ${LEARNWORLDS_API_BASE_URL}`);
+    
+    // Testar conexão OAuth
+    try {
+      const oauthToken = await getOAuthToken();
+      console.log("Token OAuth obtido com sucesso:", oauthToken.substring(0, 10) + "...");
+    } catch (oauthError) {
+      console.error("Erro ao obter token OAuth:", oauthError.message);
+      // Continuar mesmo com erro de OAuth, pois pode estar usando token bypass
+    }
     
     // Extrair componentes da URL
     let path = url.pathname;

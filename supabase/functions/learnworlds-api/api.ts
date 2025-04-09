@@ -1,7 +1,7 @@
 
 // Funções para chamar a API do LearnWorlds
 import { LEARNWORLDS_API_KEY, LEARNWORLDS_SCHOOL_ID, LEARNWORLDS_API_BASE_URL } from './config.ts';
-import { getOAuthToken } from './oauth.ts';
+import { getOAuthToken, invalidateOAuthToken } from './oauth.ts';
 
 /**
  * Verifica se a resposta é HTML em vez de JSON
@@ -19,7 +19,7 @@ function isHtmlResponse(text: string): boolean {
 /**
  * Chama a API do LearnWorlds com o token apropriado
  */
-export async function callLearnWorldsApi(path: string, method = 'GET', body?: any, useOAuth = false): Promise<any> {
+export async function callLearnWorldsApi(path: string, method = 'GET', body?: any, useOAuth = false, retry = true): Promise<any> {
   try {
     if (!LEARNWORLDS_SCHOOL_ID) {
       throw new Error("LEARNWORLDS_SCHOOL_ID não configurado");
@@ -54,15 +54,34 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     // Determinar qual token usar com base no parâmetro useOAuth
     if (useOAuth) {
       // Para endpoints que exigem OAuth (como users)
-      authToken = await getOAuthToken();
-      console.log("Usando token OAuth para autenticação");
+      try {
+        authToken = await getOAuthToken();
+        console.log("Usando token OAuth para autenticação");
+      } catch (oauthError) {
+        console.error("Falha ao obter token OAuth:", oauthError);
+        
+        // Se não conseguir obter o token OAuth, tentar usar API Key como fallback
+        if (LEARNWORLDS_API_KEY) {
+          console.log("Usando API Key como fallback após falha de OAuth");
+          authToken = LEARNWORLDS_API_KEY;
+        } else {
+          throw new Error("Não foi possível obter token OAuth e API Key não está disponível");
+        }
+      }
     } else {
       // Para outros endpoints (como cursos)
       if (!LEARNWORLDS_API_KEY) {
-        throw new Error("LEARNWORLDS_API_KEY não configurado");
+        // Se a API Key não estiver disponível, tentar usar OAuth como fallback
+        try {
+          console.log("API Key não configurada, tentando OAuth como fallback");
+          authToken = await getOAuthToken();
+        } catch (fallbackError) {
+          throw new Error("LEARNWORLDS_API_KEY não configurado e fallback OAuth falhou");
+        }
+      } else {
+        authToken = LEARNWORLDS_API_KEY;
+        console.log("Usando token de acesso API Key para autenticação");
       }
-      authToken = LEARNWORLDS_API_KEY;
-      console.log("Usando token de acesso API Key para autenticação");
     }
     
     // Configurar os headers com School ID (Lw-Client é obrigatório!)
@@ -93,8 +112,23 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     
     const text = await response.text();
     
+    // Verificar se é um erro de autenticação e tentar novamente com novo token OAuth
+    if (response.status === 401 && useOAuth && retry) {
+      console.log("Erro de autenticação 401. Invalidando token OAuth e tentando novamente...");
+      invalidateOAuthToken();
+      return callLearnWorldsApi(path, method, body, useOAuth, false); // Tentar apenas uma vez
+    }
+    
     if (!response.ok || isHtmlResponse(text)) {
       console.error(`Erro na API LearnWorlds: ${response.status} - ${text.substring(0, 200)}`);
+      
+      // Se recebeu HTML e é uma chamada OAuth, pode ser problema de token
+      if (isHtmlResponse(text) && useOAuth && retry) {
+        console.log("Recebeu HTML em resposta à chamada OAuth. Invalidando token e tentando novamente...");
+        invalidateOAuthToken();
+        return callLearnWorldsApi(path, method, body, useOAuth, false); // Tentar apenas uma vez
+      }
+      
       throw new Error(`Erro LearnWorlds: ${response.status} - ${text.substring(0, 200)}`);
     }
     
@@ -102,6 +136,14 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       return JSON.parse(text);
     } catch (parseError) {
       console.error("Erro ao converter resposta para JSON:", parseError);
+      
+      // Se não conseguir converter para JSON, pode ser um problema com o token
+      if (useOAuth && retry) {
+        console.log("Falha ao parse JSON com token OAuth. Invalidando token e tentando novamente...");
+        invalidateOAuthToken();
+        return callLearnWorldsApi(path, method, body, useOAuth, false); // Tentar apenas uma vez
+      }
+      
       throw new Error("Resposta da API LearnWorlds não é um JSON válido.");
     }
   } catch (error) {

@@ -13,6 +13,9 @@ export const corsHeaders = {
 // Token de bypass para admin (mantido para compatibilidade)
 export const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
 
+// Token público para chamadas GET
+export const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "public-zayn-lw-2025";
+
 // Credenciais e configurações do LearnWorlds
 export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
 
@@ -29,6 +32,7 @@ export const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET
 // Log de inicialização
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token de administrador:", ADMIN_BYPASS_JWT ? (ADMIN_BYPASS_JWT.substring(0, 4) + "...") : "Não configurado ✗");
+console.log("Token público:", LEARNWORLDS_PUBLIC_TOKEN ? (LEARNWORLDS_PUBLIC_TOKEN.substring(0, 4) + "...") : "Não configurado ✗");
 console.log("API Key LearnWorlds:", LEARNWORLDS_API_KEY ? "Configurado ✓" : "Não configurado ✗");
 console.log("Client ID LearnWorlds:", LEARNWORLDS_CLIENT_ID ? "Configurado ✓" : "Não configurado ✗");
 console.log("Client Secret LearnWorlds:", LEARNWORLDS_CLIENT_SECRET ? "Configurado ✓" : "Não configurado ✗");
