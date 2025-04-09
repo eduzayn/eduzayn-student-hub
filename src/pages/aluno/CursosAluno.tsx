@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -5,7 +6,8 @@ import { AlertCircle, BookOpen, Grid3X3, ListFilter } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
 import { getUserCourses, getCurrentUserId, type LearnWorldsCourse } from "@/services/learnworlds-api";
-import useLearnWorldsApi, { Course } from "@/hooks/useLearnWorldsApi";
+import useLearnWorldsApi from "@/hooks/useLearnWorldsApi";
+import { type Course } from "@/hooks/learnworlds/types/cursoTypes";
 import { toast } from "sonner";
 
 const mapCourseToLearnWorldsCourse = (curso: Course): LearnWorldsCourse => {
@@ -29,7 +31,7 @@ const CursosAluno: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  const { getAllCourses } = useLearnWorldsApi();
+  const { buscarCursos } = useLearnWorldsApi();
   
   useEffect(() => {
     const fetchUserId = async () => {
@@ -55,10 +57,9 @@ const CursosAluno: React.FC = () => {
       try {
         setLoading(true);
         
-        const cursosApi = await getAllCourses();
-        
-        if (cursosApi && Array.isArray(cursosApi)) {
-          const cursosFormatados = cursosApi.map(mapCourseToLearnWorldsCourse);
+        const response = await buscarCursos(1, 50);
+        if (response && response.data && Array.isArray(response.data)) {
+          const cursosFormatados = response.data.map(mapCourseToLearnWorldsCourse);
           setCursos(cursosFormatados);
         } else {
           const data = await getUserCourses(userId);
@@ -86,7 +87,7 @@ const CursosAluno: React.FC = () => {
     };
     
     fetchCursos();
-  }, [userId, getAllCourses]);
+  }, [userId, buscarCursos]);
   
   const cursosEmAndamento = cursos.filter(curso => curso.progress > 0 && curso.progress < 100);
   const cursosNaoIniciados = cursos.filter(curso => curso.progress === 0);

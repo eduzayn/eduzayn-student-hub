@@ -120,7 +120,91 @@ const useLearnWorldsBase = () => {
     }
   };
 
-  return { makeRequest, loading, error, offlineMode };
+  /**
+   * Faz uma requisição pública (sem autenticação) para a API do LearnWorlds
+   */
+  const makePublicRequest = async (
+    endpoint: string,
+    method = 'GET',
+    body?: any,
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = `/api/learnworlds-api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+      console.log(`Realizando requisição pública: ${method} ${url}`);
+      
+      // Configurar cabeçalhos
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Construir opções da requisição
+      const options: RequestInit = {
+        method,
+        headers,
+        credentials: 'include'
+      };
+
+      if (body && (method === 'POST' || method === 'PUT')) {
+        options.body = JSON.stringify(body);
+      }
+
+      // Fazer a requisição
+      console.log(`Enviando requisição pública para ${url}`);
+      
+      const response = await fetch(url, options);
+      console.log(`Resposta HTTP status: ${response.status}`);
+      
+      const responseText = await response.text();
+      
+      // Verificar se a resposta é JSON válido
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error(`Resposta não é JSON válido:`, responseText);
+        throw new Error(`Resposta inválida do servidor: ${responseText}`);
+      }
+      
+      // Verificar por erros na resposta
+      if (!response.ok) {
+        console.error(`Erro na resposta:`, data);
+        
+        if (data && data.error) {
+          throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
+        } else {
+          throw new Error(`Erro ${response.status}: ${responseText}`);
+        }
+      }
+      
+      return data;
+    } catch (error: any) {
+      console.error(`Erro na API LearnWorlds (${endpoint}):`, error);
+      
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: sem conexão com o servidor');
+        setError('Sem conexão com o servidor - operando em modo offline');
+        return null;
+      }
+      
+      setError(error.message || 'Erro ao comunicar com a API do LearnWorlds');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { 
+    makeRequest, 
+    makePublicRequest, 
+    loading, 
+    error, 
+    offlineMode, 
+    setOfflineMode 
+  };
 };
 
 export default useLearnWorldsBase;

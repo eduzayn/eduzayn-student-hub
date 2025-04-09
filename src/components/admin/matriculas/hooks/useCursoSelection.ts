@@ -15,7 +15,7 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   const [totalPages, setTotalPages] = useState(1);
   const [isBuscaAtiva, setIsBuscaAtiva] = useState(false);
   const [forceReload, setForceReload] = useState(0); // Contador para forçar recargas
-  const { getCourses, loading, error, offlineMode } = useLearnWorldsApi();
+  const { buscarCursos, loading, error, offlineMode } = useLearnWorldsApi();
   
   // Cursos por página - podemos aumentar se necessário
   const cursosPerPage = 50;
@@ -24,26 +24,31 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
   useEffect(() => {
     if (!isBuscaAtiva) {
       carregarCursos({ 
-        getCourses, 
+        getCourses: buscarCursos, 
         setTotalPages, 
         setCursos, 
         offlineMode 
       }, "", page, cursosPerPage);
     } else {
       carregarCursos({ 
-        getCourses, 
+        getCourses: buscarCursos, 
         setTotalPages, 
         setCursos, 
         offlineMode 
       }, busca, page, cursosPerPage);
     }
-  }, [page, offlineMode, forceReload]);
+  }, [page, offlineMode, forceReload, buscarCursos, busca, isBuscaAtiva]);
   
   // Handler para a busca de cursos
   const handleBusca = () => {
     setPage(1); // Resetar para primeira página quando fizer uma nova busca
     setIsBuscaAtiva(true);
-    carregarCursos({ getCourses, setTotalPages, setCursos, offlineMode }, busca, 1, cursosPerPage);
+    carregarCursos({ 
+      getCourses: buscarCursos, 
+      setTotalPages, 
+      setCursos, 
+      offlineMode 
+    }, busca, 1, cursosPerPage);
   };
   
   // Função para forçar a recarga dos cursos ignorando o cache
@@ -74,7 +79,12 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     setBusca("");
     setIsBuscaAtiva(false);
     setPage(1);
-    carregarCursos({ getCourses, setTotalPages, setCursos, offlineMode }, "", 1, cursosPerPage);
+    carregarCursos({ 
+      getCourses: buscarCursos, 
+      setTotalPages, 
+      setCursos, 
+      offlineMode 
+    }, "", 1, cursosPerPage);
   };
 
   return {

@@ -1,28 +1,17 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
-interface SincronizacaoAlunosHeaderProps {
+export interface SincronizacaoAlunosHeaderProps {
   title: string;
 }
 
 const SincronizacaoAlunosHeader: React.FC<SincronizacaoAlunosHeaderProps> = ({ title }) => {
-  const navigate = useNavigate();
-  
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate("/admin/matriculas/sincronizacao")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar
-        </Button>
-      </div>
+    <div className="mb-6">
+      <h2 className="text-2xl font-semibold">{title}</h2>
+      <p className="text-muted-foreground">
+        Sincronize os alunos entre o LearnWorlds e o sistema de matrículas.
+      </p>
     </div>
   );
 };

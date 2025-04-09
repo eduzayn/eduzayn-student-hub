@@ -35,7 +35,15 @@ export interface AlunoParams {
 }
 
 const useLearnWorldsAlunos = () => {
-  const { loading, error, offlineMode, setOfflineMode, makeRequest, makePublicRequest } = useLearnWorldsBase();
+  const { 
+    makeRequest, 
+    makePublicRequest, 
+    loading, 
+    error, 
+    offlineMode, 
+    setOfflineMode 
+  } = useLearnWorldsBase();
+  
   const [dadosListagem, setDadosListagem] = useState<{ total: number; data: AlunoDTO[] }>({ 
     total: 0, 
     data: [] 
