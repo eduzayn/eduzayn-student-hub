@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "./config.ts";
 import { handleUsuarios, handleCursos, handleMatriculas } from "./handlers.ts";
+import { handleSync } from "./sync.ts";
 
 function verificarToken(req: Request): boolean {
   const authHeader = req.headers.get("Authorization") || "";
@@ -42,6 +43,11 @@ serve(async (req: Request): Promise<Response> => {
 
     if (path.startsWith("/enrollments") || path.includes("enrollments")) {
       return await handleMatriculas(req, path);
+    }
+
+    // NOVA FUNCIONALIDADE: Rotas para sincronização
+    if (path.startsWith("/sync")) {
+      return await handleSync(req, path);
     }
 
     return new Response(JSON.stringify({ error: "Endpoint não encontrado", path }), {

@@ -1,74 +1,91 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import useLearnWorldsApi from '@/hooks/useLearnWorldsApi';
+import { supabase } from '@/integrations/supabase/client';
 import { SincronizacaoResult } from '@/hooks/learnworlds/types/cursoTypes';
+import { useAuth } from '@/hooks/use-auth';
 
-interface SincronizacaoResultado {
-  success: boolean;
-  message: string;
-  imported?: number;
-  updated?: number;
-  failed?: number;
-  total?: number;
-  logs?: string[];
-}
-
-export default function useSincronizacaoCursos() {
+/**
+ * Hook para sincronizar cursos do LearnWorlds
+ */
+export const useSincronizacaoCursos = () => {
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<SincronizacaoResultado | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-  const { sincronizarCursos, offlineMode } = useLearnWorldsApi();
-  
-  const iniciarSincronizacao = async (): Promise<SincronizacaoResult> => {
+  const [resultado, setResultado] = useState<SincronizacaoResult | null>(null);
+  const { getAuthToken } = useAuth();
+
+  /**
+   * Sincroniza cursos do LearnWorlds com o banco de dados
+   * Atualizado para usar a rota centralizada no learnworlds-api
+   */
+  const sincronizarCursos = async (sincronizarTodos: boolean = false): Promise<SincronizacaoResult> => {
     setLoading(true);
-    setLogs([]);
     
     try {
-      // Chamando sem argumentos (o padrão é false)
-      const result = await sincronizarCursos();
-      
-      // Atualizar estado com resultado da sincronização
-      setResultado({
-        success: result.success,
-        message: result.message,
-        imported: result.imported,
-        updated: result.updated,
-        failed: result.failed,
-        total: result.total
-      });
-      
-      // Atualizar logs
-      if (result.logs && result.logs.length > 0) {
-        setLogs(result.logs);
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error("Você precisa estar autenticado para realizar esta ação");
       }
       
-      return result;
-    } catch (error: any) {
-      const mensagemErro = error.message || 'Erro ao sincronizar cursos';
-      toast.error(mensagemErro);
-      
-      setResultado({
-        success: false,
-        message: mensagemErro
+      // Usar a nova rota do /sync dentro de learnworlds-api
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: {
+          path: '/sync',
+          method: 'POST',
+          query: { 
+            type: 'courses',
+            syncAll: sincronizarTodos 
+          }
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-      
-      setLogs([`Erro: ${mensagemErro}`]);
-      
-      // Retornar um resultado de erro
-      return {
-        success: false,
-        message: mensagemErro
+
+      if (error) {
+        throw new Error(error.message || "Erro ao sincronizar cursos");
+      }
+
+      const resultado: SincronizacaoResult = {
+        success: true,
+        message: 'Sincronização concluída com sucesso',
+        imported: data.imported || 0,
+        updated: data.updated || 0,
+        failed: data.failed || 0,
+        total: data.total || 0,
+        logs: data.logs || [],
+        syncedItems: (data.imported || 0) + (data.updated || 0)
       };
+
+      setResultado(resultado);
+      
+      toast.success(`Sincronização concluída: ${resultado.syncedItems} cursos processados`);
+      return resultado;
+    } catch (error: any) {
+      console.error("Erro ao sincronizar cursos:", error);
+      
+      const falha: SincronizacaoResult = {
+        success: false,
+        message: error.message || 'Erro desconhecido',
+        imported: 0,
+        updated: 0,
+        failed: 0,
+        total: 0,
+        logs: [error.message || 'Erro desconhecido']
+      };
+      
+      setResultado(falha);
+      toast.error(`Falha na sincronização: ${falha.message}`);
+      return falha;
     } finally {
       setLoading(false);
     }
   };
-  
+
   return {
+    sincronizarCursos,
     loading,
-    resultado,
-    logs,
-    sincronizarCursos: iniciarSincronizacao
+    resultado
   };
-}
+};
+
+export default useSincronizacaoCursos;

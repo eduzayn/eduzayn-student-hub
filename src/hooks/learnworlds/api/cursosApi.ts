@@ -159,12 +159,13 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
   
   /**
    * Sincroniza cursos do LearnWorlds com o banco de dados local
+   * Atualizado para usar a rota centralizada /sync em vez de learnworlds-sync
    */
   const sincronizarCursos = async (todos: boolean = false): Promise<SincronizacaoResult> => {
     try {
       // Esta função requer token de administrador
       console.log(`Iniciando sincronização de cursos (todos=${todos})`);
-      const response = await makeRequest(`learnworlds-sync?type=courses&syncAll=${todos}`, "POST");
+      const response = await makeRequest(`learnworlds-api/sync?type=courses&syncAll=${todos}`, "POST");
       console.log("Resposta da sincronização:", response);
       
       if (!response || response.error) {
