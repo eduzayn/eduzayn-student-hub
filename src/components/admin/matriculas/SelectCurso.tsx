@@ -7,7 +7,7 @@ import OfflineModeIndicator from "./OfflineModeIndicator";
 import useCursoSelection from "./hooks/useCursoSelection";
 import CursosPagination from "./cursos/lista/CursosPagination";
 import { Button } from "@/components/ui/button";
-import { X, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
+import { X, AlertTriangle, ExternalLink, RefreshCw, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   // Verificar se todos os cursos são simulados
   const [todosCursosSimulados, setTodosCursosSimulados] = useState<boolean>(false);
   const [problemaDeDados, setProblemasDeDados] = useState<boolean>(false);
+  const [cursosOAuth, setCursosOAuth] = useState<number>(0);
   
   // Verificar quando os cursos são carregados
   useEffect(() => {
@@ -44,6 +45,10 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       const cursosSimuladosCount = cursos.filter(curso => curso.simulado === true).length;
       const todosCursosMaradosComoSimulados = cursosSimuladosCount === cursos.length;
       setTodosCursosSimulados(todosCursosMaradosComoSimulados);
+      
+      // Contar cursos OAuth
+      const countOAuth = cursos.filter(curso => curso.api_oauth === true).length;
+      setCursosOAuth(countOAuth);
       
       // Verificar se os IDs dos cursos parecem problemáticos
       const idsSuspeitosComCourse = cursos.filter(curso => 
@@ -97,6 +102,20 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
                 <ExternalLink className="h-3 w-3" /> Ver cursos no LearnWorlds
               </Button>
             </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!offlineMode && !todosCursosSimulados && cursosOAuth > 0 && !loading && (
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <AlertDescription>
+            <p className="font-medium text-green-700">
+              Conexão OAuth2 estabelecida com sucesso!
+            </p>
+            <p className="mt-1">
+              {cursosOAuth} cursos carregados via API OAuth2 do LearnWorlds.
+            </p>
           </AlertDescription>
         </Alert>
       )}

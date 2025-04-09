@@ -59,10 +59,10 @@ export const useCursoSelection = (onCursoSelecionado: (curso: any) => void) => {
     setSelecionado(cursoId);
     
     // CORREÇÃO: Garantir explicitamente que simulado seja booleano e preservar o valor original
-    // Se vier da API, não vai ser simulado (false); se vier dos dados de fallback, será true
     const cursoProcessado = {
       ...curso,
       simulado: curso.simulado === true, // Preserva o valor original, mas garante que seja booleano
+      api_oauth: curso.api_oauth === true || false, // Preserva flag de origem OAuth
       learning_worlds_id: curso.learning_worlds_id || curso.id
     };
     

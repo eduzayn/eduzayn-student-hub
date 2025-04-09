@@ -54,7 +54,6 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       // DIAGNÓSTICO ADICIONAL: Verificar o formato exato da resposta para debug
       console.log("Tipo da resposta:", typeof response);
       console.log("Estrutura da resposta:", Object.keys(response));
-      console.log("Status da resposta:", response.status);
       
       // CORREÇÃO: Assumir que qualquer array de dados é válido
       // Não marcar os cursos como simulados mesmo se os IDs parecerem simulados
@@ -63,15 +62,6 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         if (Array.isArray(response.data)) {
           console.log("Dados recebidos (primeiros 2 itens):", response.data.slice(0, 2));
           
-          // Verificar propriedades disponíveis nos cursos
-          if (response.data.length > 0) {
-            const firstCourse = response.data[0];
-            console.log("Propriedades disponíveis no primeiro curso:", Object.keys(firstCourse));
-            console.log("Tipo do ID no primeiro curso:", typeof firstCourse.id);
-            console.log("ID do primeiro curso:", firstCourse.id);
-            console.log("Título do primeiro curso:", firstCourse.title);
-          }
-          
           // Registrar todos os IDs para diagnóstico
           const allIds = response.data.map(c => c.id).join(", ");
           console.log("Todos os IDs dos cursos:", allIds);
@@ -79,7 +69,7 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
           const dataProperties = response.data.some(item => item.id !== undefined || item.title !== undefined);
           
           if (dataProperties) {
-            console.log("✅ Usando dados reais de cursos da API LearnWorlds:", response.data.length, "cursos encontrados");
+            console.log("✅ Usando dados reais de cursos da API OAuth 2.0:", response.data.length, "cursos encontrados");
             setOfflineMode(false);
             return {
               ...response,
@@ -87,7 +77,11 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
               data: response.data.map(curso => {
                 // Remove a propriedade simulado, se existir
                 const { simulado, ...restoCurso } = curso;
-                return restoCurso;
+                // Adiciona flag para API OAuth
+                return { 
+                  ...restoCurso,
+                  api_oauth: true 
+                };
               })
             };
           } else {
@@ -126,7 +120,9 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       }
       
       console.log(`Detalhes recebidos para curso ${courseId}:`, response);
-      return response;
+      
+      // Adicionar flag de API OAuth
+      return { ...response, api_oauth: true };
     } catch (error) {
       console.error(`Erro ao buscar detalhes do curso ${courseId}:`, error);
       setOfflineMode(true);

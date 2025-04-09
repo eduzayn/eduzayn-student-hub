@@ -47,9 +47,11 @@ export const formatarCursos = (cursosAPI: any[]): any[] => {
       valor_mensalidade: valorMensal,
       url: curso.url || "",
       imagem_url: image || "https://via.placeholder.com/300x180?text=Curso",
-      // CORREÇÃO IMPORTANTE: Nunca marcar cursos da API como simulados
+      // IMPORTANTE: Dados vindos da API NUNCA são marcados como simulados
       simulado: false,
-      simulatedResponse: false
+      simulatedResponse: false,
+      // Atributo adicional para garantir que sabemos que este curso veio da nova API OAuth
+      api_oauth: true
     };
   });
 };

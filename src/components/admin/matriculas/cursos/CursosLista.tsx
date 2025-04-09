@@ -32,10 +32,12 @@ const CursosLista: React.FC<CursosListaProps> = ({
   console.log("Exemplo de curso:", cursosExibir[0]);
   
   // Verificações específicas de origem de dados
-  // CORREÇÃO: Identificação correta de cursos simulados - procurando explicitamente pelo flag
   const cursosSimulados = cursosExibir.filter(c => c.simulado === true).length;
+  const cursosOAuth = cursosExibir.filter(c => c.api_oauth === true).length;
   const cursosReais = cursosExibir.length - cursosSimulados;
+  
   console.log("Cursos simulados:", cursosSimulados);
+  console.log("Cursos OAuth API:", cursosOAuth);
   console.log("Cursos reais:", cursosReais);
   
   if (cursosExibir.length === 0) {
@@ -71,9 +73,12 @@ const CursosLista: React.FC<CursosListaProps> = ({
     <div className="space-y-3">
       <div className="text-sm text-muted-foreground mb-2">
         Mostrando {cursosExibir.length} cursos
-        {offlineMode ? " (usando dados simulados)" : " da API LearnWorlds"}
+        {offlineMode ? " (usando dados simulados)" : " da API LearnWorlds OAuth2"}
         {!offlineMode && cursosSimulados > 0 && (
           <span className="text-amber-600"> ({cursosSimulados} simulados, {cursosReais} reais)</span>
+        )}
+        {cursosOAuth > 0 && (
+          <span className="text-green-600"> ({cursosOAuth} via OAuth)</span>
         )}
       </div>
       
@@ -82,8 +87,9 @@ const CursosLista: React.FC<CursosListaProps> = ({
           key={getLearnWorldsId(curso)}
           curso={{
             ...curso,
-            // CORREÇÃO: Garantir que simulado seja um booleano explícito usando o valor existente
-            simulado: curso.simulado === true
+            // Garantir que simulado seja um booleano explícito usando o valor existente
+            simulado: curso.simulado === true,
+            api_oauth: curso.api_oauth === true
           }} 
           selecionado={isCursoSelecionado(curso)}
           onSelecionar={onSelecionar} 

@@ -104,6 +104,10 @@ const useLearnWorldsBase = () => {
         // Processar a resposta
         const data = await parseResponse(response);
         setOfflineMode(false);
+        
+        // Log para debug
+        console.log("Resposta final formatada:", JSON.stringify(data).substring(0, 200) + "...");
+        
         return data;
       } catch (fetchError: any) {
         console.error(`Erro na requisição: ${fetchError.message}`);

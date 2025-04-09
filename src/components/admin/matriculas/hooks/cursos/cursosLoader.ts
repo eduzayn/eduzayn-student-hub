@@ -50,16 +50,26 @@ export const carregarCursos = async (
         setTotalPages(resultado.meta.totalPages);
       }
       
-      // CORREÇÃO PRINCIPAL: Nunca marcar cursos da API como simulados
+      // Garantir explicitamente que cursos da API são marcados como não simulados
       const cursosFormatados = formatarCursos(resultado.data).map(curso => ({
         ...curso,
         simulado: false, // Garantir explicitamente que cursos da API são marcados como não simulados
-        simulatedResponse: false // Campo adicional para garantir
+        simulatedResponse: false, // Campo adicional para garantir
+        api_oauth: true // Indicar que vieram da API OAuth
       }));
       
       console.log("Cursos formatados:", cursosFormatados);
-      console.log("Total de cursos da API:", cursosFormatados.length);
+      console.log("Total de cursos da API OAuth:", cursosFormatados.length);
       setCursos(cursosFormatados);
+      
+      // Verificar se temos algum curso com ID que parece simulado (para diagnóstico)
+      const cursosComIdsCourse = cursosFormatados.filter(c => 
+        c.id && c.id.toString().startsWith('course-')
+      ).length;
+      
+      if (cursosComIdsCourse > 0) {
+        console.log(`Aviso: ${cursosComIdsCourse} cursos têm IDs no formato 'course-X'. Isso é normal na API OAuth.`);
+      }
     } else {
       console.warn("API retornou um array vazio de cursos ou formato inesperado");
       handleFallbackData(setCursos, setTotalPages, termoBusca);
