@@ -29,15 +29,18 @@ export const adaptApiResponse = (response: any): CoursesResponse => {
     : [];
   
   // Adaptar metadados para o formato esperado de CoursesResponse
-  const meta = response.meta || {};
+  const responseMeta = response.meta || {};
+  
+  // Garantir que os campos necessários existam com os nomes corretos
+  const meta = {
+    total: responseMeta.totalItems || responseMeta.total || formattedData.length,
+    pages: responseMeta.totalPages || responseMeta.pages || 1,
+    currentPage: responseMeta.page || responseMeta.currentPage || 1
+  };
 
   return {
     data: formattedData,
-    meta: {
-      total: meta.totalItems || meta.total || formattedData.length,
-      pages: meta.totalPages || meta.pages || 1,
-      currentPage: meta.page || meta.currentPage || 1
-    },
+    meta,
     success: true
   };
 };
