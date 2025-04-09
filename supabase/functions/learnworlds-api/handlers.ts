@@ -24,16 +24,18 @@ export async function handleCursos(req: Request, path: string): Promise<Response
     } else {
       // Adicionar parâmetros de consulta para listagem
       const page = params.get("page") || "1";
-      const limit = params.get("limit") || "20";
-      apiPath += `?page=${page}&per_page=${limit}`; // Atualizado para usar per_page em vez de limit
+      const perPage = params.get("limit") || params.get("per_page") || "20";
+      apiPath += `?page=${page}&per_page=${perPage}`;
       
       // Adicionar outros parâmetros de consulta se presentes
-      if (params.has("q")) {
-        apiPath += `&search=${params.get("q")}`; // Atualizado para usar search
+      if (params.has("q") || params.has("search")) {
+        const searchTerm = params.get("q") || params.get("search");
+        apiPath += `&search=${searchTerm}`;
       }
       
-      if (params.has("categories")) {
-        apiPath += `&category=${params.get("categories")}`; // Atualizado para usar category
+      if (params.has("categories") || params.has("category")) {
+        const category = params.get("categories") || params.get("category");
+        apiPath += `&category=${category}`;
       }
     }
     
@@ -81,7 +83,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
       // Caso: /users/{userId}/courses/{courseId?}
       apiPath = `/users/${userId}/enrollments`;
       if (pathParts.length >= 3) {
-        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na nova API
+        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na API
       }
     } else if (isSingleUser) {
       // Caso: /users/{userId}
@@ -89,12 +91,13 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     } else {
       // Caso: /users (listar todos)
       const page = params.get("page") || "1";
-      const limit = params.get("limit") || "20";
-      apiPath += `?page=${page}&per_page=${limit}`; // Atualizado para usar per_page
+      const perPage = params.get("limit") || params.get("per_page") || "20";
+      apiPath += `?page=${page}&per_page=${perPage}`;
       
       // Adicionar outros parâmetros se presentes
-      if (params.has("q")) {
-        apiPath += `&search=${params.get("q")}`; // Atualizado para usar search
+      if (params.has("q") || params.has("search")) {
+        const searchTerm = params.get("q") || params.get("search");
+        apiPath += `&search=${searchTerm}`;
       }
     }
     
@@ -106,7 +109,7 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     
     console.log(`Chamando API LearnWorlds: ${apiPath} (método: ${req.method})`);
     
-    // Usuários podem exigir OAuth dependendo da implementação da API
+    // Usuários geralmente exigem OAuth
     const useOAuth = true;
     const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     

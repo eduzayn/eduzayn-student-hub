@@ -5,15 +5,15 @@
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, Lw-Client, X-School-Id",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, School-Id, X-API-Version, X-Use-OAuth",
   "Content-Type": "application/json"
 };
 
 // Credenciais e configurações
 export const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC"; // Token de bypass para admin
-export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY");
+export const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "YEmshZGseUQgbCuLyb9WeYUnHrpq91yuUk3Dx4nN";
 export const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-export const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com/api/v2";
+export const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com/v2";
 export const LEARNWORLDS_CLIENT_ID = Deno.env.get("LEARNWORLDS_CLIENT_ID");
 export const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET");
 

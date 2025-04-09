@@ -26,7 +26,12 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     }
 
     // Construir a URL completa usando a base de API v2
-    const url = `${LEARNWORLDS_API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
+    // Remover "api/" da URL se já estiver presente na base
+    const baseUrl = LEARNWORLDS_API_BASE_URL.endsWith('/api') 
+      ? LEARNWORLDS_API_BASE_URL.substring(0, LEARNWORLDS_API_BASE_URL.length - 4)
+      : LEARNWORLDS_API_BASE_URL;
+      
+    const url = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     
     let authToken;
@@ -45,12 +50,11 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       console.log("Usando token de acesso API Key para autenticação");
     }
     
-    // Configurar os headers com School ID como parâmetro, não mais como parte da URL
+    // Configurar os headers com School ID
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${authToken}`,
-      'School-Id': LEARNWORLDS_SCHOOL_ID, // Como header em vez de parte da URL
-      'X-API-Version': '2.0' // Adicionar versão para compatibilidade com API v2
+      'School-Id': LEARNWORLDS_SCHOOL_ID
     };
     
     const options: RequestInit = {
@@ -64,6 +68,11 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
       console.log(`Corpo da requisição: ${options.body}`);
     }
 
+    console.log(`Enviando requisição para: ${url} com cabeçalhos:`, JSON.stringify({
+      ...headers,
+      Authorization: `Bearer ${authToken.substring(0, 5)}...`
+    }));
+    
     const response = await fetch(url, options);
     console.log(`Resposta da API LearnWorlds: ${response.status}`);
     

@@ -1,4 +1,3 @@
-
 /**
  * Funções utilitárias para manipulação de requisições
  */
@@ -13,33 +12,32 @@ import { isHtmlResponse } from './errorUtils';
 export const normalizeEndpoint = (endpoint: string): string => {
   // Remover barras duplicadas
   const cleanEndpoint = endpoint.replace(/\/+/g, '/');
+
+  // URL completa da função edge do Supabase
+  const baseUrl = window.location.origin;
   
-  // Remover duplicação de 'api/learnworlds-api' ou 'learnworlds-api'
-  let normalizedEndpoint = cleanEndpoint
-    .replace(/\/api\/learnworlds-api\/learnworlds-api/g, '/api/learnworlds-api')
-    .replace(/\/learnworlds-api\/learnworlds-api/g, '/learnworlds-api');
-  
-  // Remover duplicação de api/api
-  normalizedEndpoint = normalizedEndpoint
-    .replace(/\/api\/api\//g, '/api/');
-    
-  // Garantir que não estamos enviando para URL errada
-  if (normalizedEndpoint.includes('/api/learnworlds-api/users') || 
-      normalizedEndpoint.includes('/api/learnworlds-api/courses')) {
-    console.log('URL detectada como incorreta, normalizando:', normalizedEndpoint);
-    // Remover /api do caminho para invocar a API edge function diretamente
-    normalizedEndpoint = normalizedEndpoint.replace('/api/learnworlds-api', '/learnworlds-api');
+  // Se o endpoint já contém uma URL completa, retorne-o como está
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
   }
   
-  // Se não começar com /api/learnworlds-api ou /learnworlds-api, adicionar prefixo
-  if (!normalizedEndpoint.startsWith('/api/learnworlds-api') && 
-      !normalizedEndpoint.startsWith('/learnworlds-api')) {
-    return normalizedEndpoint.startsWith('/') 
+  // Se o endpoint já começar com /learnworlds-api, apenas certifique-se de que está no formato correto
+  if (cleanEndpoint.startsWith('/learnworlds-api')) {
+    return cleanEndpoint;
+  }
+  
+  // Remover api/ do caminho se estiver presente
+  let normalizedEndpoint = cleanEndpoint.replace(/^\/api\/learnworlds-api/, '/learnworlds-api');
+  
+  // Se ainda não começar com /learnworlds-api, adicione o prefixo
+  if (!normalizedEndpoint.startsWith('/learnworlds-api')) {
+    normalizedEndpoint = normalizedEndpoint.startsWith('/') 
       ? `/learnworlds-api${normalizedEndpoint}`
       : `/learnworlds-api/${normalizedEndpoint}`;
   }
   
-  return normalizedEndpoint;
+  // Retornar a URL completa para a função edge
+  return `${baseUrl}${normalizedEndpoint}`;
 };
 
 /**
