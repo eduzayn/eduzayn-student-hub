@@ -36,8 +36,14 @@ const useLearnWorldsBase = () => {
     setError(null);
 
     try {
-      const url = `/api/learnworlds-api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-      console.log(`Realizando requisição: ${method} ${url}`);
+      // Remover duplicação de 'learnworlds-api' no caminho
+      const normalizedEndpoint = endpoint.startsWith('/learnworlds-api') 
+        ? endpoint
+        : endpoint.startsWith('/') 
+          ? `/learnworlds-api${endpoint}`
+          : `/learnworlds-api/${endpoint}`;
+          
+      console.log(`Realizando requisição: ${method} ${normalizedEndpoint}`);
       
       // Obter token de autenticação
       const authToken = await getAuthToken();
@@ -68,13 +74,13 @@ const useLearnWorldsBase = () => {
       }
 
       // Fazer a requisição
-      console.log(`Enviando requisição para ${url}`, { 
+      console.log(`Enviando requisição para ${normalizedEndpoint}`, { 
         method, 
         headers: { ...headers, Authorization: 'Bearer xxxxx' },
         body: options.body
       });
       
-      const response = await fetch(url, options);
+      const response = await fetch(normalizedEndpoint, options);
       console.log(`Resposta HTTP status: ${response.status}`);
       
       const responseText = await response.text();
@@ -82,11 +88,31 @@ const useLearnWorldsBase = () => {
       // Verificar se a resposta é JSON válido
       let data;
       try {
+        // Se a resposta está vazia, retornar objeto vazio
+        if (!responseText || responseText.trim() === '') {
+          console.warn('Resposta vazia recebida');
+          return {};
+        }
+        
+        // Se a resposta contém HTML ao invés de JSON
+        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+          console.error('Resposta HTML detectada:', responseText.substring(0, 200));
+          setOfflineMode(true);
+          throw new Error('API retornou conteúdo não-JSON (HTML). Ativando modo offline.');
+        }
+        
         data = JSON.parse(responseText);
         console.log(`Dados da resposta:`, data);
       } catch (e) {
-        console.error(`Resposta não é JSON válido:`, responseText);
-        throw new Error(`Resposta inválida do servidor: ${responseText}`);
+        console.error(`Resposta não é JSON válido:`, responseText.substring(0, 200));
+        
+        // Verificar se é HTML e ativar modo offline
+        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+          setOfflineMode(true);
+          throw new Error('API retornou HTML. Ativando modo offline.');
+        }
+        
+        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
       }
       
       // Verificar por erros na resposta
@@ -97,7 +123,7 @@ const useLearnWorldsBase = () => {
         if (data && data.error) {
           throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
         } else {
-          throw new Error(`Erro ${response.status}: ${responseText}`);
+          throw new Error(`Erro ${response.status}: ${responseText.substring(0, 100)}`);
         }
       }
       
@@ -106,7 +132,9 @@ const useLearnWorldsBase = () => {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, error);
       
       // Verificar se é um erro de rede - ativar modo offline
-      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      if (error.message.includes('Failed to fetch') || 
+          error.message.includes('NetworkError') || 
+          error.message.includes('HTML')) {
         setOfflineMode(true);
         toast.error('Modo offline ativado: sem conexão com o servidor');
         setError('Sem conexão com o servidor - operando em modo offline');
@@ -132,8 +160,14 @@ const useLearnWorldsBase = () => {
     setError(null);
 
     try {
-      const url = `/api/learnworlds-api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-      console.log(`Realizando requisição pública: ${method} ${url}`);
+      // Remover duplicação de 'learnworlds-api' no caminho
+      const normalizedEndpoint = endpoint.startsWith('/learnworlds-api') 
+        ? endpoint
+        : endpoint.startsWith('/') 
+          ? `/learnworlds-api${endpoint}`
+          : `/learnworlds-api/${endpoint}`;
+          
+      console.log(`Realizando requisição pública: ${method} ${normalizedEndpoint}`);
       
       // Configurar cabeçalhos
       const headers: Record<string, string> = {
@@ -152,9 +186,9 @@ const useLearnWorldsBase = () => {
       }
 
       // Fazer a requisição
-      console.log(`Enviando requisição pública para ${url}`);
+      console.log(`Enviando requisição pública para ${normalizedEndpoint}`);
       
-      const response = await fetch(url, options);
+      const response = await fetch(normalizedEndpoint, options);
       console.log(`Resposta HTTP status: ${response.status}`);
       
       const responseText = await response.text();
@@ -162,10 +196,30 @@ const useLearnWorldsBase = () => {
       // Verificar se a resposta é JSON válido
       let data;
       try {
+        // Se a resposta está vazia, retornar objeto vazio
+        if (!responseText || responseText.trim() === '') {
+          console.warn('Resposta vazia recebida');
+          return {};
+        }
+        
+        // Se a resposta contém HTML ao invés de JSON
+        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+          console.error('Resposta HTML detectada:', responseText.substring(0, 200));
+          setOfflineMode(true);
+          throw new Error('API retornou conteúdo não-JSON (HTML). Ativando modo offline.');
+        }
+        
         data = JSON.parse(responseText);
       } catch (e) {
-        console.error(`Resposta não é JSON válido:`, responseText);
-        throw new Error(`Resposta inválida do servidor: ${responseText}`);
+        console.error(`Resposta não é JSON válido:`, responseText.substring(0, 200));
+        
+        // Verificar se é HTML e ativar modo offline
+        if (responseText.includes('<!DOCTYPE html>') || responseText.includes('<html')) {
+          setOfflineMode(true);
+          throw new Error('API retornou HTML. Ativando modo offline.');
+        }
+        
+        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
       }
       
       // Verificar por erros na resposta
@@ -175,7 +229,7 @@ const useLearnWorldsBase = () => {
         if (data && data.error) {
           throw new Error(`Erro ${response.status}: ${JSON.stringify(data)}`);
         } else {
-          throw new Error(`Erro ${response.status}: ${responseText}`);
+          throw new Error(`Erro ${response.status}: ${responseText.substring(0, 100)}`);
         }
       }
       
@@ -183,7 +237,9 @@ const useLearnWorldsBase = () => {
     } catch (error: any) {
       console.error(`Erro na API LearnWorlds (${endpoint}):`, error);
       
-      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      if (error.message.includes('Failed to fetch') || 
+          error.message.includes('NetworkError') ||
+          error.message.includes('HTML')) {
         setOfflineMode(true);
         toast.error('Modo offline ativado: sem conexão com o servidor');
         setError('Sem conexão com o servidor - operando em modo offline');

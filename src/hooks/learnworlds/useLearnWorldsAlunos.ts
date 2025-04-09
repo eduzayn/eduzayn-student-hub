@@ -1,5 +1,5 @@
 
-import { useState, useCallback, Dispatch, SetStateAction } from "react";
+import { useState, useCallback } from "react";
 import useLearnWorldsBase from "./useLearnWorldsBase";
 
 export interface CadastrarAlunoDTO {
@@ -56,7 +56,8 @@ const useLearnWorldsAlunos = () => {
   const getUsers = useCallback(async (page = 1, limit = 10, query = ""): Promise<{ total: number; data: AlunoDTO[] }> => {
     try {
       console.log("Buscando usuários com autenticação OAuth...");
-      const endpoint = `learnworlds-api/users?page=${page}&limit=${limit}${query ? `&q=${encodeURIComponent(query)}` : ''}`;
+      // Endpoint corrigido - removendo duplicação
+      const endpoint = `users?page=${page}&limit=${limit}${query ? `&q=${encodeURIComponent(query)}` : ''}`;
       
       const response = await makeRequest(endpoint, 'GET');
       
@@ -87,7 +88,8 @@ const useLearnWorldsAlunos = () => {
     try {
       console.log("Tentando cadastrar aluno via OAuth:", dados);
       
-      const response = await makeRequest('learnworlds-api/users', 'POST', dados);
+      // Endpoint corrigido - removendo duplicação
+      const response = await makeRequest('users', 'POST', dados);
       
       if (response) {
         console.log("Aluno cadastrado com sucesso via OAuth");
@@ -113,7 +115,8 @@ const useLearnWorldsAlunos = () => {
       // Parâmetros para a função de sincronização
       const params = todos ? { completa: true } : {};
       
-      const endpoint = `learnworlds-api/admin/sync/alunos`;
+      // Endpoint corrigido - removendo duplicação
+      const endpoint = `admin/sync/alunos`;
       const response = await makeRequest(endpoint, 'POST', params);
       
       console.log("Resposta da sincronização:", response);

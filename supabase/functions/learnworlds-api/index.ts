@@ -45,7 +45,17 @@ Deno.serve(async (req) => {
 
     // Extrair componentes da URL
     const url = new URL(req.url);
-    const path = url.pathname.replace("/learnworlds-api", "");
+    
+    // Corrigir o problema de duplicação de path normalizando o path
+    let path = url.pathname;
+    
+    // Remover duplicação de "/learnworlds-api"
+    if (path.startsWith("/learnworlds-api/learnworlds-api")) {
+      path = path.replace("/learnworlds-api/learnworlds-api", "/learnworlds-api");
+    }
+    
+    // Remover o prefixo "/learnworlds-api" para processamento
+    path = path.replace("/learnworlds-api", "");
     
     console.log(`Recebendo requisição: ${req.method} ${path}`);
 
@@ -57,7 +67,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Processar requisição
+    // Processar requisição com base no path normalizado
     if (path.startsWith("/users")) {
       return await handleUsuarios(req, path);
     } 

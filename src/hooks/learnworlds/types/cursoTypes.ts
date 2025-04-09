@@ -39,10 +39,12 @@ export interface SincronizacaoResult {
   syncedItems?: number;
 }
 
-// Adicionando a interface EnrollmentResponse que estava faltando
+// Interface EnrollmentResponse corrigida com id e simulatedResponse
 export interface EnrollmentResponse {
   success: boolean;
   error?: string;
+  id?: string; // Adicionado id como opcional
+  simulatedResponse?: boolean; // Adicionado para identificar respostas simuladas
   data?: {
     id: string;
     student_id: string;
