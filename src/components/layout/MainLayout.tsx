@@ -1,25 +1,25 @@
 
 import React from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import NavBar from "./NavBar";
-import Footer from "./Footer";
-import BreadcrumbNav from "../navigation/Breadcrumbs";
+import { Outlet } from "react-router-dom";
 
-const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  
-  // Removendo a lógica que esconde o cabeçalho na página inicial
-  // A página inicial deve sempre mostrar o cabeçalho
-  const isDetailPage = location.pathname.includes('/curso/');
-  
+const MainLayout: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <NavBar />
-      {!isDetailPage && <BreadcrumbNav />}
-      <main className="flex-grow">
-        {children || <Outlet />}
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-primary text-white p-4">
+        <div className="container mx-auto">
+          <h1 className="text-2xl font-bold">Sistema de Gestão Educacional</h1>
+        </div>
+      </header>
+      
+      <main className="flex-1 container mx-auto py-6 px-4">
+        <Outlet />
       </main>
-      <Footer />
+      
+      <footer className="bg-gray-100 p-4 text-center text-sm text-gray-600">
+        <div className="container mx-auto">
+          © {new Date().getFullYear()} Sistema de Gestão Educacional
+        </div>
+      </footer>
     </div>
   );
 };
