@@ -31,11 +31,11 @@ export const adaptApiResponse = (response: any): CoursesResponse => {
   // Adaptar metadados da resposta da API LearnWorlds para nosso formato interno
   const responseMeta = response.meta || {};
   
-  // Mapear explicitamente os campos da API para o formato esperado
+  // Mapear explicitamente os campos da API para o formato esperado pela interface CoursesResponse
   const meta = {
-    total: responseMeta.totalItems || responseMeta.total || formattedData.length,
-    pages: responseMeta.totalPages || responseMeta.pages || 1,
-    currentPage: responseMeta.page || responseMeta.currentPage || 1
+    total: responseMeta.totalItems || 0,
+    pages: responseMeta.totalPages || 1,
+    currentPage: responseMeta.page || 1
   };
 
   return {

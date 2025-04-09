@@ -26,6 +26,7 @@ export const handleCourseRequest = async (
   } catch (error) {
     console.error("Erro ao buscar cursos:", error);
     setOfflineMode(true);
-    return getDadosSimulados(page, limit, searchTerm);
+    // Garantir que dados simulados também sigam o formato correto
+    return processApiResponse(getDadosSimulados(page, limit, searchTerm), setOfflineMode);
   }
 };

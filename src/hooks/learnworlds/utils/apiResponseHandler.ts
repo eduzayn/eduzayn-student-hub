@@ -1,4 +1,3 @@
-
 import { CoursesResponse } from '../types/cursoTypes';
 import { adaptApiResponse } from './responseAdapter';
 import { getDadosSimulados } from './mockCursosData';
@@ -14,14 +13,16 @@ export const processApiResponse = (
   if (!response) {
     console.error("Resposta nula da API de cursos");
     setOfflineMode(true);
-    return getDadosSimulados(1, 20, "");
+    // Adaptar os dados simulados para o formato correto
+    return adaptApiResponse(getDadosSimulados(1, 20, ""));
   }
   
   // Verificar se recebemos HTML (erro comum)
   if (isHtmlResponse(response)) {
     console.warn("Recebida resposta HTML, ativando modo offline");
     setOfflineMode(true);
-    return getDadosSimulados(1, 20, "");
+    // Adaptar os dados simulados para o formato correto
+    return adaptApiResponse(getDadosSimulados(1, 20, ""));
   }
   
   // DIAGNÓSTICO ADICIONAL: Verificar o formato exato da resposta para debug
@@ -39,7 +40,8 @@ export const processApiResponse = (
   // Se chegamos aqui, não conseguimos interpretar os dados
   console.error("Formato de resposta inválido da API de cursos:", response);
   setOfflineMode(true);
-  return getDadosSimulados(1, 20, "");
+  // Adaptar os dados simulados para o formato correto
+  return adaptApiResponse(getDadosSimulados(1, 20, ""));
 };
 
 /**

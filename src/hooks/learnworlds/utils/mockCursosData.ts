@@ -119,12 +119,13 @@ export const getDadosSimulados = (page: number, limit: number, searchTerm = "") 
   const endIndex = startIndex + limit;
   const paginatedData = dados.slice(startIndex, endIndex);
   
+  // Retornar com formato de meta compatível com CoursesResponse
   return {
     data: paginatedData,
     meta: {
-      page,
       totalItems: dados.length,
       totalPages: Math.ceil(dados.length / limit),
+      page: page,
       itemsPerPage: limit
     }
   };
