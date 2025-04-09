@@ -6,6 +6,7 @@ import { AlertCircle, Plus, FileText, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const MatriculasPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -15,6 +16,14 @@ const MatriculasPage: React.FC = () => {
   const irParaNovaMatricula = () => navigate("/admin/matriculas/nova");
   const irParaCursos = () => navigate("/admin/matriculas/cursos");
   const irParaAlunos = () => navigate("/admin/matriculas/alunos");
+  const irParaConfiguracoes = () => navigate("/admin/matriculas/configuracoes");
+
+  // Função para lidar com botões ainda não implementados
+  const handleConfigurarClick = (tipo: string) => {
+    toast.info(`Configurações de ${tipo} serão implementadas em breve`, {
+      duration: 3000,
+    });
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -143,7 +152,10 @@ const MatriculasPage: React.FC = () => {
                     <p className="font-medium">Integração com LearnWorlds</p>
                     <p className="text-sm text-muted-foreground">Configurações da integração com LearnWorlds</p>
                   </div>
-                  <Button variant="outline" disabled>
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleConfigurarClick("LearnWorlds")}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Configurar
                   </Button>
@@ -154,7 +166,24 @@ const MatriculasPage: React.FC = () => {
                     <p className="font-medium">Temas de E-mail</p>
                     <p className="text-sm text-muted-foreground">Configurações de temas para e-mails de matrícula</p>
                   </div>
-                  <Button variant="outline" disabled>
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleConfigurarClick("e-mail")}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurar
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between pb-4">
+                  <div>
+                    <p className="font-medium">Configurações Gerais</p>
+                    <p className="text-sm text-muted-foreground">Ajustes gerais do módulo de matrículas</p>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    onClick={irParaConfiguracoes}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Configurar
                   </Button>
