@@ -32,13 +32,14 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
         })
       : [];
     
-    // Adaptar metadados para o formato esperado
+    // Adaptar metadados para o formato esperado de CoursesResponse
+    // Converter explicitamente os campos da resposta para o formato esperado
     const meta = response.meta || {};
     return {
       data: formattedData,
       meta: {
-        total: meta.totalItems || formattedData.length,
-        pages: meta.totalPages || 1,
+        total: meta.totalItems || meta.total || formattedData.length,
+        pages: meta.totalPages || meta.pages || 1,
         currentPage: meta.page || meta.currentPage || 1
       },
       success: true
