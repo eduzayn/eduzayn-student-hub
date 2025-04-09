@@ -20,9 +20,20 @@ export async function getOAuthToken(): Promise<string> {
     
     console.log("Obtendo novo token OAuth...");
     
-    if (!LEARNWORLDS_CLIENT_ID || !LEARNWORLDS_CLIENT_SECRET) {
-      throw new Error("LEARNWORLDS_CLIENT_ID ou LEARNWORLDS_CLIENT_SECRET não configurados");
+    // Verificação melhorada das credenciais OAuth
+    if (!LEARNWORLDS_CLIENT_ID) {
+      console.error("LEARNWORLDS_CLIENT_ID não configurado nas variáveis de ambiente");
+      throw new Error("Falha ao obter access_token: LEARNWORLDS_CLIENT_ID ou LEARNWORLDS_CLIENT_SECRET não configurados");
     }
+    
+    if (!LEARNWORLDS_CLIENT_SECRET) {
+      console.error("LEARNWORLDS_CLIENT_SECRET não configurado nas variáveis de ambiente");
+      throw new Error("Falha ao obter access_token: LEARNWORLDS_CLIENT_ID ou LEARNWORLDS_CLIENT_SECRET não configurados");
+    }
+    
+    // Log das credenciais (parcial, por segurança)
+    console.log(`CLIENT_ID disponível: ${LEARNWORLDS_CLIENT_ID ? "Sim (primeiros 4 caracteres: " + LEARNWORLDS_CLIENT_ID.substring(0, 4) + "...)" : "Não"}`);
+    console.log(`CLIENT_SECRET disponível: ${LEARNWORLDS_CLIENT_SECRET ? "Sim (tamanho: " + LEARNWORLDS_CLIENT_SECRET.length + ")" : "Não"}`);
     
     // Montar o corpo da requisição no formato URL-encoded
     const body = new URLSearchParams();

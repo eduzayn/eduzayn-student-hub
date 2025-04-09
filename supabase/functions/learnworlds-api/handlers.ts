@@ -10,16 +10,26 @@ export async function handleCoursesRequest(url: URL): Promise<Response> {
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = parseInt(url.searchParams.get("limit") || "50");
   
-  // Para cursos, usamos o token de acesso API Key
-  const result = await callLearnWorldsApi(
-    `/v2/${LEARNWORLDS_SCHOOL_ID}/courses?page=${page}&limit=${limit}`, 
-    'GET', null, false
-  );
-  
-  return new Response(JSON.stringify(result), {
-    headers: corsHeaders,
-    status: 200
-  });
+  try {
+    // Para cursos, usamos o token de acesso API Key
+    const result = await callLearnWorldsApi(
+      `/v2/${LEARNWORLDS_SCHOOL_ID}/courses?page=${page}&limit=${limit}`, 
+      'GET', null, false
+    );
+    
+    return new Response(JSON.stringify(result), {
+      headers: corsHeaders,
+      status: 200
+    });
+  } catch (error) {
+    console.error("Erro ao buscar cursos:", error);
+    return new Response(JSON.stringify({
+      error: error.message || "Erro interno ao buscar cursos"
+    }), {
+      headers: corsHeaders,
+      status: 500
+    });
+  }
 }
 
 /**
@@ -28,16 +38,26 @@ export async function handleCoursesRequest(url: URL): Promise<Response> {
 export async function handleCourseDetailsRequest(path: string): Promise<Response> {
   const courseId = path.split("courses/")[1];
   
-  // Para detalhes do curso, usamos o token de acesso API Key
-  const result = await callLearnWorldsApi(
-    `/v2/${LEARNWORLDS_SCHOOL_ID}/courses/${courseId}`,
-    'GET', null, false
-  );
-  
-  return new Response(JSON.stringify(result), {
-    headers: corsHeaders,
-    status: 200
-  });
+  try {
+    // Para detalhes do curso, usamos o token de acesso API Key
+    const result = await callLearnWorldsApi(
+      `/v2/${LEARNWORLDS_SCHOOL_ID}/courses/${courseId}`,
+      'GET', null, false
+    );
+    
+    return new Response(JSON.stringify(result), {
+      headers: corsHeaders,
+      status: 200
+    });
+  } catch (error) {
+    console.error(`Erro ao buscar detalhes do curso ${courseId}:`, error);
+    return new Response(JSON.stringify({
+      error: error.message || "Erro interno ao buscar detalhes do curso"
+    }), {
+      headers: corsHeaders,
+      status: 500
+    });
+  }
 }
 
 /**
@@ -48,16 +68,26 @@ export async function handleUsersRequest(url: URL): Promise<Response> {
   const limit = parseInt(url.searchParams.get("limit") || "20");
   const searchTerm = url.searchParams.get("q") || "";
   
-  // Para usuários, precisamos usar OAuth
-  const result = await callLearnWorldsApi(
-    `/v2/${LEARNWORLDS_SCHOOL_ID}/users?page=${page}&limit=${limit}${searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''}`,
-    'GET', null, true
-  );
-  
-  return new Response(JSON.stringify(result), {
-    headers: corsHeaders,
-    status: 200
-  });
+  try {
+    // Para usuários, precisamos usar OAuth
+    const result = await callLearnWorldsApi(
+      `/v2/${LEARNWORLDS_SCHOOL_ID}/users?page=${page}&limit=${limit}${searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''}`,
+      'GET', null, true
+    );
+    
+    return new Response(JSON.stringify(result), {
+      headers: corsHeaders,
+      status: 200
+    });
+  } catch (error) {
+    console.error("Erro ao buscar usuários:", error);
+    return new Response(JSON.stringify({
+      error: error.message || "Erro interno ao buscar usuários"
+    }), {
+      headers: corsHeaders,
+      status: 500
+    });
+  }
 }
 
 /**

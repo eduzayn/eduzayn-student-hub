@@ -33,9 +33,11 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     
     // Determinar qual token usar com base no parâmetro useOAuth
     if (useOAuth) {
+      // Para endpoints que exigem OAuth (como users)
       authToken = await getOAuthToken();
       console.log("Usando token OAuth para autenticação");
     } else {
+      // Para outros endpoints (como cursos)
       if (!LEARNWORLDS_API_KEY) {
         throw new Error("LEARNWORLDS_API_KEY não configurado");
       }
