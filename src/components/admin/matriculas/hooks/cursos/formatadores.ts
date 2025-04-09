@@ -47,11 +47,11 @@ export const formatarCursos = (cursosAPI: any[]): any[] => {
       valor_mensalidade: valorMensal,
       url: curso.url || "",
       imagem_url: image || "https://via.placeholder.com/300x180?text=Curso",
-      // IMPORTANTE: Dados vindos da API NUNCA são marcados como simulados
+      // Dados vindos da API são explicitamente marcados como não simulados
       simulado: false,
       simulatedResponse: false,
-      // Atributo adicional para garantir que sabemos que este curso veio da nova API OAuth
-      api_oauth: true
+      // Atributo para identificar a origem dos dados (API direta com token)
+      api_token: true
     };
   });
 };

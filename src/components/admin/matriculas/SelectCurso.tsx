@@ -36,7 +36,7 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
   // Verificar se todos os cursos são simulados
   const [todosCursosSimulados, setTodosCursosSimulados] = useState<boolean>(false);
   const [problemaDeDados, setProblemasDeDados] = useState<boolean>(false);
-  const [cursosOAuth, setCursosOAuth] = useState<number>(0);
+  const [cursosAPI, setCursosAPI] = useState<number>(0);
   
   // Verificar quando os cursos são carregados
   useEffect(() => {
@@ -46,9 +46,9 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
       const todosCursosMaradosComoSimulados = cursosSimuladosCount === cursos.length;
       setTodosCursosSimulados(todosCursosMaradosComoSimulados);
       
-      // Contar cursos OAuth
-      const countOAuth = cursos.filter(curso => curso.api_oauth === true).length;
-      setCursosOAuth(countOAuth);
+      // Contar cursos API
+      const countAPI = cursos.filter(curso => curso.api_token === true).length;
+      setCursosAPI(countAPI);
       
       // Verificar se os IDs dos cursos parecem problemáticos
       const idsSuspeitosComCourse = cursos.filter(curso => 
@@ -106,15 +106,15 @@ const SelectCurso: React.FC<SelectCursoProps> = ({ onCursoSelecionado }) => {
         </Alert>
       )}
       
-      {!offlineMode && !todosCursosSimulados && cursosOAuth > 0 && !loading && (
+      {!offlineMode && !todosCursosSimulados && cursosAPI > 0 && !loading && (
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-500" />
           <AlertDescription>
             <p className="font-medium text-green-700">
-              Conexão OAuth2 estabelecida com sucesso!
+              Conexão com API LearnWorlds estabelecida com sucesso!
             </p>
             <p className="mt-1">
-              {cursosOAuth} cursos carregados via API OAuth2 do LearnWorlds.
+              {cursosAPI} cursos carregados via API do LearnWorlds com token de acesso.
             </p>
           </AlertDescription>
         </Alert>

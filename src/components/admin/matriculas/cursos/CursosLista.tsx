@@ -33,11 +33,11 @@ const CursosLista: React.FC<CursosListaProps> = ({
   
   // Verificações específicas de origem de dados
   const cursosSimulados = cursosExibir.filter(c => c.simulado === true).length;
-  const cursosOAuth = cursosExibir.filter(c => c.api_oauth === true).length;
+  const cursosAPI = cursosExibir.filter(c => c.api_token === true).length;
   const cursosReais = cursosExibir.length - cursosSimulados;
   
   console.log("Cursos simulados:", cursosSimulados);
-  console.log("Cursos OAuth API:", cursosOAuth);
+  console.log("Cursos API com token:", cursosAPI);
   console.log("Cursos reais:", cursosReais);
   
   if (cursosExibir.length === 0) {
@@ -73,12 +73,12 @@ const CursosLista: React.FC<CursosListaProps> = ({
     <div className="space-y-3">
       <div className="text-sm text-muted-foreground mb-2">
         Mostrando {cursosExibir.length} cursos
-        {offlineMode ? " (usando dados simulados)" : " da API LearnWorlds OAuth2"}
+        {offlineMode ? " (usando dados simulados)" : " da API LearnWorlds"}
         {!offlineMode && cursosSimulados > 0 && (
           <span className="text-amber-600"> ({cursosSimulados} simulados, {cursosReais} reais)</span>
         )}
-        {cursosOAuth > 0 && (
-          <span className="text-green-600"> ({cursosOAuth} via OAuth)</span>
+        {cursosAPI > 0 && (
+          <span className="text-green-600"> ({cursosAPI} via API Token)</span>
         )}
       </div>
       
@@ -89,7 +89,7 @@ const CursosLista: React.FC<CursosListaProps> = ({
             ...curso,
             // Garantir que simulado seja um booleano explícito usando o valor existente
             simulado: curso.simulado === true,
-            api_oauth: curso.api_oauth === true
+            api_token: curso.api_token === true
           }} 
           selecionado={isCursoSelecionado(curso)}
           onSelecionar={onSelecionar} 

@@ -61,14 +61,14 @@ export const useSincronizacaoCursos = () => {
         );
         
         if (apiErrorLog) {
-          setDetalhesErro("Erro da API LearnWorlds: Verifique se a API Key está configurada corretamente.");
+          setDetalhesErro("Erro da API LearnWorlds: Verifique se o token de acesso está configurado corretamente.");
           toast.error("Erro da API LearnWorlds", {
-            description: "Falha na autenticação. Verifique a API key."
+            description: "Falha na autenticação. Verifique o token de acesso."
           });
         } else if (accessDeniedLog) {
-          setDetalhesErro("Erro de autorização na API LearnWorlds. Verifique se o token da API tem permissões suficientes.");
+          setDetalhesErro("Erro de autorização na API LearnWorlds. Verifique se o token de acesso tem permissões suficientes.");
           toast.error("Erro de autorização", {
-            description: "O token da API não tem permissões suficientes"
+            description: "O token de acesso não tem permissões suficientes"
           });
         }
         
@@ -100,15 +100,13 @@ export const useSincronizacaoCursos = () => {
       let mensagemDetalhada = "";
       
       if (error.message && error.message.includes("API")) {
-        mensagemDetalhada = "Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique a API key.";
-      } else if (error.message && error.message.includes("client_id")) {
-        mensagemDetalhada = "Erro na API do LearnWorlds: ID do cliente ausente ou incorreto. Verifique as configurações da API.";
-      } else if (error.message && error.message.includes("Failed to fetch")) {
-        mensagemDetalhada = "Erro de conexão com a função edge. Verifique se a função está ativa e se não há problemas de rede ou CORS.";
-      } else if (error.message && error.message.includes("<!doctype")) {
+        mensagemDetalhada = "Erro de autenticação da API LearnWorlds: Falha na autenticação. Verifique o token de acesso.";
+      } else if (error.message && error.message.includes("HTML")) {
         mensagemDetalhada = "A API do LearnWorlds retornou HTML em vez de JSON. Verifique se a URL da API está correta. Isso geralmente acontece quando a URL da API está incorreta.";
       } else if (error.message && error.message.includes("status 401") || error.message.includes("status 403")) {
-        mensagemDetalhada = "Erro de autorização: a API rejeitou o token de autenticação. Verifique se a API key tem permissões suficientes e está correta.";
+        mensagemDetalhada = "Erro de autorização: a API rejeitou o token de autenticação. Verifique se o token de acesso tem permissões suficientes e está correto.";
+      } else if (error.message && error.message.includes("Failed to fetch")) {
+        mensagemDetalhada = "Erro de conexão com a função edge. Verifique se a função está ativa e se não há problemas de rede ou CORS.";
       } else {
         mensagemDetalhada = error.message || "Erro desconhecido durante a sincronização";
       }
