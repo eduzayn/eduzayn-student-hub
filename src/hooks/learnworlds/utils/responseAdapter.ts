@@ -31,7 +31,7 @@ export const adaptApiResponse = (response: any): CoursesResponse => {
   // Adaptar metadados para o formato esperado de CoursesResponse
   const responseMeta = response.meta || {};
   
-  // Garantir que os campos necessários existam com os nomes corretos
+  // Garantir que os campos sejam mapeados corretamente
   const meta = {
     total: responseMeta.totalItems || responseMeta.total || formattedData.length,
     pages: responseMeta.totalPages || responseMeta.pages || 1,
