@@ -1,19 +1,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useAuthProvider } from "./useAuthProvider";
-
-// Interface para o contexto de autenticação
-interface AuthContextType {
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  isAdminUser: boolean;
-  isAdminBypass: boolean;
-  userEmail: string | null;
-  checkAuth: () => Promise<boolean>;
-  getAccessToken: () => Promise<string | null>;
-  getAuthToken: () => Promise<string | null>;
-  refreshAuth: () => Promise<boolean>;
-}
+import { AuthContextType } from "./types";
 
 // Criação do contexto de autenticação
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
