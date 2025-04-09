@@ -1,7 +1,7 @@
 
 // Unified LearnWorlds Sync Function (Sem autenticação obrigatória)
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 // Atualizando os cabeçalhos CORS para incluir todos os cabeçalhos necessários
 const corsHeaders = {
@@ -10,9 +10,10 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
 };
 
-// Constantes para tokens fixos de emergência caso os secrets falhem
-const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
-const LEARNWORLDS_PUBLIC_TOKEN = Deno.env.get("LEARNWORLDS_PUBLIC_TOKEN") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
+// Constantes para tokens e configurações
+const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN");
+const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY");
+const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID");
 
 serve(async (req) => {
   // Garantir o tratamento correto das requisições OPTIONS (preflight)
@@ -54,19 +55,26 @@ serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const supabase = createClient(supabaseUrl, anonKey);
 
-    // Usando os tokens corretos da API LearnWorlds
-    const learnworldsApiKey = Deno.env.get("LEARNWORLDS_API_KEY") || LEARNWORLDS_PUBLIC_TOKEN;
-    const schoolId = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
+    // Verificar se temos os dados necessários
+    if (!LEARNWORLDS_API_KEY) {
+      addLog("❌ Erro: LEARNWORLDS_API_KEY não configurado");
+      throw new Error("LEARNWORLDS_API_KEY não configurado");
+    }
+
+    if (!LEARNWORLDS_SCHOOL_ID) {
+      addLog("❌ Erro: LEARNWORLDS_SCHOOL_ID não configurado");
+      throw new Error("LEARNWORLDS_SCHOOL_ID não configurado");
+    }
     
-    // CORREÇÃO CRÍTICA: Modificar a URL base da API para usar a URL correta da API LearnWorlds
+    // URL base da API LearnWorlds
     const apiBaseUrl = "https://api.learnworlds.com";
     
     // URL BASE CORRETA DA API LEARNWORLDS
-    const fullApiUrl = `${apiBaseUrl}/v2/${schoolId}`;
+    const fullApiUrl = `${apiBaseUrl}/v2/${LEARNWORLDS_SCHOOL_ID}`;
 
     addLog(`Iniciando sincronização de ${type}. sincronizarTodos=${isSyncAll}, página=${pageNumber}`);
-    addLog(`Usando School ID: ${schoolId}`);
-    addLog(`API Key encontrada: ${learnworldsApiKey ? 'Sim' : 'Não'}`);
+    addLog(`Usando School ID: ${LEARNWORLDS_SCHOOL_ID}`);
+    addLog(`API Key encontrada: ${LEARNWORLDS_API_KEY ? 'Sim' : 'Não'}`);
     addLog(`URL da API: ${fullApiUrl}`);
     
     // Função para testar a API antes de tentar usar
@@ -77,7 +85,7 @@ serve(async (req) => {
           method: "GET",
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${learnworldsApiKey}`
+            'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`
           }
         });
         
@@ -104,7 +112,7 @@ serve(async (req) => {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${learnworldsApiKey}`
+          'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`
         }
       });
 
@@ -133,7 +141,7 @@ serve(async (req) => {
         method: "GET",
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${learnworldsApiKey}`
+          'Authorization': `Bearer ${LEARNWORLDS_API_KEY}`
         }
       });
 

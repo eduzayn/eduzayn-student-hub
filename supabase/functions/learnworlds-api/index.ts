@@ -9,12 +9,12 @@ const corsHeaders = {
 };
 
 // Credenciais e configurações
-const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN") || "byZ4yn-#v0lt-2025!SEC";
-const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY") || "8BtSujQd7oBzSgJIWAeNtjYrmfeWHCZSBIXTGRpR";
-const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID") || "grupozayneducacional";
-const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://grupozayneducacional.com.br/admin/api";
-const LEARNWORLDS_CLIENT_ID = Deno.env.get("LEARNWORLDS_CLIENT_ID") || "66abb5fdf8655b4b800c7278";
-const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET") || "835mPsiAJ6jqdQJNdnBeyfggOd7VAAOavPFxluR86D48xXOAPp";
+const ADMIN_BYPASS_JWT = Deno.env.get("ADMIN_BYPASS_TOKEN");
+const LEARNWORLDS_API_KEY = Deno.env.get("LEARNWORLDS_API_KEY");
+const LEARNWORLDS_SCHOOL_ID = Deno.env.get("LEARNWORLDS_SCHOOL_ID");
+const LEARNWORLDS_API_BASE_URL = Deno.env.get("LEARNWORLDS_API_URL") || "https://api.learnworlds.com";
+const LEARNWORLDS_CLIENT_ID = Deno.env.get("LEARNWORLDS_CLIENT_ID");
+const LEARNWORLDS_CLIENT_SECRET = Deno.env.get("LEARNWORLDS_CLIENT_SECRET");
 
 console.log("Inicializando função edge learnworlds-api");
 console.log("Token de administrador:", ADMIN_BYPASS_JWT ? "Configurado ✓" : "Não configurado ✗");
@@ -52,6 +52,10 @@ async function getOAuthToken(): Promise<string> {
     
     console.log("Obtendo novo token OAuth...");
     
+    if (!LEARNWORLDS_CLIENT_ID || !LEARNWORLDS_CLIENT_SECRET) {
+      throw new Error("LEARNWORLDS_CLIENT_ID ou LEARNWORLDS_CLIENT_SECRET não configurados");
+    }
+    
     // Montar o corpo da requisição no formato URL-encoded
     const body = new URLSearchParams();
     body.append("grant_type", "client_credentials");
@@ -59,7 +63,8 @@ async function getOAuthToken(): Promise<string> {
     body.append("client_secret", LEARNWORLDS_CLIENT_SECRET);
     
     // Fazer a requisição para o endpoint de token
-    const tokenUrl = `${LEARNWORLDS_API_BASE_URL.split('/admin/api')[0]}/admin/api/oauth/token`;
+    const baseApiUrl = LEARNWORLDS_API_BASE_URL || "https://api.learnworlds.com";
+    const tokenUrl = `${baseApiUrl.split('/admin/api')[0]}/admin/api/oauth/token`;
     console.log(`Solicitando token em: ${tokenUrl}`);
     
     const tokenResponse = await fetch(tokenUrl, {
@@ -96,12 +101,16 @@ async function getOAuthToken(): Promise<string> {
 }
 
 /**
- * Chama a API do LearnWorlds com o token de acesso padrão (ficha)
- * Usado para endpoints que aceitam o token direto, como /courses
+ * Chama a API do LearnWorlds com o token apropriado
  */
 async function callLearnWorldsApi(path: string, method = 'GET', body?: any, useOAuth = false): Promise<any> {
   try {
-    const url = `${LEARNWORLDS_API_BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
+    if (!LEARNWORLDS_SCHOOL_ID) {
+      throw new Error("LEARNWORLDS_SCHOOL_ID não configurado");
+    }
+
+    const baseUrl = LEARNWORLDS_API_BASE_URL || "https://api.learnworlds.com";
+    const url = `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     
     let authToken;
@@ -111,8 +120,11 @@ async function callLearnWorldsApi(path: string, method = 'GET', body?: any, useO
       authToken = await getOAuthToken();
       console.log("Usando token OAuth para autenticação");
     } else {
+      if (!LEARNWORLDS_API_KEY) {
+        throw new Error("LEARNWORLDS_API_KEY não configurado");
+      }
       authToken = LEARNWORLDS_API_KEY;
-      console.log("Usando token de acesso fixo (ficha) para autenticação");
+      console.log("Usando token de acesso API Key para autenticação");
     }
     
     const headers = {
@@ -165,16 +177,13 @@ serve(async (req) => {
 
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  const isAdminToken = token === ADMIN_BYPASS_JWT;
   
-  if (!isAdminToken) {
+  if (!ADMIN_BYPASS_JWT || token !== ADMIN_BYPASS_JWT) {
     console.log("Token inválido - nenhuma correspondência encontrada");
-    console.log(`Token recebido: ${token.substring(0, 10)}...`);
-    console.log(`Token admin esperado: ${ADMIN_BYPASS_JWT.substring(0, 10)}...`);
     
     return new Response(JSON.stringify({
       code: 401,
-      message: "Invalid JWT"
+      message: "Token JWT inválido"
     }), {
       headers: corsHeaders,
       status: 401
@@ -189,8 +198,8 @@ serve(async (req) => {
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "50");
         
-        // Para cursos, usamos o token de acesso padrão (ficha)
-        const result = await callLearnWorldsApi(`/courses?page=${page}&limit=${limit}`, 'GET', null, false);
+        // Para cursos, usamos o token de acesso API Key
+        const result = await callLearnWorldsApi(`/v2/${LEARNWORLDS_SCHOOL_ID}/courses?page=${page}&limit=${limit}`, 'GET', null, false);
         return new Response(JSON.stringify(result), {
           headers: corsHeaders,
           status: 200
@@ -200,8 +209,8 @@ serve(async (req) => {
       if (path.startsWith("courses/")) {
         const courseId = path.split("courses/")[1];
         
-        // Para detalhes do curso, usamos o token de acesso padrão (ficha)
-        const result = await callLearnWorldsApi(`/courses/${courseId}`, 'GET', null, false);
+        // Para detalhes do curso, usamos o token de acesso API Key
+        const result = await callLearnWorldsApi(`/v2/${LEARNWORLDS_SCHOOL_ID}/courses/${courseId}`, 'GET', null, false);
         return new Response(JSON.stringify(result), {
           headers: corsHeaders,
           status: 200
@@ -209,22 +218,12 @@ serve(async (req) => {
       }
       
       if (path === "users" || path.startsWith("users?")) {
-        if (!isAdminToken) {
-          return new Response(JSON.stringify({
-            code: 403,
-            message: "Esta operação requer token de administrador"
-          }), {
-            headers: corsHeaders,
-            status: 403
-          });
-        }
-        
         const page = parseInt(url.searchParams.get("page") || "1");
         const limit = parseInt(url.searchParams.get("limit") || "20");
         const searchTerm = url.searchParams.get("q") || "";
         
         // Para usuários, precisamos usar OAuth (true como último parâmetro)
-        const result = await callLearnWorldsApi(`/users?page=${page}&limit=${limit}${searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''}`, 'GET', null, true);
+        const result = await callLearnWorldsApi(`/v2/${LEARNWORLDS_SCHOOL_ID}/users?page=${page}&limit=${limit}${searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''}`, 'GET', null, true);
         
         return new Response(JSON.stringify(result), {
           headers: corsHeaders,
@@ -245,7 +244,7 @@ serve(async (req) => {
       
       console.log(`Recebido POST para ${path} com corpo:`, JSON.stringify(body).substring(0, 200) + "...");
       
-      if (path === "users" && isAdminToken) {
+      if (path === "users") {
         console.log("Processando criação de usuário na API LearnWorlds");
         
         try {
@@ -260,7 +259,7 @@ serve(async (req) => {
           console.log("Dados de usuário para LearnWorlds:", userData);
           
           // Para criar usuários, precisamos usar OAuth (true como último parâmetro)
-          const result = await callLearnWorldsApi("/users", "POST", userData, true);
+          const result = await callLearnWorldsApi(`/v2/${LEARNWORLDS_SCHOOL_ID}/users`, "POST", userData, true);
           console.log("Resposta da criação de usuário:", result);
           
           return new Response(JSON.stringify(result), {
@@ -285,7 +284,7 @@ serve(async (req) => {
       if (path.startsWith("admin/")) {
         try {
           // Para endpoints administrativos, usar OAuth
-          const result = await callLearnWorldsApi(path.substring("admin".length), "POST", body, true);
+          const result = await callLearnWorldsApi(`/v2/${LEARNWORLDS_SCHOOL_ID}${path.substring("admin".length)}`, "POST", body, true);
           
           return new Response(JSON.stringify(result), {
             headers: corsHeaders,

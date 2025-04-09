@@ -21,7 +21,7 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ error }) => {
   // Detectar erro de autorização
   const isAuthError = error?.toLowerCase().includes("401") || 
                       error?.toLowerCase().includes("403") ||
-                      error?.toLowerCase().includes("autoriza");
+                      error?.toLowerCase().includes("autorização");
   
   return (
     <Alert variant="destructive" className="mb-4">
