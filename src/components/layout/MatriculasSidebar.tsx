@@ -1,5 +1,6 @@
+
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   BookOpen, 
@@ -20,6 +21,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 const MatriculasSidebar: React.FC = () => {
+  const navigate = useNavigate();
+  
   const menuItems = [
     { label: "Dashboard", href: "/admin/matriculas", icon: Home },
     { label: "Lista de Matrículas", href: "/admin/matriculas/lista", icon: List },
@@ -45,7 +48,7 @@ const MatriculasSidebar: React.FC = () => {
       
       <Button
         className="mx-4 my-4 gap-2"
-        onClick={() => window.location.href = "/admin/matriculas/nova"}
+        onClick={() => navigate("/admin/matriculas/nova")}
       >
         <Plus className="h-4 w-4" /> Nova Matrícula
       </Button>
@@ -64,7 +67,7 @@ const MatriculasSidebar: React.FC = () => {
         <Button 
           variant="outline" 
           className="w-full"
-          onClick={() => window.location.href = "/admin"}
+          onClick={() => navigate("/admin")}
         >
           Voltar ao Portal Admin
         </Button>
