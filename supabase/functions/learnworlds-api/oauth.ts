@@ -53,3 +53,6 @@ export async function getAccessToken(): Promise<string> {
     throw new Error("Falha ao obter access_token");
   }
 }
+
+// Exportar com nome compatível para ambas as APIs
+export const getOAuthToken = getAccessToken;

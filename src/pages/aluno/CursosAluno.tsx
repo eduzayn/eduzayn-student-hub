@@ -7,7 +7,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import CursoCard from "@/components/aluno/curso/CursoCard";
 import { getUserCourses, getCurrentUserId } from "@/services/learnworlds-api";
 import { toast } from "sonner";
-import { LearnWorldsCourse } from "@/types/curso";
+import { LearnWorldsCourse } from "@/hooks/learnworlds/types/cursoTypes";
 
 const CursosAluno: React.FC = () => {
   const [cursos, setCursos] = useState<LearnWorldsCourse[]>([]);
@@ -40,7 +40,13 @@ const CursosAluno: React.FC = () => {
       try {
         setLoading(true);
         const data = await getUserCourses(userId);
-        setCursos(data);
+        // Converte os cursos para o formato LearnWorldsCourse
+        const learnWorldsCursos = data.map(curso => ({
+          ...curso,
+          // Garante que os campos obrigatórios existem
+          description: curso.description || '',
+        }));
+        setCursos(learnWorldsCursos);
         setError(null);
       } catch (err) {
         console.error("Erro ao buscar cursos:", err);
@@ -49,7 +55,13 @@ const CursosAluno: React.FC = () => {
         try {
           const fallbackData = await getUserCourses(userId);
           if (fallbackData && fallbackData.length > 0) {
-            setCursos(fallbackData);
+            // Converte os cursos para o formato LearnWorldsCourse
+            const learnWorldsCursos = fallbackData.map(curso => ({
+              ...curso,
+              // Garante que os campos obrigatórios existem
+              description: curso.description || '',
+            }));
+            setCursos(learnWorldsCursos);
             setError(null);
             toast.info("Usando dados locais", { description: "Não foi possível conectar ao servidor" });
           }

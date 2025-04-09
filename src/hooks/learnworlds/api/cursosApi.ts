@@ -11,7 +11,14 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
    */
   const adaptApiResponse = (response: any): CoursesResponse => {
     if (!response || !response.data) {
-      return { data: [] };
+      return { 
+        data: [],
+        meta: {
+          total: 0,
+          pages: 1,
+          currentPage: 1
+        }
+      };
     }
     
     // Mapear os dados para o formato esperado
@@ -26,16 +33,13 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       : [];
     
     // Adaptar metadados
-    const metaData = response.meta || {};
     return {
       data: formattedData,
       meta: {
-        currentPage: metaData.page || metaData.currentPage || 1,
-        totalPages: metaData.totalPages || 1,
-        totalItems: metaData.totalItems || formattedData.length,
-        itemsPerPage: metaData.itemsPerPage || response.limit || 20
+        total: response.meta?.totalItems || formattedData.length,
+        pages: response.meta?.totalPages || 1,
+        currentPage: response.meta?.page || response.meta?.currentPage || 1
       },
-      total: response.total || formattedData.length,
       success: true
     };
   };

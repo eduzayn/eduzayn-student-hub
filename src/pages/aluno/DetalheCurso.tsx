@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,10 +13,9 @@ import {
   getUserCourses, 
   getCourseLessons,
   getCurrentUserId,
-  markLessonAsCompleted,
-  type LearnWorldsCourse, 
-  type LearnWorldsLesson 
+  markLessonAsCompleted
 } from "@/services/learnworlds-api";
+import { LearnWorldsCourse, LearnWorldsLesson } from "@/hooks/learnworlds/types/cursoTypes";
 
 const DetalheCurso: React.FC = () => {
   const { id: courseId } = useParams<{ id: string }>();
@@ -29,7 +27,6 @@ const DetalheCurso: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Busca o ID do usuário atual
   useEffect(() => {
     const fetchUserId = async () => {
       const id = await getCurrentUserId();
@@ -48,7 +45,6 @@ const DetalheCurso: React.FC = () => {
       try {
         setLoading(true);
         
-        // Busca informações do curso
         const courses = await getUserCourses(userId);
         const foundCourse = courses.find(c => c.id === courseId);
         
@@ -60,11 +56,9 @@ const DetalheCurso: React.FC = () => {
         
         setCourse(foundCourse);
         
-        // Busca aulas do curso
         const courseLessons = await getCourseLessons(courseId, userId);
         setLessons(courseLessons);
         
-        // Define a primeira aula não concluída como atual, ou a primeira se todas estiverem concluídas
         const firstIncomplete = courseLessons.find(lesson => !lesson.completed);
         setCurrentLessonId(firstIncomplete ? firstIncomplete.id : (courseLessons.length > 0 ? courseLessons[0].id : null));
         
@@ -91,7 +85,6 @@ const DetalheCurso: React.FC = () => {
       setCurrentLessonId(lessonId);
     } else if (lesson && lesson.locked) {
       toast({
-        // Corrigindo o tipo do toast para um valor válido
         variant: "destructive",
         title: "Aula bloqueada",
         description: "Esta aula ainda não está disponível para visualização.",
@@ -103,10 +96,8 @@ const DetalheCurso: React.FC = () => {
     if (!currentLessonId || !courseId || !userId) return;
     
     try {
-      // Chama a API para marcar a aula como concluída
       await markLessonAsCompleted(courseId, currentLessonId, userId);
       
-      // Atualiza a lista de aulas localmente
       setLessons(prevLessons => 
         prevLessons.map(lesson => 
           lesson.id === currentLessonId 
@@ -115,7 +106,6 @@ const DetalheCurso: React.FC = () => {
         )
       );
       
-      // Atualiza o progresso do curso
       if (course) {
         const completedLessons = lessons.filter(l => 
           l.completed || l.id === currentLessonId
@@ -133,7 +123,6 @@ const DetalheCurso: React.FC = () => {
         description: "Seu progresso foi salvo com sucesso.",
       });
       
-      // Opcionalmente, avança para a próxima aula não concluída
       const currentIndex = lessons.findIndex(l => l.id === currentLessonId);
       const nextIncompleteLesson = lessons.slice(currentIndex + 1).find(l => !l.completed && !l.locked);
       
@@ -150,7 +139,6 @@ const DetalheCurso: React.FC = () => {
     }
   };
   
-  // Componente de carregamento
   if (loading) {
     return (
       <div className="space-y-6">
@@ -171,7 +159,6 @@ const DetalheCurso: React.FC = () => {
     );
   }
   
-  // Exibição de erro
   if (error || !course) {
     return (
       <Card>
@@ -186,7 +173,6 @@ const DetalheCurso: React.FC = () => {
     );
   }
   
-  // Encontra a aula atual baseada no ID
   const currentLesson = lessons.find(l => l.id === currentLessonId) || null;
   
   return (
@@ -203,7 +189,6 @@ const DetalheCurso: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Área principal - Vídeo e informações da aula */}
         <div className="lg:col-span-2 space-y-6">
           {currentLesson ? (
             <VideoPlayer 
@@ -268,7 +253,6 @@ const DetalheCurso: React.FC = () => {
           </Tabs>
         </div>
         
-        {/* Sidebar - Lista de aulas */}
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-4">

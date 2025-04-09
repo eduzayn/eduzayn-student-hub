@@ -9,6 +9,67 @@ export default function useLearnWorldsApi() {
   const [error, setError] = useState<string | null>(null);
   const [offlineMode, setOfflineMode] = useState(false);
 
+  // Função para buscar usuários/alunos
+  const getUsers = async (page = 1, limit = 10, searchTerm = ""): Promise<any> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (offlineMode) {
+        // Retornar dados simulados se estiver em modo offline
+        return {
+          data: simulatedUsers,
+          meta: {
+            total: simulatedUsers.length,
+            pages: 1,
+            currentPage: 1
+          }
+        };
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('Você precisa estar autenticado para realizar esta ação');
+      }
+
+      const { data, error } = await supabase.functions.invoke('learnworlds-api', {
+        body: { 
+          path: '/users',
+          method: 'GET',
+          query: { page, limit, q: searchTerm }
+        }
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error: any) {
+      setError(error.message || 'Erro ao buscar usuários');
+      console.error('Erro ao buscar usuários:', error);
+      
+      // Se houver erro de conexão, ativar modo offline
+      if (error.message && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Network error')
+      )) {
+        setOfflineMode(true);
+        toast.error('Modo offline ativado: Usando dados simulados');
+      }
+      
+      // Retornar dados simulados em caso de erro
+      return {
+        data: simulatedUsers,
+        meta: {
+          total: simulatedUsers.length,
+          pages: 1,
+          currentPage: 1
+        }
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Função para buscar cursos
   const buscarCursos = async (page = 1, limit = 10): Promise<CoursesResponse> => {
     setLoading(true);
@@ -118,7 +179,12 @@ export default function useLearnWorldsApi() {
       
       return {
         success: false,
-        message: error.message || 'Erro ao sincronizar cursos'
+        message: error.message || 'Erro ao sincronizar cursos',
+        imported: 0,
+        updated: 0,
+        failed: 0,
+        total: 0,
+        logs: [error.message || 'Erro desconhecido']
       };
     } finally {
       setLoading(false);
@@ -224,6 +290,7 @@ export default function useLearnWorldsApi() {
     loading,
     error,
     offlineMode,
+    getUsers,
     buscarCursos,
     matricularAlunoEmCurso,
     verificarMatricula,
@@ -259,5 +326,33 @@ const simulatedCourses = [
     price: 697,
     access: 'paid',
     duration: '60 horas'
+  }
+];
+
+// Dados simulados de usuários
+const simulatedUsers = [
+  {
+    id: 'sim-user-1',
+    email: 'joao.silva@exemplo.com',
+    first_name: 'João',
+    last_name: 'Silva',
+    status: 'ativo',
+    created_at: '2023-01-15T10:30:00Z'
+  },
+  {
+    id: 'sim-user-2',
+    email: 'maria.santos@exemplo.com',
+    first_name: 'Maria',
+    last_name: 'Santos',
+    status: 'ativo',
+    created_at: '2023-02-20T14:45:00Z'
+  },
+  {
+    id: 'sim-user-3',
+    email: 'pedro.oliveira@exemplo.com',
+    first_name: 'Pedro',
+    last_name: 'Oliveira',
+    status: 'inativo',
+    created_at: '2023-03-10T09:15:00Z'
   }
 ];

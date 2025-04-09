@@ -13,6 +13,9 @@ export interface Course {
   duration?: string;
   progress?: number;
   modalidade?: string;
+  simulado?: boolean;
+  api_token?: boolean;
+  api_oauth?: boolean;
 }
 
 export interface EnrollmentResponse {
@@ -41,6 +44,7 @@ export interface CourseSyncResponse {
   failed?: number;
   total?: number;
   logs?: string[];
+  syncedItems?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -73,7 +77,7 @@ export interface SincronizacaoResult {
   failed?: number;
   total?: number;
   logs?: string[];
-  syncedItems?: any[];
+  syncedItems?: number;
 }
 
 export interface CoursesResponse {
@@ -83,7 +87,10 @@ export interface CoursesResponse {
     pages: number;
     currentPage: number;
   };
+  success?: boolean;
 }
 
-// Exportando os tipos para serem usados por outros componentes
-export type { Course as LearnWorldsCourse, LearnWorldsLesson };
+// Exportando os tipos para outros componentes
+export type LearnWorldsCourse = Course;
+
+// Removendo a exportação duplicada de LearnWorldsLesson que causava conflito
