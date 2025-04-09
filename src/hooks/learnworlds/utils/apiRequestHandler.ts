@@ -21,7 +21,8 @@ export const handleCourseRequest = async (
     console.log("Resposta de cursos do LearnWorlds:", response);
     
     // Processar e adaptar resposta usando o adaptador
-    return processApiResponse(response, setOfflineMode);
+    const processedResponse = processApiResponse(response, setOfflineMode);
+    return processedResponse;
   } catch (error) {
     console.error("Erro ao buscar cursos:", error);
     setOfflineMode(true);
