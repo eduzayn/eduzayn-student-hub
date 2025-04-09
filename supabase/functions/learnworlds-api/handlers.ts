@@ -1,163 +1,103 @@
 
-// Manipuladores de rota para os diferentes endpoints da API
-import { callLearnWorldsApi } from './api.ts';
-import { LEARNWORLDS_SCHOOL_ID, corsHeaders } from './config.ts';
+import { corsHeaders } from "./config.ts";
+import { callLearnWorldsApi } from "./api.ts";
 
 /**
- * Manipula requisições para o endpoint de cursos
+ * Gerencia requisições relacionadas a cursos
  */
-export async function handleCoursesRequest(url: URL): Promise<Response> {
-  const page = parseInt(url.searchParams.get("page") || "1");
-  const limit = parseInt(url.searchParams.get("limit") || "50");
-  
+export async function handleCursos(req: Request, path: string): Promise<Response> {
   try {
-    // Para cursos, usamos o token de acesso API Key
-    const result = await callLearnWorldsApi(
-      `/v2/${LEARNWORLDS_SCHOOL_ID}/courses?page=${page}&limit=${limit}`, 
-      'GET', null, false
-    );
+    console.log(`Processando requisição de cursos: ${req.method} ${path}`);
+    const url = new URL(req.url);
+    const params = url.searchParams;
+    
+    // Determinar curso específico se um ID for fornecido
+    const pathParts = path.split("/").filter((p) => p);
+    const isSingleCourse = pathParts.length >= 2;
+    const courseId = isSingleCourse ? pathParts[1] : null;
+    
+    let apiPath = "/admin/api/v2/courses";
+    if (courseId) {
+      apiPath += `/${courseId}`;
+    } else {
+      // Adicionar parâmetros de consulta para listagem
+      const page = params.get("page") || "1";
+      const limit = params.get("limit") || "20";
+      apiPath += `?page=${page}&limit=${limit}`;
+    }
+    
+    // Realizar a chamada à API do LearnWorlds
+    // Não usamos OAuth para endpoints de cursos
+    const result = await callLearnWorldsApi(apiPath, "GET", null, false);
     
     return new Response(JSON.stringify(result), {
-      headers: corsHeaders,
-      status: 200
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (error) {
-    console.error("Erro ao buscar cursos:", error);
-    return new Response(JSON.stringify({
-      error: error.message || "Erro interno ao buscar cursos"
-    }), {
-      headers: corsHeaders,
-      status: 500
+    console.error(`Erro ao processar requisição de cursos: ${error.message}`);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 }
 
 /**
- * Manipula requisições para detalhes de um curso específico
+ * Gerencia requisições relacionadas a usuários
  */
-export async function handleCourseDetailsRequest(path: string): Promise<Response> {
-  const courseId = path.split("courses/")[1];
-  
+export async function handleUsuarios(req: Request, path: string): Promise<Response> {
   try {
-    // Para detalhes do curso, usamos o token de acesso API Key
-    const result = await callLearnWorldsApi(
-      `/v2/${LEARNWORLDS_SCHOOL_ID}/courses/${courseId}`,
-      'GET', null, false
-    );
+    console.log(`Processando requisição de usuários: ${req.method} ${path}`);
+    const url = new URL(req.url);
+    const params = url.searchParams;
+
+    // Determinar usuário específico se um ID for fornecido
+    const pathParts = path.split("/").filter((p) => p);
+    const isUserWithCourse = pathParts.length >= 3 && pathParts[2] === "courses";
+    const isSingleUser = pathParts.length >= 2 && !isUserWithCourse;
+    const userId = isSingleUser || isUserWithCourse ? pathParts[1] : null;
+    
+    // Construir o caminho da API com base na requisição
+    let apiPath = "/admin/api/v2/users";
+    
+    if (isUserWithCourse) {
+      // Caso: /users/{userId}/courses/{courseId?}
+      apiPath = `/admin/api/v2/users/${userId}/courses`;
+      if (pathParts.length >= 4) {
+        apiPath += `/${pathParts[3]}`; // courseId
+      }
+    } else if (isSingleUser) {
+      // Caso: /users/{userId}
+      apiPath += `/${userId}`;
+    } else {
+      // Caso: /users (listar todos)
+      const page = params.get("page") || "1";
+      const limit = params.get("limit") || "20";
+      apiPath += `?page=${page}&limit=${limit}`;
+    }
+    
+    // Processar corpo da requisição para métodos não-GET
+    let body = null;
+    if (req.method === "POST" || req.method === "PUT") {
+      body = await req.json().catch(() => null);
+    }
+    
+    console.log(`Chamando API LearnWorlds: ${apiPath} (método: ${req.method})`);
+    
+    // Usuários exigem OAuth
+    const useOAuth = true;
+    const result = await callLearnWorldsApi(apiPath, req.method, body, useOAuth);
     
     return new Response(JSON.stringify(result), {
-      headers: corsHeaders,
-      status: 200
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (error) {
-    console.error(`Erro ao buscar detalhes do curso ${courseId}:`, error);
-    return new Response(JSON.stringify({
-      error: error.message || "Erro interno ao buscar detalhes do curso"
-    }), {
-      headers: corsHeaders,
-      status: 500
-    });
-  }
-}
-
-/**
- * Manipula requisições para o endpoint de usuários
- */
-export async function handleUsersRequest(url: URL): Promise<Response> {
-  const page = parseInt(url.searchParams.get("page") || "1");
-  const limit = parseInt(url.searchParams.get("limit") || "20");
-  const searchTerm = url.searchParams.get("q") || "";
-  
-  try {
-    // Para usuários, precisamos usar OAuth
-    const result = await callLearnWorldsApi(
-      `/v2/${LEARNWORLDS_SCHOOL_ID}/users?page=${page}&limit=${limit}${searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''}`,
-      'GET', null, true
-    );
-    
-    return new Response(JSON.stringify(result), {
-      headers: corsHeaders,
-      status: 200
-    });
-  } catch (error) {
-    console.error("Erro ao buscar usuários:", error);
-    return new Response(JSON.stringify({
-      error: error.message || "Erro interno ao buscar usuários"
-    }), {
-      headers: corsHeaders,
-      status: 500
-    });
-  }
-}
-
-/**
- * Manipula requisições para criar novos usuários
- */
-export async function handleCreateUserRequest(body: any): Promise<Response> {
-  console.log("Processando criação de usuário na API LearnWorlds");
-  
-  try {
-    const userData = {
-      firstName: body.firstName || "",
-      lastName: body.lastName || "",
-      email: body.email,
-      ...(body.phoneNumber && { phoneNumber: body.phoneNumber }),
-      ...(body.cpf && { customField1: body.cpf })
-    };
-    
-    console.log("Dados de usuário para LearnWorlds:", userData);
-    
-    // Para criar usuários, precisamos usar OAuth
-    const result = await callLearnWorldsApi(
-      `/v2/${LEARNWORLDS_SCHOOL_ID}/users`, 
-      "POST", userData, true
-    );
-    
-    console.log("Resposta da criação de usuário:", result);
-    
-    return new Response(JSON.stringify(result), {
-      headers: corsHeaders,
-      status: 200
-    });
-  } catch (learnWorldsError) {
-    console.error("Erro ao chamar API LearnWorlds para criar usuário:", learnWorldsError);
-    
-    return new Response(JSON.stringify({
-      error: "Erro ao criar usuário no LearnWorlds",
-      message: learnWorldsError.message,
-      errorType: "learnworlds_api_error"
-    }), {
-      headers: corsHeaders,
-      status: 500
-    });
-  }
-}
-
-/**
- * Manipula endpoints administrativos do LearnWorlds
- */
-export async function handleAdminRequest(path: string, body: any): Promise<Response> {
-  try {
-    // Para endpoints administrativos, usar OAuth
-    const result = await callLearnWorldsApi(
-      `/v2/${LEARNWORLDS_SCHOOL_ID}${path.substring("admin".length)}`,
-      "POST", body, true
-    );
-    
-    return new Response(JSON.stringify(result), {
-      headers: corsHeaders,
-      status: 200
-    });
-  } catch (apiError) {
-    console.error("Erro na chamada para API LearnWorlds:", apiError);
-    
-    return new Response(JSON.stringify({
-      error: "Erro na API do LearnWorlds",
-      message: apiError.message,
-      source: "LearnWorlds API"
-    }), {
-      headers: corsHeaders,
-      status: 500
+    console.error(`Erro ao processar requisição de usuários: ${error.message}`);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 }

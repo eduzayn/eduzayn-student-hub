@@ -1,66 +1,73 @@
 
-import { useState, useEffect } from 'react';
-import useLearnWorldsAlunos, { AlunoParams } from './learnworlds/useLearnWorldsAlunos';
-import useLearnWorldsCursos, { Course } from './learnworlds/useLearnWorldsCursos';
-import useLearnWorldsMatriculas from './learnworlds/useLearnWorldsMatriculas';
+import useLearnWorldsAlunos from '@/hooks/learnworlds/useLearnWorldsAlunos';
+import useLearnWorldsCursos from '@/hooks/learnworlds/useLearnWorldsCursos';
+import useLearnWorldsMatriculas from '@/hooks/learnworlds/useLearnWorldsMatriculas';
 
 /**
- * Hook para interagir com a API do LearnWorlds através das funções edge do Supabase
- * Este hook combina a funcionalidade de vários hooks especializados
+ * Hook combinado que fornece todas as funcionalidades da API do LearnWorlds
+ * através de uma única interface
  */
 const useLearnWorldsApi = () => {
-  // Estado local para gerenciar erros e modo offline de forma consistente
-  const [internalError, setInternalError] = useState<string | null>(null);
-  const [internalOfflineMode, setInternalOfflineMode] = useState<boolean>(false); // Iniciando como false para tentar usar dados reais
+  // Usar hooks individuais para cada funcionalidade
+  const {
+    buscarAlunos,
+    buscarDadosAluno,
+    criarAluno,
+    atualizarAluno,
+    loading: loadingAlunos,
+    error: errorAlunos,
+    offlineMode: offlineAlunos
+  } = useLearnWorldsAlunos();
 
-  // Utilizamos os hooks especializados
-  const alunosApi = useLearnWorldsAlunos();
-  const cursosApi = useLearnWorldsCursos();
-  const matriculasApi = useLearnWorldsMatriculas();
+  const {
+    buscarCursos,
+    buscarCursoDetalhes,
+    criarCurso,
+    atualizarCurso,
+    loading: loadingCursos,
+    error: errorCursos,
+    offlineMode: offlineCursos
+  } = useLearnWorldsCursos();
 
-  // Combinamos o status de carregamento
-  const loading = alunosApi.loading || cursosApi.loading || matriculasApi.loading;
-  
-  // Verificamos o status de modo offline de todos os hooks e atualizamos o estado interno
-  useEffect(() => {
-    const anyOffline = alunosApi.offlineMode || cursosApi.offlineMode || matriculasApi.offlineMode;
-    if (anyOffline !== internalOfflineMode) {
-      setInternalOfflineMode(anyOffline);
-    }
-  }, [alunosApi.offlineMode, cursosApi.offlineMode, matriculasApi.offlineMode, internalOfflineMode]);
+  const {
+    matricularAlunoEmCurso,
+    verificarMatricula,
+    atualizarStatusMatricula,
+    matriculaStatus,
+    loading: loadingMatriculas,
+    error: errorMatriculas,
+    offlineMode: offlineMatriculas
+  } = useLearnWorldsMatriculas();
 
-  // Atualizamos o estado de erro dentro de um useEffect para evitar atualizações durante a renderização
-  useEffect(() => {
-    const newError = alunosApi.error || cursosApi.error || matriculasApi.error;
-    if (newError !== internalError) {
-      setInternalError(newError);
-    }
-  }, [alunosApi.error, cursosApi.error, matriculasApi.error, internalError]);
+  // Determinar estado combinado
+  const loading = loadingAlunos || loadingCursos || loadingMatriculas;
+  const error = errorAlunos || errorCursos || errorMatriculas;
+  const offlineMode = offlineAlunos || offlineCursos || offlineMatriculas;
 
-  // Retornamos todas as funções e estados dos hooks especializados
   return {
+    // Alunos
+    buscarAlunos,
+    buscarDadosAluno,
+    criarAluno,
+    atualizarAluno,
+    
+    // Cursos
+    buscarCursos,
+    buscarCursoDetalhes,
+    criarCurso,
+    atualizarCurso,
+    
+    // Matrículas
+    matricularAlunoEmCurso,
+    verificarMatricula,
+    atualizarStatusMatricula,
+    matriculaStatus,
+    
+    // Estados
     loading,
-    error: internalError,
-    offlineMode: internalOfflineMode,
-    
-    // Funções de alunos
-    getUsers: alunosApi.getUsers,
-    cadastrarAluno: alunosApi.cadastrarAluno,
-    sincronizarAlunos: alunosApi.sincronizarAlunos,
-    
-    // Funções de cursos
-    getCourses: cursosApi.getCourses,
-    getCourseDetails: cursosApi.getCourseDetails,
-    getAllCourses: cursosApi.getAllCourses,
-    sincronizarCursos: cursosApi.sincronizarCursos,
-    
-    // Funções de matrículas
-    matricularAlunoEmCurso: matriculasApi.matricularAlunoEmCurso,
-    verificarMatricula: matriculasApi.verificarMatricula,
-    atualizarStatusMatricula: matriculasApi.atualizarStatusMatricula,
-    matriculaStatus: matriculasApi.matriculaStatus
+    error,
+    offlineMode
   };
 };
 
 export default useLearnWorldsApi;
-export type { AlunoParams, Course };
