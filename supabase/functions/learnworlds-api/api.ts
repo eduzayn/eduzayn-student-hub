@@ -20,11 +20,13 @@ export async function callLearnWorldsApi(
   body: any = null,
   usarOAuth: boolean = false
 ): Promise<any> {
-  const url = `${LEARNWORLDS_API_BASE_URL}/api/v2/${LEARNWORLDS_SCHOOL_ID}${path.startsWith("/") ? path : "/" + path}`;
+  // Construir URL com base no novo formato da API v2
+  const url = `${LEARNWORLDS_API_BASE_URL}/api/v2/${path.startsWith("/") ? path.substring(1) : path}`;
   console.log(`🌍 Requisição LearnWorlds → ${method} ${url}`);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    "Accept": "application/json",
     "Lw-Client": LEARNWORLDS_SCHOOL_ID
   };
 
@@ -32,12 +34,14 @@ export async function callLearnWorldsApi(
     try {
       const token = await getAccessToken();
       headers["Authorization"] = `Bearer ${token}`;
+      console.log("✅ Token OAuth adicionado aos cabeçalhos");
     } catch (e) {
       console.error("❌ Falha ao obter token OAuth:", e.message);
       throw new Error("Falha ao obter token OAuth");
     }
   } else {
     headers["Authorization"] = `Bearer ${LEARNWORLDS_API_KEY}`;
+    console.log("✅ Token API Key adicionado aos cabeçalhos");
   }
 
   const options: RequestInit = {
@@ -55,7 +59,7 @@ export async function callLearnWorldsApi(
     const text = await res.text();
 
     if (!res.ok) {
-      console.error("❌ Erro na resposta da API:", res.status, text);
+      console.error(`❌ Erro na resposta da API: ${res.status}`, text.substring(0, 200));
       throw new Error(`Erro LearnWorlds API: ${res.status} ${text}`);
     }
 

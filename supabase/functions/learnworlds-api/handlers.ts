@@ -1,143 +1,75 @@
-
-// 🛠️ Handlers da API LearnWorlds - Processadores de Requisições
+// 👥 handlers.ts - Manipuladores de rota para API LearnWorlds
 import { callLearnWorldsApi } from "./api.ts";
 import { corsHeaders } from "./config.ts";
 
-// Processar requisições relativas a usuários
+// Manipulador para rotas relacionadas a usuários
 export async function handleUsuarios(req: Request, path: string): Promise<Response> {
   try {
     const url = new URL(req.url);
-    const params = url.searchParams;
+    const method = req.method;
+    let body = null;
     
-    // GET /users - Listar usuários
-    if (path === "/users" && req.method === "GET") {
-      const page = Number(params.get("page") || "1");
-      const limit = Number(params.get("limit") || "50");
-      const searchTerm = params.get("q") || "";
-      
-      const result = await callLearnWorldsApi(
-        `/users?page=${page}&limit=${limit}${searchTerm ? `&q=${searchTerm}` : ""}`,
-        "GET",
-        null,
-        true
-      );
-      
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: corsHeaders
-      });
+    if (method === "POST" || method === "PUT") {
+      body = await req.json();
     }
-    
-    // GET /users/:id - Obter usuário específico
-    if (path.match(/^\/users\/[^\/]+$/) && req.method === "GET") {
-      const userId = path.split("/")[2];
+
+    // Identificar o tipo de requisição de usuário
+    if (path.includes("/users")) {
+      console.log(`📋 Processando requisição de usuários: ${method} ${path}`);
       
-      const result = await callLearnWorldsApi(`/users/${userId}`, "GET", null, true);
+      // Extrair parâmetros da URL
+      const page = url.searchParams.get("page") || "1";
+      const limit = url.searchParams.get("items_per_page") || "20";
+      const search = url.searchParams.get("search") || "";
+      const email = url.searchParams.get("email") || "";
       
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: corsHeaders
-      });
-    }
-    
-    // GET /users/:id/courses - Obter cursos de um usuário
-    if (path.match(/^\/users\/[^\/]+\/courses$/) && req.method === "GET") {
-      const userId = path.split("/")[2];
+      // Formatar endpoint corretamente para API V2
+      let endpoint = `users?page=${page}&items_per_page=${limit}`;
       
-      const result = await callLearnWorldsApi(`/users/${userId}/enrollments`, "GET", null, true);
-      
-      // Formatar resposta para incluir detalhes do curso
-      const enrollments = result.data || [];
-      const coursesData = [];
-      
-      for (const enrollment of enrollments) {
-        try {
-          const courseDetails = await callLearnWorldsApi(
-            `/courses/${enrollment.course_id}`,
-            "GET",
-            null,
-            true
-          );
-          
-          coursesData.push({
-            ...courseDetails,
-            progress: enrollment.progress || 0,
-            enrollment_id: enrollment.id,
-            enrollment_status: enrollment.status,
-            enrollment_date: enrollment.created_at
-          });
-        } catch (error) {
-          console.error(`Erro ao buscar detalhes do curso ${enrollment.course_id}:`, error);
-          // Continua para o próximo curso
-        }
+      // Adicionar parâmetros de busca se houver
+      if (search) {
+        endpoint += `&search=${encodeURIComponent(search)}`;
+      }
+      if (email) {
+        endpoint += `&email=${encodeURIComponent(email)}`;
       }
       
-      return new Response(JSON.stringify({
-        success: true,
-        data: coursesData
-      }), {
-        status: 200,
-        headers: corsHeaders
-      });
-    }
-    
-    // POST /users - Criar usuário
-    if (path === "/users" && req.method === "POST") {
-      const userData = await req.json();
-      
-      // Garantir dados mínimos obrigatórios
-      if (!userData.email || !userData.username) {
-        return new Response(JSON.stringify({
-          success: false,
-          message: "Dados incompletos: email e username são obrigatórios"
-        }), {
-          status: 400,
-          headers: corsHeaders
-        });
+      // Se for busca por ID específico
+      if (path.match(/\/users\/[a-zA-Z0-9-]+$/)) {
+        const userId = path.split("/").pop();
+        endpoint = `users/${userId}`;
       }
       
-      const result = await callLearnWorldsApi("/users", "POST", userData, true);
+      console.log(`🔍 Endpoint formatado: ${endpoint}`);
       
-      return new Response(JSON.stringify(result), {
-        status: 201,
-        headers: corsHeaders
-      });
-    }
-    
-    // PUT /users/:id - Atualizar usuário
-    if (path.match(/^\/users\/[^\/]+$/) && req.method === "PUT") {
-      const userId = path.split("/")[2];
-      const userData = await req.json();
+      // Chamar a API do LearnWorlds usando OAuth
+      const data = await callLearnWorldsApi(endpoint, method, body, true);
       
-      const result = await callLearnWorldsApi(`/users/${userId}`, "PUT", userData, true);
-      
-      return new Response(JSON.stringify(result), {
+      return new Response(JSON.stringify(data), {
         status: 200,
-        headers: corsHeaders
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
     
-    // Rota não implementada
-    return new Response(JSON.stringify({
-      success: false,
-      message: "Endpoint de usuário não implementado",
-      path
-    }), {
+    return new Response(JSON.stringify({ error: "Rota de usuário não encontrada" }), {
       status: 404,
-      headers: corsHeaders
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
+    
   } catch (error) {
+    console.error("❌ Erro ao processar requisição de usuários:", error);
+    
     return new Response(JSON.stringify({
       success: false,
-      message: error.message || "Erro ao processar requisição de usuário"
+      message: error.message || "Erro ao processar requisição de usuários"
     }), {
       status: 500,
-      headers: corsHeaders
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 }
 
-// Processar requisições relativas a cursos
+// Manipulador para rotas relacionadas a cursos
 export async function handleCursos(req: Request, path: string): Promise<Response> {
   try {
     const url = new URL(req.url);
@@ -283,7 +215,7 @@ export async function handleCursos(req: Request, path: string): Promise<Response
   }
 }
 
-// Processar requisições relativas a matrículas
+// Manipulador para rotas relacionadas a matrículas
 export async function handleMatriculas(req: Request, path: string): Promise<Response> {
   try {
     // POST /enrollments - Criar matrícula
