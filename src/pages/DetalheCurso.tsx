@@ -60,7 +60,9 @@ const DetalheCurso: React.FC = () => {
     // Mostrar mensagem amigável quando o curso não for encontrado
     toast.error(`Curso com ID ${courseId} não encontrado`);
     console.warn(`Curso com ID ${courseId} não encontrado na lista de cursos disponíveis`);
-    return <CourseNotFound courseId={courseId} />;
+    return (
+      <CourseNotFound courseId={courseId} />
+    );
   }
   
   const curso = mockCourses[courseId];
