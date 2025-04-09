@@ -27,8 +27,9 @@ export async function callLearnWorldsApi(path: string, method = 'GET', body?: an
     
     // Remover qualquer barra inicial para não criar URLs malformadas
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-      
+    
     // Construir a URL completa usando a base de API v2
+    // A URL já inclui o endpoint v2, então não adicionar novamente
     const url = `${LEARNWORLDS_API_BASE_URL}/${cleanPath}`;
     console.log(`Chamando API LearnWorlds: ${method} ${url} (useOAuth: ${useOAuth})`);
     

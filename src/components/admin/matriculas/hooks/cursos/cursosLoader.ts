@@ -40,14 +40,16 @@ export const carregarCursos = async (
       throw new Error("Erro ao carregar cursos do LearnWorlds");
     }
     
-    console.log("Dados originais dos cursos:", resultado.data);
-    console.log("Metadados da paginação:", resultado.meta);
+    console.log("Dados originais dos cursos:", resultado);
+    console.log("Total de cursos recebidos:", resultado.data ? resultado.data.length : 0);
     
     // Verificar se os dados da API são válidos e não estão vazios
     if (Array.isArray(resultado.data) && resultado.data.length > 0) {
       // Atualizar o total de páginas baseado na resposta da API
       if (resultado.meta && resultado.meta.totalPages) {
         setTotalPages(resultado.meta.totalPages);
+      } else if (resultado.pages) {
+        setTotalPages(resultado.pages);
       }
       
       // Garantir explicitamente que cursos da API são marcados como não simulados
@@ -61,15 +63,6 @@ export const carregarCursos = async (
       console.log("Cursos formatados:", cursosFormatados);
       console.log("Total de cursos da API com token:", cursosFormatados.length);
       setCursos(cursosFormatados);
-      
-      // Verificar se temos algum curso com ID que parece simulado (para diagnóstico)
-      const cursosComIdsCourse = cursosFormatados.filter(c => 
-        c.id && c.id.toString().startsWith('course-')
-      ).length;
-      
-      if (cursosComIdsCourse > 0) {
-        console.log(`Aviso: ${cursosComIdsCourse} cursos têm IDs no formato 'course-X'. Isso é normal na API.`);
-      }
     } else {
       console.warn("API retornou um array vazio de cursos ou formato inesperado");
       handleFallbackData(setCursos, setTotalPages, termoBusca);

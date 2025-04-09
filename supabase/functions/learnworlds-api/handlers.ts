@@ -13,7 +13,7 @@ export async function handleCursos(req: Request, path: string): Promise<Response
     
     // Determinar curso específico se um ID for fornecido
     const pathParts = path.split("/").filter((p) => p);
-    const courseId = pathParts.length > 0 ? pathParts[0] : null;
+    const courseId = pathParts.length > 1 ? pathParts[1] : null;
     
     console.log("Path parts:", pathParts, "courseId:", courseId);
     
@@ -70,9 +70,9 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     const pathParts = path.split("/").filter((p) => p);
     console.log("Path parts para usuários:", pathParts);
     
-    const isUserWithCourse = pathParts.length >= 2 && pathParts[1] === "courses";
-    const isSingleUser = pathParts.length >= 1 && !isUserWithCourse;
-    const userId = isSingleUser || isUserWithCourse ? pathParts[0] : null;
+    const isUserWithCourse = pathParts.length >= 3 && pathParts[1] === "courses";
+    const isSingleUser = pathParts.length >= 2 && !isUserWithCourse;
+    const userId = isSingleUser || isUserWithCourse ? pathParts[1] : null;
     
     console.log("isUserWithCourse:", isUserWithCourse, "isSingleUser:", isSingleUser, "userId:", userId);
     
@@ -82,8 +82,8 @@ export async function handleUsuarios(req: Request, path: string): Promise<Respon
     if (isUserWithCourse) {
       // Caso: /users/{userId}/courses/{courseId?}
       apiPath = `users/${userId}/enrollments`;
-      if (pathParts.length >= 3) {
-        apiPath += `?course_id=${pathParts[2]}`; // Filtrar por course_id na API v2
+      if (pathParts.length >= 4) {
+        apiPath += `?course_id=${pathParts[3]}`; // Filtrar por course_id na API v2
       }
     } else if (isSingleUser) {
       // Caso: /users/{userId}
