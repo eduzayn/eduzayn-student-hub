@@ -26,11 +26,10 @@ export const useSincronizacaoCursos = () => {
         throw new Error("Você precisa estar autenticado para realizar esta ação");
       }
       
-      // Usar a nova rota do /sync dentro de learnworlds-api
+      // Usar a rota de sincronização dentro de learnworlds-api
       const { data, error } = await supabase.functions.invoke('learnworlds-api', {
         body: {
           path: '/sync',
-          method: 'POST',
           query: { 
             type: 'courses',
             syncAll: sincronizarTodos 

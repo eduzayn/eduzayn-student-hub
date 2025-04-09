@@ -14,7 +14,8 @@ interface SincronizacaoCursosProps {
 }
 
 const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
-  const { sincronizarCursos, loading, resultado, logs } = useSincronizacaoCursos();
+  const { sincronizarCursos, loading, resultado } = useSincronizacaoCursos();
+  const [logs, setLogs] = useState<string[]>([]);
   
   const handleSincronizar = async () => {
     try {
@@ -22,6 +23,7 @@ const SincronizacaoCursos: React.FC<SincronizacaoCursosProps> = () => {
       
       if (result && result.success) {
         toast.success("Sincronização concluída com sucesso!");
+        setLogs(result.logs || []);
       }
     } catch (error) {
       console.error("Erro ao sincronizar cursos:", error);

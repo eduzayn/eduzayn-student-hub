@@ -40,7 +40,7 @@ const CursosModulos: React.FC<CursosModulosProps> = ({ cursoId }) => {
   const carregarModulos = async () => {
     setLoading(true);
     try {
-      // Usar a tabela correta modulos_curso em vez de modulos
+      // Usar a tabela correta modulos_curso
       const { data, error } = await supabase
         .from('modulos_curso')
         .select(`

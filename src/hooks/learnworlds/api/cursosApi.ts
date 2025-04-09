@@ -33,12 +33,13 @@ export const cursosApi = (makeRequest: any, makePublicRequest: any, setOfflineMo
       : [];
     
     // Adaptar metadados para o formato esperado
+    const meta = response.meta || {};
     return {
       data: formattedData,
       meta: {
-        total: response.meta?.totalItems || formattedData.length,
-        pages: response.meta?.totalPages || 1,
-        currentPage: response.meta?.page || response.meta?.currentPage || 1
+        total: meta.totalItems || formattedData.length,
+        pages: meta.totalPages || 1,
+        currentPage: meta.page || meta.currentPage || 1
       },
       success: true
     };

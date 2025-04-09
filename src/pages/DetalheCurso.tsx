@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -97,7 +96,10 @@ const DetalheCurso: React.FC = () => {
                   certification={curso.certification}
                 />
                 
-                <CourseDescription description={curso.description} />
+                <CourseDescription 
+                  description={curso.description}
+                  loading={loading}
+                />
               </div>
             </div>
             
