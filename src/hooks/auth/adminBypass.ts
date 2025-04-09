@@ -1,38 +1,61 @@
 
 /**
- * Funções utilitárias para obter tokens de autenticação do administrador
+ * Funções utilitárias para o bypass de autenticação do administrador
  */
 
-// Token de bypass para admins - deve corresponder ao valor na função Edge
+// Token de bypass para administrador - deve corresponder ao que está na função edge
 const ADMIN_BYPASS_TOKEN = "byZ4yn-#v0lt-2025!SEC";
 
+// Chaves para valores armazenados no localStorage
+const ADMIN_BYPASS_KEY = "admin_bypass";
+const ADMIN_BYPASS_EMAIL_KEY = "admin_bypass_email";
+
 /**
- * Verifica se existe um bypass de admin ativo no localStorage
- * 
- * @returns True se o bypass de admin estiver ativo
+ * Verifica se o bypass de administrador está ativo
  */
 export const isAdminBypassAuthenticated = (): boolean => {
-  const bypassAuthenticated = localStorage.getItem("adminBypassAuthenticated");
-  return bypassAuthenticated === "true";
+  return localStorage.getItem(ADMIN_BYPASS_KEY) === "true";
 };
 
 /**
- * Obtém o email associado ao bypass de admin
- * 
- * @returns O email do bypass de admin, ou null se não estiver definido
+ * Define o estado de bypass de administrador
+ */
+export const setAdminBypassAuthenticated = (value: boolean, email: string = "admin@eduzayn.com.br"): void => {
+  localStorage.setItem(ADMIN_BYPASS_KEY, value ? "true" : "false");
+  
+  if (value) {
+    localStorage.setItem(ADMIN_BYPASS_EMAIL_KEY, email);
+  } else {
+    localStorage.removeItem(ADMIN_BYPASS_EMAIL_KEY);
+  }
+  
+  console.log(`Bypass de administrador ${value ? "ativado" : "desativado"} para ${email}`);
+};
+
+/**
+ * Obtém o email associado ao bypass de administrador
  */
 export const getAdminBypassEmail = (): string | null => {
-  return localStorage.getItem("adminBypassEmail");
+  return localStorage.getItem(ADMIN_BYPASS_EMAIL_KEY);
 };
 
 /**
- * Verifica se há um bypass de admin e atualiza o estado de autenticação
- * 
- * @param setIsLoggedIn Função para atualizar o estado de login
- * @param setIsAdminBypass Função para atualizar o estado de bypass de admin
- * @param setIsAdminUser Função para atualizar o estado de usuário admin
- * @param setUserEmail Função para atualizar o email do usuário
- * @returns True se o bypass de admin estiver ativo
+ * Obtém o token de bypass de administrador
+ * Esse token deve corresponder ao definido na função edge
+ */
+export const getAdminBypassToken = (): string => {
+  return ADMIN_BYPASS_TOKEN;
+};
+
+/**
+ * Retorna o cabeçalho de autorização para requisições de administrador
+ */
+export const getAuthorizationHeader = (): string => {
+  return `Bearer ${ADMIN_BYPASS_TOKEN}`;
+};
+
+/**
+ * Verifica o bypass de administrador e define o estado de autenticação
  */
 export const checkAdminBypass = (
   setIsLoggedIn: (value: boolean) => void,
@@ -40,30 +63,20 @@ export const checkAdminBypass = (
   setIsAdminUser: (value: boolean) => void,
   setUserEmail: (value: string | null) => void
 ): boolean => {
-  if (isAdminBypassAuthenticated()) {
-    const email = getAdminBypassEmail();
-    console.log("[adminBypass] Bypass de administrador ativo para:", email);
-    setIsLoggedIn(true);
-    setIsAdminBypass(true);
-    setIsAdminUser(true);
-    setUserEmail(email);
-    return true;
+  const adminBypass = isAdminBypassAuthenticated();
+  
+  if (adminBypass) {
+    const bypassEmail = getAdminBypassEmail();
+    console.log(`Admin bypass está ativo para email: ${bypassEmail}`);
+    
+    if (bypassEmail) {
+      setIsLoggedIn(true);
+      setIsAdminBypass(true);
+      setIsAdminUser(true);
+      setUserEmail(bypassEmail);
+      return true;
+    }
   }
+  
   return false;
-};
-
-/**
- * Obtém o token de bypass para administradores
- * @returns O token de bypass admin
- */
-export const getAdminBypassToken = (): string => {
-  return ADMIN_BYPASS_TOKEN;
-};
-
-/**
- * Obtém o cabeçalho de autorização completo para requisições administrativas
- * @returns O cabeçalho de autorização formatado com o token
- */
-export const getAuthorizationHeader = (): string => {
-  return `Bearer ${ADMIN_BYPASS_TOKEN}`;
 };

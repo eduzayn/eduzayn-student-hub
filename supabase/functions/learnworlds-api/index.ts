@@ -23,6 +23,9 @@ serve(async (req) => {
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   
+  console.log(`Token recebido: ${token ? token.substring(0, 10) + "..." : "nenhum"}`);
+  console.log(`Token esperado: ${ADMIN_BYPASS_JWT ? ADMIN_BYPASS_JWT.substring(0, 10) + "..." : "nenhum"}`);
+  
   if (!ADMIN_BYPASS_JWT || token !== ADMIN_BYPASS_JWT) {
     console.log("Token inválido - nenhuma correspondência encontrada");
     
