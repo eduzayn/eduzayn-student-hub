@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { NovoAlunoForm, Aluno, AlunoSelectionProps, UseAlunoSelectionReturn } from "./types";
 import { 
   mapearAlunosDeAPI, 
-  tratarErroCarregamento 
+  tratarErroCarregamento,
+  formatarAlunoParaExibicao
 } from "./alunoService";
 import { 
   processarRespostaCadastro, 
@@ -43,6 +44,8 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       
       const resultado = await apiDirectClient.getUsers(1, 20, termoBusca);
       
+      console.log("Resultado completo da busca de alunos:", resultado);
+      
       // Resultado agora pode ser simulado ou real, mas sempre terá a mesma estrutura
       if (!resultado || !resultado.data) {
         console.warn("Nenhum dado retornado pela API");
@@ -50,11 +53,8 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
         return;
       }
       
-      console.log("Dados obtidos da API:", resultado.data);
-      
       // Mapear alunos da API para o formato esperado pelo componente
       const alunosFormatados = mapearAlunosDeAPI(resultado.data);
-      console.log("Alunos formatados:", alunosFormatados);
       
       setAlunos(alunosFormatados);
     } catch (error) {
@@ -73,10 +73,12 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
   
   const handleSelecionar = (aluno: Aluno) => {
     setSelecionado(aluno.id);
-    onAlunoSelecionado({
-      ...aluno,
-      learnworlds_id: aluno.learnworlds_id || aluno.id
-    });
+    
+    // Formatar aluno para garantir consistência
+    const alunoFormatado = formatarAlunoParaExibicao(aluno);
+    
+    console.log("Aluno selecionado:", alunoFormatado);
+    onAlunoSelecionado(alunoFormatado);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

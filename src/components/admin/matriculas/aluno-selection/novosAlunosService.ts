@@ -24,13 +24,29 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
     return { id: novoAlunoId, sucesso: true };
   }
   
-  if (resultado && typeof resultado === 'object' && 'text' in resultado) {
+  if (resultado && resultado.success === true) {
+    // A API retornou sucesso, mas sem ID específico
+    novoAlunoId = resultado.id || `temp-${Date.now()}`;
+    console.log("✅ API retornou sucesso. ID (ou gerado):", novoAlunoId);
+    
+    // Verificando se temos uma resposta HTML ou texto
+    if (resultado.rawResponse) {
+      console.log("⚠️ API retornou texto/HTML mas com status de sucesso");
+      toast.info("A API retornou sucesso, mas em formato inesperado", {
+        description: "O aluno pode ter sido criado, mas a confirmação não está no formato esperado."
+      });
+    }
+    
+    return { id: novoAlunoId, sucesso: true };
+  }
+  
+  if (resultado && typeof resultado === 'object' && 'rawResponse' in resultado) {
     // Formato alternativo (resposta HTML ou outro formato)
     novoAlunoId = `local-${Date.now()}`;
-    console.log("⚠️ Resposta da API em formato não-padrão, usando ID local:", novoAlunoId);
+    console.log("⚠️ Resposta da API em formato não-padrão:", resultado.rawResponse?.substring(0, 100));
     
-    toast.info("Resposta da API em formato não-padrão, usando ID local", {
-      description: "A sincronização completa pode ser necessária mais tarde."
+    toast.info("Resposta da API em formato não-padrão", {
+      description: "O aluno pode ter sido criado, mas não foi possível confirmar detalhes."
     });
     return { id: novoAlunoId, sucesso: true };
   } 
@@ -40,8 +56,8 @@ export const processarRespostaCadastro = (resultado: any): { id: string; sucesso
     novoAlunoId = `local-${Date.now()}`;
     console.log("⚠️ Resposta da API sem ID, usando ID local:", novoAlunoId, "Resposta:", resultado);
     
-    toast.info("Resposta da API sem ID, usando ID local", {
-      description: "A sincronização completa pode ser necessária mais tarde."
+    toast.info("Resposta da API sem ID esperado", {
+      description: "O aluno foi criado, mas com identificador temporário."
     });
     return { id: novoAlunoId, sucesso: true };
   } 

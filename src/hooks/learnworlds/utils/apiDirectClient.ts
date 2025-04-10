@@ -60,6 +60,8 @@ export const apiDirectClient = {
         'Authorization': 'OAuth [CREDENCIAIS]' // Log sem expor credenciais completas
       });
       
+      console.log("🌐 URL completa para criação de usuário:", `${this.baseUrl}/users`);
+      
       const response = await fetch(`${this.baseUrl}/users`, {
         method: 'POST',
         headers,
@@ -68,42 +70,63 @@ export const apiDirectClient = {
 
       // Log detalhado da resposta para depuração
       console.log("📡 Status da resposta:", response.status);
+      console.log("📡 Status text da resposta:", response.statusText);
       console.log("📡 Headers da resposta:", Object.fromEntries(response.headers.entries()));
 
       // Verificar tipo de conteúdo para tratamento adequado
       const contentType = response.headers.get("content-type") || "";
+      console.log("📄 Content-Type da resposta:", contentType);
+      
+      // Capturar o corpo da resposta como texto primeiro
+      const responseText = await response.text();
+      console.log("📄 Corpo da resposta (texto):", responseText.slice(0, 500) + (responseText.length > 500 ? "..." : ""));
+      
       const isJson = contentType.includes("application/json");
+      console.log("🔍 A resposta é JSON?", isJson);
       
       if (!response.ok) {
-        const responseText = await response.text();
         console.error("❌ Erro na resposta da API:", response.status, responseText);
         
         throw new Error(`Erro ao criar usuário: ${response.status} - ${responseText}`);
       }
 
-      // Se o formato for JSON, parse como JSON, caso contrário, retorne um objeto simulado
-      if (isJson) {
+      // Processar a resposta da API
+      let responseData;
+      
+      // Tentar parsear como JSON se o Content-Type for JSON ou se o texto parecer JSON
+      if (isJson || (responseText.trim().startsWith('{') && responseText.trim().endsWith('}'))) {
         try {
-          const data = await response.text();
-          return data ? JSON.parse(data) : { success: true, id: `temp-${Date.now()}` };
+          responseData = responseText ? JSON.parse(responseText) : null;
+          console.log("✅ Resposta parseada como JSON:", responseData);
         } catch (parseError) {
-          console.error("❌ Falha ao analisar JSON:", parseError);
+          console.error("❌ Falha ao parsear JSON:", parseError);
+          console.log("⚠️ Texto que não pôde ser parseado:", responseText);
+          
           // Em caso de erro de parsing, retorne um objeto simulado com sucesso
-          return { 
+          responseData = { 
             success: true, 
             id: `temp-${Date.now()}`,
             message: "Usuário criado com sucesso (resposta não-JSON)"
           };
         }
       } else {
-        // Se não for JSON, assumimos que foi um sucesso e retornamos um objeto simulado
-        console.log("✅ Usuário criado com sucesso (resposta não-JSON)");
-        return { 
-          success: true, 
-          id: `temp-${Date.now()}`,
-          message: "Usuário criado com sucesso (resposta não-JSON)"
-        };
+        // Se não for JSON, verificamos se foi bem sucedido pelo status code
+        if (response.ok) {
+          console.log("✅ Usuário criado com sucesso (resposta não-JSON)");
+          // A API retornou sucesso, mas não em formato JSON
+          responseData = { 
+            success: true, 
+            id: `temp-${Date.now()}`,
+            message: "Usuário criado com sucesso (resposta não-JSON)",
+            rawResponse: responseText.slice(0, 100) // Incluir parte da resposta para inspeção
+          };
+        } else {
+          throw new Error(`Erro na resposta da API: ${response.status} ${responseText}`);
+        }
       }
+      
+      console.log("✅ Resposta final processada:", responseData);
+      return responseData;
     } catch (error) {
       console.error("❌ Falha ao criar usuário na API direta:", error);
       throw error;
@@ -152,53 +175,89 @@ export const apiDirectClient = {
 
       // Log detalhado da resposta para depuração
       console.log("📡 Status da resposta de busca:", response.status);
+      console.log("📡 Status text da resposta:", response.statusText);
+      console.log("📡 Headers da resposta:", Object.fromEntries(response.headers.entries()));
       
       // Verificar tipo de conteúdo para tratamento adequado
       const contentType = response.headers.get("content-type") || "";
+      console.log("📄 Content-Type da resposta:", contentType);
+      
+      // Capturar o corpo da resposta como texto para análise
+      const responseText = await response.text();
+      console.log("📄 Corpo da resposta (texto):", responseText.slice(0, 500) + (responseText.length > 500 ? "..." : ""));
+      
       const isJson = contentType.includes("application/json");
+      console.log("🔍 A resposta é JSON?", isJson);
       
       if (!response.ok) {
-        const responseText = await response.text();
         console.error("❌ Erro na resposta da API de busca:", response.status, responseText);
-        
         throw new Error(`Erro ao buscar usuários: ${response.status} - ${responseText}`);
       }
 
-      // Se o formato for JSON, parse como JSON, caso contrário, retorne uma lista vazia
-      if (isJson) {
+      // Processar a resposta conforme o formato
+      let responseData;
+      
+      // Verificar se o texto pode ser parseado como JSON
+      if (isJson || (responseText.trim().startsWith('{') || responseText.trim().startsWith('['))) {
         try {
-          const text = await response.text();
-          const data = text ? JSON.parse(text) : { data: [] };
-          console.log("✅ Usuários encontrados:", data.data?.length || 0);
-          return data;
+          responseData = responseText ? JSON.parse(responseText) : { data: [] };
+          console.log("✅ Resposta parseada como JSON:", responseData);
         } catch (parseError) {
-          console.error("❌ Falha ao analisar JSON:", parseError);
-          // Em caso de erro de parsing, retorne uma lista vazia
-          return { data: [] };
+          console.error("❌ Falha ao parsear JSON:", parseError);
+          console.log("⚠️ Texto que não pôde ser parseado:", responseText);
+          
+          // Em caso de erro de parsing, retornamos dados simulados
+          responseData = { 
+            data: [],
+            message: "Falha ao parsear resposta JSON",
+            rawResponse: responseText.slice(0, 100)
+          };
         }
       } else {
-        // Se não for JSON, mas o status é 200, retornamos uma lista vazia
-        console.log("⚠️ A API retornou uma resposta não-JSON, usando dados simulados");
-        // Dados simulados para retornar algo útil
-        return { 
-          data: [
-            { 
-              id: `sim-1`,
-              username: "Usuário Teste",
-              email: "usuario.teste@example.com",
-              fields: {
-                first_name: "Usuário",
-                last_name: "Teste",
-                phone_number: "11999999999",
-                cpf: "12345678900"
-              }
-            }
-          ]
-        };
+        // Se a resposta não é JSON mas o status é 200, podemos estar recebendo HTML ou outro formato
+        console.log("⚠️ A API retornou uma resposta não-JSON, avaliando conteúdo");
+        
+        // Verificando se parece HTML (tem tags)
+        if (responseText.includes('<html') || responseText.includes('<body')) {
+          console.log("⚠️ A resposta parece ser HTML, usando dados simulados");
+          responseData = { 
+            data: [],
+            message: "API retornou HTML em vez de JSON",
+            isHtml: true,
+            rawResponse: responseText.slice(0, 100)
+          };
+        } else {
+          // Talvez seja texto plano com outra estrutura
+          console.log("⚠️ A resposta é texto plano, usando dados simulados");
+          responseData = { 
+            data: [],
+            message: "API retornou texto plano",
+            rawResponse: responseText.slice(0, 100)
+          };
+        }
       }
+
+      // Garantir que temos uma estrutura de dados consistente para retorno
+      if (!responseData.data && response.ok) {
+        // Se a resposta foi bem-sucedida mas não tem o campo 'data', criamos um
+        console.log("⚠️ Resposta sem campo 'data', criando estrutura padrão");
+        
+        // Verificar se a resposta parece ser um array
+        if (Array.isArray(responseData)) {
+          return { data: responseData };
+        } else {
+          // Se é um objeto único, envolve em um array
+          return { data: [responseData] };
+        }
+      }
+      
+      console.log("✅ Dados de usuários recuperados:", responseData.data?.length || 0, "usuários");
+      return responseData;
     } catch (error) {
       console.error("❌ Falha ao buscar usuários na API direta:", error);
-      throw error;
+      
+      // Em caso de erro, retornar estrutura vazia para não quebrar a UI
+      return { data: [] };
     }
   }
 };
