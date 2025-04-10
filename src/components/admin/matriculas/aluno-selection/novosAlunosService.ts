@@ -8,73 +8,14 @@ import { Aluno, NovoAlunoForm } from "./types";
 export const processarRespostaCadastro = (resultado: any): { id: string; sucesso: boolean } => {
   console.log("🔄 Processando resposta da API V2:", resultado);
   
-  let novoAlunoId: string;
-  
-  if (resultado && resultado.id) {
-    // Formato esperado da API V2
-    novoAlunoId = resultado.id;
-    console.log("✅ ID do usuário criado:", novoAlunoId);
-    return { id: novoAlunoId, sucesso: true };
-  } 
-  
-  if (resultado && resultado.user && resultado.user.id) {
-    // Formato alternativo da API V2
-    novoAlunoId = resultado.user.id;
-    console.log("✅ ID do usuário criado (formato alternativo):", novoAlunoId);
-    return { id: novoAlunoId, sucesso: true };
+  // Se temos um ID e sucesso, usamos isso diretamente
+  if (resultado && resultado.success === true && resultado.id) {
+    console.log("✅ ID do usuário criado:", resultado.id);
+    return { id: resultado.id, sucesso: true };
   }
   
-  if (resultado && resultado.success === true) {
-    // A API retornou sucesso, mas sem ID específico
-    novoAlunoId = resultado.id || `temp-${Date.now()}`;
-    console.log("✅ API retornou sucesso. ID (ou gerado):", novoAlunoId);
-    
-    // Verificando se temos uma resposta HTML ou texto
-    if (resultado.rawResponse) {
-      console.log("⚠️ API retornou texto/HTML mas com status de sucesso");
-      toast.info("A API retornou sucesso, mas em formato inesperado", {
-        description: "O aluno pode ter sido criado, mas a confirmação não está no formato esperado."
-      });
-    }
-    
-    return { id: novoAlunoId, sucesso: true };
-  }
-  
-  if (resultado && typeof resultado === 'object' && 'rawResponse' in resultado) {
-    // Formato alternativo (resposta HTML ou outro formato)
-    novoAlunoId = `local-${Date.now()}`;
-    console.log("⚠️ Resposta da API em formato não-padrão:", resultado.rawResponse?.substring(0, 100));
-    
-    toast.info("Resposta da API em formato não-padrão", {
-      description: "O aluno pode ter sido criado, mas não foi possível confirmar detalhes."
-    });
-    return { id: novoAlunoId, sucesso: true };
-  } 
-  
-  if (resultado && typeof resultado === 'object') {
-    // Quando recebemos um objeto, mas sem o ID esperado
-    novoAlunoId = `local-${Date.now()}`;
-    console.log("⚠️ Resposta da API sem ID, usando ID local:", novoAlunoId, "Resposta:", resultado);
-    
-    toast.info("Resposta da API sem ID esperado", {
-      description: "O aluno foi criado, mas com identificador temporário."
-    });
-    return { id: novoAlunoId, sucesso: true };
-  } 
-  
-  if (resultado === null || resultado === undefined) {
-    // Quando a resposta é nula, possível erro na API
-    novoAlunoId = `local-${Date.now()}`;
-    console.log("⚠️ Resposta nula da API, usando ID local:", novoAlunoId);
-    
-    toast.warning("Resposta nula da API, usando ID local", {
-      description: "O cadastro pode não ter sido concluído no servidor."
-    });
-    return { id: novoAlunoId, sucesso: true };
-  }
-  
-  // Quando a resposta não se enquadra em nenhum dos casos acima
-  console.error("❌ Formato de resposta desconhecido:", resultado);
+  // Se não temos ID ou sucesso, provavelmente algo deu errado
+  console.error("❌ Formato de resposta desconhecido ou erro:", resultado);
   return { id: '', sucesso: false };
 };
 

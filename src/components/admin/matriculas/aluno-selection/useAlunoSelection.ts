@@ -24,7 +24,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
     nome: "",
     sobrenome: "",
     email: "",
-    cpf: "", // Será tratado como opcional
+    cpf: "",
     telefone: ""
   });
   
@@ -42,13 +42,26 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       
       console.log("Carregando alunos diretamente do LearnWorlds com termo:", termoBusca);
       
+      // Tentando buscar alunos da API
       const resultado = await apiDirectClient.getUsers(1, 20, termoBusca);
       
-      console.log("Resultado completo da busca de alunos:", resultado);
+      console.log("Resultado da busca de alunos:", resultado);
       
-      // Resultado agora pode ser simulado ou real, mas sempre terá a mesma estrutura
-      if (!resultado || !resultado.data) {
-        console.warn("Nenhum dado retornado pela API");
+      if (resultado.error) {
+        // Se a API retornar um erro específico
+        setError(resultado.error);
+        toast.error("Erro ao buscar alunos", {
+          description: resultado.error
+        });
+        
+        // Definir lista vazia para evitar erros na UI
+        setAlunos([]);
+        return;
+      }
+      
+      // Quando não há dados, retornamos uma lista vazia
+      if (!resultado || !resultado.data || resultado.data.length === 0) {
+        console.log("Nenhum aluno encontrado na API");
         setAlunos([]);
         return;
       }
