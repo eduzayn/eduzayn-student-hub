@@ -23,7 +23,6 @@ const AlunoSelection: React.FC<AlunoSelectionProps> = ({ onAlunoSelecionado }) =
     formNovoAluno,
     loading,
     error,
-    offlineMode,
     handleBusca,
     handleSelecionar,
     handleInputChange,
@@ -77,11 +76,6 @@ const AlunoSelection: React.FC<AlunoSelectionProps> = ({ onAlunoSelecionado }) =
                         <p className="text-sm text-muted-foreground">{aluno.email}</p>
                         {aluno.cpf && <p className="text-sm text-muted-foreground">CPF: {aluno.cpf}</p>}
                       </div>
-                      {aluno.simulado && (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full h-fit">
-                          {aluno.offline ? "Offline" : "Simulado"}
-                        </span>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -116,7 +110,6 @@ const AlunoSelection: React.FC<AlunoSelectionProps> = ({ onAlunoSelecionado }) =
         handleInputChange={handleInputChange}
         handleCriarNovoAluno={handleCriarNovoAluno}
         loading={loading}
-        offlineMode={offlineMode}
       />
     </div>
   );

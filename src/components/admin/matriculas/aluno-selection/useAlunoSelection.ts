@@ -43,6 +43,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       
       const resultado = await apiDirectClient.getUsers(1, 20, termoBusca);
       
+      // Resultado agora pode ser simulado ou real, mas sempre terá a mesma estrutura
       if (!resultado || !resultado.data) {
         console.warn("Nenhum dado retornado pela API");
         setAlunos([]);
