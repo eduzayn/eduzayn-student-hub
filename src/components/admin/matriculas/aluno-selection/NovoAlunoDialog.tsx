@@ -23,7 +23,6 @@ interface NovoAlunoDialogProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleCriarNovoAluno: () => void;
   loading: boolean;
-  offlineMode: boolean;
 }
 
 const NovoAlunoDialog: React.FC<NovoAlunoDialogProps> = ({

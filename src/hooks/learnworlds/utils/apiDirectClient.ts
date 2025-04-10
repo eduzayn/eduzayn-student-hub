@@ -84,5 +84,64 @@ export const apiDirectClient = {
       console.error("❌ Falha ao criar usuário na API direta:", error);
       throw error;
     }
+  },
+
+  /**
+   * Buscar usuários diretamente na API da escola
+   * 
+   * @param page Número da página
+   * @param perPage Itens por página
+   * @param searchTerm Termo de busca opcional
+   * @returns Lista de usuários
+   */
+  async getUsers(page: number = 1, perPage: number = 20, searchTerm: string = '') {
+    try {
+      console.log("🔍 Buscando usuários diretamente da API V2 da escola");
+      
+      // Construir URL com parâmetros de consulta
+      let url = `${this.baseUrl}/users?page=${page}&items_per_page=${perPage}`;
+      
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+      
+      console.log("🌐 URL de requisição:", url);
+      
+      // Garantindo que temos todos os cabeçalhos necessários
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `OAuth ${this.credentials.clientId}:${this.credentials.clientSecret}`,
+        'School-Id': LEARNWORLDS_SCHOOL_ID,
+        'Lw-Client': LEARNWORLDS_SCHOOL_ID,
+      };
+
+      console.log("🔑 Cabeçalhos da requisição de busca:", {
+        ...headers,
+        'Authorization': 'OAuth [CREDENCIAIS]' // Log sem expor credenciais completas
+      });
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      // Log detalhado da resposta para depuração
+      console.log("📡 Status da resposta de busca:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Erro na resposta da API de busca:", response.status, errorText);
+        
+        throw new Error(`Erro ao buscar usuários: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Usuários encontrados:", data.data?.length || 0);
+      return data;
+    } catch (error) {
+      console.error("❌ Falha ao buscar usuários na API direta:", error);
+      throw error;
+    }
   }
 };

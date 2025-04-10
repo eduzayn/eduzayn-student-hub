@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import useLearnWorldsAlunos from "@/hooks/learnworlds/useLearnWorldsAlunos";
 import { NovoAlunoForm, Aluno, AlunoSelectionProps, UseAlunoSelectionReturn } from "./types";
 import { 
   mapearAlunosDeAPI, 
@@ -28,7 +27,8 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
     telefone: ""
   });
   
-  const { getUsers, loading, error } = useLearnWorldsAlunos();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     carregarAlunos();
@@ -36,8 +36,12 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
   
   const carregarAlunos = async (termoBusca = "") => {
     try {
-      console.log("Carregando alunos do LearnWorlds com termo:", termoBusca);
-      const resultado = await getUsers(1, 20, termoBusca);
+      setLoading(true);
+      setError(null);
+      
+      console.log("Carregando alunos diretamente do LearnWorlds com termo:", termoBusca);
+      
+      const resultado = await apiDirectClient.getUsers(1, 20, termoBusca);
       
       if (!resultado || !resultado.data) {
         console.warn("Nenhum dado retornado pela API");
@@ -54,8 +58,11 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       setAlunos(alunosFormatados);
     } catch (error) {
       console.error("Erro ao carregar alunos:", error);
+      setError(error.message || "Erro ao carregar alunos");
       tratarErroCarregamento(error);
       setAlunos([]);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -87,9 +94,7 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       const dadosAluno = prepararDadosParaAPI(formNovoAluno);
       console.log("🚀 Iniciando cadastro de aluno com dados:", dadosAluno);
       
-      // Tentar com a API direta da escola (rota principal solicitada)
-      console.log("🔄 Cadastrando aluno diretamente na API da escola");
-      toast.loading("Cadastrando aluno na plataforma...");
+      setLoading(true);
       
       // Chamar a API direta da escola
       const resultadoDireto = await apiDirectClient.createUser(dadosAluno);
@@ -114,6 +119,8 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
       throw new Error("Falha ao cadastrar aluno");
     } catch (error: any) {
       exibirErroAoCadastrar(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,7 +145,6 @@ export const useAlunoSelection = ({ onAlunoSelecionado }: AlunoSelectionProps): 
     formNovoAluno,
     loading,
     error,
-    offlineMode: false, // Sempre retorna false pois não existe modo offline
     handleBusca,
     handleSelecionar,
     handleInputChange,
