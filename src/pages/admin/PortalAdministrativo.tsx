@@ -74,7 +74,7 @@ const PortalAdministrativo: React.FC = () => {
       descricao: "Área exclusiva para alunos",
       icon: GraduationCap,
       iconColor: "text-blue-600",
-      path: "/dashboard"
+      path: "/aluno"  // Corrigido de /dashboard para /aluno
     },
     {
       id: "professor",

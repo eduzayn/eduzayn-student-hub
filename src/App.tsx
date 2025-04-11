@@ -17,6 +17,8 @@ import NavBarLayout from "./components/layout/NavBarLayout";
 import MatriculasAlunos from "./pages/admin/matriculas/MatriculasAlunos";
 import NovaMatricula from "./pages/admin/matriculas/NovaMatricula";
 import MatriculasConfiguracoes from "./pages/admin/matriculas/MatriculasConfiguracoes";
+// Import do AlunoLayout para o portal do aluno
+import AlunoLayout from "./components/layout/AlunoLayout";
 
 function App() {
   return (
@@ -34,7 +36,7 @@ function App() {
         {/* Rotas de autenticação */}
         <Route path="/login" element={<Login />} />
         
-        {/* Rotas protegidas */}
+        {/* Rotas protegidas - painel administrativo */}
         <Route path="/" element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           
@@ -54,6 +56,25 @@ function App() {
           <Route path="/chamados" element={<EmConstrucao title="Chamados" />} />
           <Route path="/comunicados" element={<EmConstrucao title="Comunicados" />} />
           <Route path="/agenda" element={<EmConstrucao title="Agenda" />} />
+        </Route>
+        
+        {/* Portal do Aluno */}
+        <Route path="/aluno" element={<AlunoLayout />}>
+          <Route index element={<EmConstrucao title="Portal do Aluno" />} />
+          <Route path="/aluno/cursos" element={<EmConstrucao title="Meus Cursos" />} />
+          <Route path="/aluno/aprendizagem" element={<EmConstrucao title="Rota de Aprendizagem" />} />
+          <Route path="/aluno/carteira" element={<EmConstrucao title="Carteira de Estudante" />} />
+          <Route path="/aluno/calendario" element={<EmConstrucao title="Calendário" />} />
+          <Route path="/aluno/materiais" element={<EmConstrucao title="Materiais" />} />
+          <Route path="/aluno/financeiro" element={<EmConstrucao title="Financeiro" />} />
+          <Route path="/aluno/documentos" element={<EmConstrucao title="Documentos" />} />
+          <Route path="/aluno/certificados" element={<EmConstrucao title="Certificados" />} />
+          <Route path="/aluno/comunicacao" element={<EmConstrucao title="Comunicação" />} />
+          <Route path="/aluno/estatisticas" element={<EmConstrucao title="Estatísticas" />} />
+          <Route path="/aluno/suporte" element={<EmConstrucao title="Central de Ajuda" />} />
+          <Route path="/aluno/chatana" element={<EmConstrucao title="Chat com Ana" />} />
+          <Route path="/aluno/perfil" element={<EmConstrucao title="Meu Perfil" />} />
+          <Route path="/aluno/configuracoes" element={<EmConstrucao title="Configurações" />} />
         </Route>
         
         {/* Rota Admin */}
